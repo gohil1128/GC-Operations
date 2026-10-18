@@ -61,14 +61,17 @@ jobs:
       - name: Unit and integration tests
         run: pnpm run test
       - run: pnpm exec next build
-      # The integration tests leave the tables empty. The e2e suite signs in
-      # with an account made here, with a password that exists only for this run.
+      # The e2e suite signs in with an account made here, with a password that
+      # exists only for this run. The role is stated, not left to the default:
+      # create-user makes an owner only when the database has no accounts, and
+      # the integration tests leave theirs behind — a staff account has no
+      # "New task" button, and the suite timed out looking for it.
       - name: Create the e2e account
         run: |
           echo "E2E_EMAIL=e2e@gctasks.test" >> "$GITHUB_ENV"
           pw="$(openssl rand -hex 16)"
           echo "E2E_PASSWORD=$pw" >> "$GITHUB_ENV"
-          pnpm create-user --email e2e@gctasks.test --name "E2E Owner" --password "$pw"
+          pnpm create-user --email e2e@gctasks.test --name "E2E Owner" --role owner --password "$pw"
       - name: Start the app
         run: |
           pnpm exec next start -p 3211 &
