@@ -1,6 +1,6 @@
 {
   "extends": ["next/core-web-vitals"],
-  "ignorePatterns": ["node_modules/", ".next/", "public/", "prisma/migrations/"],
+  "ignorePatterns": ["node_modules/", ".next/", "public/", "prisma/migrations/", "gc-tasks/"],
   "rules": {
     "@next/next/no-img-element": "warn",
 
