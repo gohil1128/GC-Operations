@@ -7,6 +7,7 @@ import { AvatarStack, type AvatarPerson } from "@/components/ui/avatar";
 import { useBackToClose } from "@/components/ui/back-to-close";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useSwipeBack } from "@/components/ui/swipe-back";
 import { runAction } from "@/lib/action-client";
 import { tintClass } from "@/lib/colors";
 import { timeAgo } from "@/lib/dates";
@@ -103,12 +104,12 @@ export function ArchivedPanel({
     return true;
   }
 
-  useBackToClose(open, () => onOpenChange(false));
+  const attachSwipe = useSwipeBack(() => onOpenChange(false));
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent ref={attachSwipe} hideClose className="touch-pan-y sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Archived tasks</DialogTitle>
             <DialogDescription>

@@ -69,11 +69,7 @@ export function NewTaskDialog({
   const allowed = canCreateTask(actor);
   const pendingRef = React.useRef(pending);
   pendingRef.current = pending;
-  const swipeRef = useSwipeBack(
-    () => onOpenChange(false),
-    () => !pendingRef.current,
-  );
-  useBackToClose(open, () => {
+  const attachSwipe = useSwipeBack(() => {
     if (!pendingRef.current) onOpenChange(false);
   });
 
@@ -84,7 +80,7 @@ export function NewTaskDialog({
       onOpenChange={(next) => !pending && onOpenChange(next)}
     >
       <DialogContent
-        ref={swipeRef}
+        ref={attachSwipe}
         hideClose
         className="touch-pan-y sm:max-w-xl"
         onOpenAutoFocus={(event) => {

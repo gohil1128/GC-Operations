@@ -158,14 +158,13 @@ export function TaskDialog({
     [onOpenChange],
   );
   const close = React.useCallback(() => handleOpenChange(false), [handleOpenChange]);
-  const swipeRef = useSwipeBack(close);
-  useBackToClose(taskId !== null, close);
+  const attachSwipe = useSwipeBack(close);
   const setContentRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       contentRef.current = node;
-      swipeRef(node);
+      attachSwipe(node);
     },
-    [swipeRef],
+    [attachSwipe],
   );
 
   return (
