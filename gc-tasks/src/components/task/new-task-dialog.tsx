@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useBackToClose } from "@/components/ui/back-to-close";
 import { useSwipeBack } from "@/components/ui/swipe-back";
 import { Input } from "@/components/ui/input";
 import { runAction } from "@/lib/action-client";
@@ -66,10 +67,13 @@ export function NewTaskDialog({
   const [pending, setPending] = React.useState(false);
   const titleRef = React.useRef<HTMLInputElement>(null);
   const allowed = canCreateTask(actor);
-  const dialogContentRef = React.useRef<HTMLDivElement>(null);
   const pendingRef = React.useRef(pending);
   pendingRef.current = pending;
-  useSwipeBack(dialogContentRef, () => {
+  const swipeRef = useSwipeBack(
+    () => onOpenChange(false),
+    () => !pendingRef.current,
+  );
+  useBackToClose(open, () => {
     if (!pendingRef.current) onOpenChange(false);
   });
 
@@ -80,7 +84,7 @@ export function NewTaskDialog({
       onOpenChange={(next) => !pending && onOpenChange(next)}
     >
       <DialogContent
-        ref={dialogContentRef}
+        ref={swipeRef}
         hideClose
         className="touch-pan-y sm:max-w-xl"
         onOpenAutoFocus={(event) => {
