@@ -26,3 +26,6 @@ _enrich.ts
 /blob-report/
 /playwright/.cache/
 tests/e2e/.auth/
+
+# Built APKs. Binaries do not belong in the repo; build them with mobile/README.md.
+mobile/*.apk
