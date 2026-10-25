@@ -9,7 +9,18 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",
-    orientation: "portrait-primary",
+    /*
+      Not locked to portrait.
+
+      Chrome enforces this field on an INSTALLED app, not just as a hint, so
+      "portrait-primary" was holding every installed copy upright. On a phone
+      that is merely opinionated; on the two devices this is actually used on
+      it is wrong. A tablet lives in a stand at the stall, which is landscape,
+      and an installed desktop window has no portrait to rotate to at all —
+      both were being handed a layout the app does not need to force, when it
+      already has breakpoints from the mobile tab bar up to the desktop rail.
+    */
+    orientation: "any",
     // Match the cream canvas so the splash and status bar don't flash slate.
     background_color: "#F8F4EC",
     theme_color: "#F8F4EC",
