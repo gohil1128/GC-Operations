@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The web app's canvas colour, the same value as background_color in
+      src/app/manifest.ts and the cream the stylesheet paints on body. Used for
+      the launch splash and the WebView's own background so a cold start, the
+      splash, and the first painted frame are all one colour instead of
+      flashing white between them.
+    -->
+    <color name="brandCanvas">#F8F4EC</color>
+</resources>
