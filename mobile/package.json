@@ -1,0 +1,20 @@
+{
+  "name": "gco-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android/iOS shell for God's Chai Operations. Not part of the web app's build.",
+  "scripts": {
+    "sync": "cap sync",
+    "apk:debug": "cd android && ./gradlew assembleDebug",
+    "apk:release": "cd android && ./gradlew assembleRelease"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.0",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.0",
+    "@capacitor/core": "6.2.0"
+  }
+}
