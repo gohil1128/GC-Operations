@@ -1,4 +1,6 @@
+import type { Actor } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { visibleTaskWhere } from "@/modules/tasks/visibility";
 import { notificationSentence } from "@/modules/notifications/text";
 import type { ActivityDTO, ActivityType } from "@/modules/tasks/types";
 
@@ -9,6 +11,10 @@ import type { ActivityDTO, ActivityType } from "@/modules/tasks/types";
   noise). "Unread" is a watermark on the account — activity by other
   people newer than notificationReadAt (or than the account itself, for
   accounts that predate the watermark and have never opened the bell).
+
+  Only activity on tasks the reader can see counts, judged as the task
+  stands now: once an owner is put on a task, its whole history leaves the
+  bell of every staff member who is not on it too.
 */
 
 export type NotificationItem = {
@@ -43,11 +49,13 @@ async function readWatermark(userId: string): Promise<Date> {
   return me?.notificationReadAt ?? me?.createdAt ?? new Date(0);
 }
 
-export async function getNotificationFeed(userId: string): Promise<NotificationFeed> {
+export async function getNotificationFeed(reader: Actor): Promise<NotificationFeed> {
+  const userId = reader.id;
   const since = await readWatermark(userId);
+  const visible = { actorId: { not: userId }, task: visibleTaskWhere(reader) };
   const [rows, unread, people] = await Promise.all([
     prisma.activity.findMany({
-      where: { actorId: { not: userId } },
+      where: visible,
       orderBy: { createdAt: "desc" },
       take: FEED_LIMIT,
       select: {
@@ -61,7 +69,7 @@ export async function getNotificationFeed(userId: string): Promise<NotificationF
         task: { select: { title: true, archivedAt: true } },
       },
     }),
-    prisma.activity.count({ where: { actorId: { not: userId }, createdAt: { gt: since } } }),
+    prisma.activity.count({ where: { ...visible, createdAt: { gt: since } } }),
     prisma.user.findMany({ select: { id: true, name: true } }),
   ]);
   const nameById = new Map(people.map((p) => [p.id, p.name]));
