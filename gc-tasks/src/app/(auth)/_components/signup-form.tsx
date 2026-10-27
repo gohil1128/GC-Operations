@@ -3,7 +3,6 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { requestSignupAction, type AuthFormState } from "@/modules/auth/actions";
-import { NAME_MAX } from "@/modules/team/schemas";
 import { authInputClass, Field, FormError, PasswordInput, SubmitButton } from "./form-bits";
 
 /** Step one of sign-up: who you are and the password you want. Success moves on to the code page. */
@@ -18,7 +17,7 @@ export function SignupForm() {
           name="name"
           autoComplete="name"
           required
-          maxLength={NAME_MAX}
+          maxLength={80}
           defaultValue={state?.values?.name}
           aria-describedby="name-hint"
           className={authInputClass}
