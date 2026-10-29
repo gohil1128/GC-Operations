@@ -11,6 +11,7 @@ import { STATUS_LABEL, type Status, type TaskCard } from "@/modules/tasks/types"
 import { useBoard } from "./board-context";
 import { QuickAdd } from "./quick-add";
 import { SortableTaskCard } from "./task-card";
+import { useScrollEdges } from "./use-scroll-edges";
 
 const COLUMN_PREFIX = "column:";
 const TAB_PREFIX = "tab:";
@@ -91,6 +92,7 @@ export function BoardColumn({
   // To do keeps its add box on screen; the other columns open one from "+".
   const persistentAdd = status === "TODO";
   const showAdd = canCreate && (persistentAdd || quickAddOpen);
+  const listEdgesRef = useScrollEdges();
   const countText = filtering && cards.length !== total ? `${cards.length} of ${total}` : String(total);
 
   return (
@@ -154,8 +156,9 @@ export function BoardColumn({
       <div className="relative flex min-h-0 flex-1 flex-col">
         <PullIndicator />
         <div
+          ref={listEdgesRef}
           data-column-list
-          className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-x-contain overscroll-y-none px-2 pb-2"
+          className="scroll-quiet scroll-fade min-h-0 flex-1 overflow-y-auto overscroll-x-contain overscroll-y-none px-2 pb-2"
         >
           <div data-column-list-content>
             <SortableContext id={status} items={ids} strategy={verticalListSortingStrategy}>
