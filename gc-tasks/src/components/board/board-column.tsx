@@ -3,6 +3,7 @@ import * as React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
+import { PullIndicator } from "@/components/shell/pull-to-refresh";
 import { Button } from "@/components/ui/button";
 import { canMoveTask } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -148,31 +149,41 @@ export function BoardColumn({
         />
       )}
 
-      <div className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-2">
-        <SortableContext id={status} items={ids} strategy={verticalListSortingStrategy}>
-          <ul className="flex flex-col gap-2 p-0.5" aria-label={`${label} tasks`}>
-            {cards.map((card) => (
-              <SortableTaskCard key={card.id} card={card} draggable={canMoveTask(actor, card)} />
-            ))}
-          </ul>
-        </SortableContext>
+      {/* The task list. Pulling it down at its top refreshes the board (see Board): only the
+          cards move, with the spinner in the gap above them; the header and add box stay put. */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <PullIndicator />
+        <div
+          data-column-list
+          className="scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-x-contain overscroll-y-none px-2 pb-2"
+        >
+          <div data-column-list-content>
+            <SortableContext id={status} items={ids} strategy={verticalListSortingStrategy}>
+              <ul className="flex flex-col gap-2 p-0.5" aria-label={`${label} tasks`}>
+                {cards.map((card) => (
+                  <SortableTaskCard key={card.id} card={card} draggable={canMoveTask(actor, card)} />
+                ))}
+              </ul>
+            </SortableContext>
 
-        {cards.length === 0 && (
-          <div
-            className={cn(
-              "m-0.5 flex min-h-24 flex-col items-center justify-center rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground transition-colors",
-              dragging ? "border-brand/50 bg-card/50" : "border-border",
-            )}
-          >
-            {dragging ? (
-              <p>Drop a card here</p>
-            ) : total > 0 ? (
-              <p>No cards here match the filters.</p>
-            ) : (
-              <p>Nothing here yet</p>
+            {cards.length === 0 && (
+              <div
+                className={cn(
+                  "m-0.5 flex min-h-24 flex-col items-center justify-center rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground transition-colors",
+                  dragging ? "border-brand/50 bg-card/50" : "border-border",
+                )}
+              >
+                {dragging ? (
+                  <p>Drop a card here</p>
+                ) : total > 0 ? (
+                  <p>No cards here match the filters.</p>
+                ) : (
+                  <p>Nothing here yet</p>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
