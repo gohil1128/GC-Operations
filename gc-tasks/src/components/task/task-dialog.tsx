@@ -165,7 +165,7 @@ export function TaskDialog({
     [onOpenChange],
   );
   const close = React.useCallback(() => handleOpenChange(false), [handleOpenChange]);
-  const attachSwipe = useSwipeBack(close);
+  const attachSwipe = useSwipeBack(close, undefined, { zoom: true });
   useBackToClose(taskId !== null, close);
   const setContentRef = React.useCallback(
     (node: HTMLDivElement | null) => {

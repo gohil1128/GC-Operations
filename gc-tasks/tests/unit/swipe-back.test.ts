@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { attachSwipeBack, BACK_FLICK_VELOCITY, isBackSwipe } from "@/components/ui/swipe-back";
+import { attachSwipeBack, BACK_FLICK_VELOCITY, isBackSwipe, slideOffMs } from "@/components/ui/swipe-back";
 
 describe("isBackSwipe", () => {
   it("closes on a drag past the threshold, at any speed", () => {
@@ -20,6 +20,14 @@ describe("isBackSwipe", () => {
 
   it("cancels when flicked back to the left, even after a long drag", () => {
     expect(isBackSwipe(150, -0.5)).toBe(false);
+  });
+});
+
+describe("slideOffMs", () => {
+  it("is quicker after a quicker flick, within 120–200ms", () => {
+    expect(slideOffMs(400, 0)).toBe(200);
+    expect(slideOffMs(300, 2.5)).toBe(120);
+    expect(slideOffMs(300, 2)).toBeLessThan(slideOffMs(300, 0));
   });
 });
 
@@ -75,20 +83,18 @@ describe("attachSwipeBack", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shrinks into a card under the finger and closes on release past the threshold", () => {
+  it("follows the finger and closes on release past the threshold", () => {
     const sheet = fakeSheet();
     const onBack = vi.fn();
     attachSwipeBack(sheet as unknown as HTMLElement, onBack);
 
     sheet.fire("touchstart", touchEvent(10, 100));
     sheet.fire("touchmove", touchEvent(140, 104));
-    const scale = Number(/scale\(([\d.]+)\)/.exec(sheet.style.transform)?.[1]);
-    expect(scale).toBeLessThan(1);
-    expect(scale).toBeGreaterThan(0.6);
-    expect(sheet.style.clipPath).toMatch(/round/);
+    expect(sheet.style.transform).toBe("translateX(130px)");
 
-    // The close takes over from where the finger let go: no slide first.
     sheet.fire("touchend", touchEvent(140, 104));
+    expect(onBack).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(200);
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
@@ -100,7 +106,7 @@ describe("attachSwipeBack", () => {
     sheet.fire("touchstart", touchEvent(10, 100));
     sheet.fire("touchmove", touchEvent(50, 102));
     sheet.fire("touchend", touchEvent(50, 102));
-    expect(sheet.style.transform).toBe("translate(0px, 0px) scale(1)");
+    expect(sheet.style.transform).toBe("translateX(0px)");
     vi.advanceTimersByTime(500);
     expect(onBack).not.toHaveBeenCalled();
   });
@@ -143,7 +149,7 @@ describe("attachSwipeBack", () => {
     sheet.fire("touchmove", touchEvent(150, 100, 1250));
     sheet.fire("touchmove", touchEvent(110, 100, 1280));
     sheet.fire("touchend", touchEvent(110, 100, 1290));
-    expect(sheet.style.transform).toBe("translate(0px, 0px) scale(1)");
+    expect(sheet.style.transform).toBe("translateX(0px)");
     vi.advanceTimersByTime(500);
     expect(onBack).not.toHaveBeenCalled();
   });
@@ -177,6 +183,37 @@ describe("attachSwipeBack", () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  it("a zooming sheet shrinks into a card under the finger and hands over straight away", () => {
+    const sheet = fakeSheet();
+    const onBack = vi.fn();
+    attachSwipeBack(sheet as unknown as HTMLElement, onBack, undefined, { zoom: true });
+
+    sheet.fire("touchstart", touchEvent(10, 100));
+    sheet.fire("touchmove", touchEvent(140, 104));
+    const scale = Number(/scale\(([\d.]+)\)/.exec(sheet.style.transform)?.[1]);
+    expect(scale).toBeLessThan(1);
+    expect(scale).toBeGreaterThan(0.6);
+    expect(sheet.style.clipPath).toMatch(/round/);
+
+    // No slide first: the dialog's zoom close takes it from here.
+    sheet.fire("touchend", touchEvent(140, 104));
+    expect(sheet.style.animation).toBe("none");
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("a zooming sheet springs back to full size on a short swipe", () => {
+    const sheet = fakeSheet();
+    const onBack = vi.fn();
+    attachSwipeBack(sheet as unknown as HTMLElement, onBack, undefined, { zoom: true });
+
+    sheet.fire("touchstart", touchEvent(10, 100));
+    sheet.fire("touchmove", touchEvent(50, 102));
+    sheet.fire("touchend", touchEvent(50, 102));
+    expect(sheet.style.transform).toBe("translate(0px, 0px) scale(1)");
+    vi.advanceTimersByTime(500);
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
   it("springs back when the close is refused", () => {
     const sheet = fakeSheet();
     const onBack = vi.fn();
@@ -185,7 +222,7 @@ describe("attachSwipeBack", () => {
     sheet.fire("touchstart", touchEvent(10, 100));
     sheet.fire("touchmove", touchEvent(140, 104));
     sheet.fire("touchend", touchEvent(140, 104));
-    expect(sheet.style.transform).toBe("translate(0px, 0px) scale(1)");
+    expect(sheet.style.transform).toBe("translateX(0px)");
     vi.advanceTimersByTime(500);
     expect(onBack).not.toHaveBeenCalled();
   });

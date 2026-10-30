@@ -1,7 +1,6 @@
 /*
-  The phone's "zoom" transition, as in iOS: a sheet grows out of the thing
-  that was tapped (a task card, a button, a photo) and, when it closes,
-  shrinks back into it. A swipe-back shrinks the sheet into a rounded card
+  The phone's "zoom" transition, as in iOS: the task sheet grows out of the
+  card that was tapped and, when it closes, shrinks back into it. A swipe-back shrinks the sheet into a rounded card
   under the finger first (see swipe-back.ts); the close then flies that card
   home from wherever the finger left it.
 
@@ -220,35 +219,4 @@ export function zoomOut(el: HTMLElement, target: Element | null, done: () => voi
       }
     },
   };
-}
-
-// ── What was tapped ─────────────────────────────────────────────────────────
-
-/*
-  A sheet with no explicit source grows out of whatever was pressed just
-  before it opened. Recorded on every press, in the capture phase so a
-  handler that stops propagation cannot hide it.
-*/
-const PRESSABLE = "[data-zoom-source], button, a, [role=button], [role=menuitem]";
-const PRESS_FRESH_MS = 1_500;
-let lastPress: { el: Element; at: number } | null = null;
-let recording = false;
-
-export function recordPresses(): void {
-  if (recording || typeof document === "undefined") return;
-  recording = true;
-  document.addEventListener(
-    "pointerdown",
-    (event) => {
-      const el = event.target instanceof Element ? event.target.closest(PRESSABLE) : null;
-      lastPress = el ? { el, at: Date.now() } : null;
-    },
-    { capture: true, passive: true },
-  );
-}
-
-/** The element pressed a moment ago, if any (not one inside an open sheet that is opening another). */
-export function recentPress(): Element | null {
-  if (!lastPress || Date.now() - lastPress.at > PRESS_FRESH_MS) return null;
-  return lastPress.el;
 }

@@ -3,7 +3,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { prefersZoom, recentPress, recordPresses, zoomIn, zoomOut } from "@/components/ui/zoom-transition";
+import { prefersZoom, zoomIn, zoomOut } from "@/components/ui/zoom-transition";
 
 /*
   Dialog = Radix's Root, plus the phone zoom (see zoom-transition.ts): the
@@ -13,9 +13,9 @@ import { prefersZoom, recentPress, recordPresses, zoomIn, zoomOut } from "@/comp
   is still open until the sheet has landed, then closes it with no exit
   animation of its own. Opening it again mid-flight cancels the close.
 
-  `zoomFrom` names the sheet's source outright (a task card, which may have
-  moved by the time the sheet closes); without it the sheet uses whatever
-  was pressed just before it opened.
+  Only a dialog given `zoomFrom` zooms — the task sheet, out of its card
+  (looked up afresh on close, since the card may have moved column). Every
+  other dialog keeps the plain fade.
 */
 const ZoomContext = React.createContext<((el: HTMLElement | null) => void) | null>(null);
 
@@ -31,7 +31,6 @@ function Dialog({ open, zoomFrom, children, ...props }: DialogProps) {
   const zoomedRef = React.useRef<HTMLElement | null>(null);
   const zoomFromRef = React.useRef(zoomFrom);
   zoomFromRef.current = zoomFrom;
-  const sourceRef = React.useRef<Element | null>(null);
   // The card stays hidden under the sheet while it is open, as on iOS, so
   // the sheet reads as the card itself, lifted.
   const hiddenRef = React.useRef<HTMLElement | null>(null);
@@ -41,24 +40,18 @@ function Dialog({ open, zoomFrom, children, ...props }: DialogProps) {
     hiddenRef.current = null;
   }, []);
 
-  React.useEffect(() => {
-    recordPresses();
-    return unhide;
-  }, [unhide]);
+  React.useEffect(() => unhide, [unhide]);
 
   const setContent = React.useCallback((el: HTMLElement | null) => {
     contentRef.current = el;
     // A ref re-attaching to the same sheet is not a new opening.
     if (!el || el === zoomedRef.current) return;
     zoomedRef.current = el;
-    if (!prefersZoom()) return;
-    const named = zoomFromRef.current?.() ?? null;
-    const source = named ?? recentPress();
-    // A press inside the sheet itself is not where it came from.
-    sourceRef.current = source && !el.contains(source) ? source : null;
-    if (zoomIn(el, sourceRef.current) && named instanceof HTMLElement) {
-      named.style.visibility = "hidden";
-      hiddenRef.current = named;
+    if (!zoomFromRef.current || !prefersZoom()) return;
+    const source = zoomFromRef.current();
+    if (zoomIn(el, source) && source instanceof HTMLElement) {
+      source.style.visibility = "hidden";
+      hiddenRef.current = source;
     }
   }, []);
 
@@ -66,7 +59,7 @@ function Dialog({ open, zoomFrom, children, ...props }: DialogProps) {
     if (open || !shown) return;
     const el = contentRef.current;
     unhide();
-    const flight = el && prefersZoom() ? zoomOut(el, zoomFromRef.current?.() ?? sourceRef.current, () => setShown(false)) : null;
+    const flight = el && zoomFromRef.current && prefersZoom() ? zoomOut(el, zoomFromRef.current(), () => setShown(false)) : null;
     if (!flight) {
       setShown(false);
       return;
