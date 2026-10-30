@@ -126,6 +126,11 @@ function keepsEscape(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest("[data-escape-cancels]") !== null;
 }
 
+/** The task's card on the board, which the sheet grows out of and shrinks back into. */
+function cardFor(id: string | null): Element | null {
+  return id ? document.querySelector(`[data-task-card="${CSS.escape(id)}"]`) : null;
+}
+
 /**
   One task in full. Opens straight away from the card the board already has,
   then fills in the checklist, comments and history from the server.
@@ -171,7 +176,7 @@ export function TaskDialog({
   );
 
   return (
-    <Dialog open={taskId !== null} onOpenChange={handleOpenChange}>
+    <Dialog open={taskId !== null} onOpenChange={handleOpenChange} zoomFrom={() => cardFor(shownId)}>
       {shownId !== null && (
         <DialogContent
           ref={setContentRef}

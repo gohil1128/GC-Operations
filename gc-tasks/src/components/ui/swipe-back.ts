@@ -1,9 +1,12 @@
 import * as React from "react";
+import { dragFrame } from "@/components/ui/zoom-transition";
 
 /*
-  Swipe right to go back, phone-style: the sheet follows the finger in
-  real time, then either slides the rest of the way off or springs back
-  if the swipe was short. Vertical scrolling must never trip it, so the
+  Swipe right to go back, phone-style: the sheet shrinks into a rounded
+  card that follows the finger in real time (iOS's zoom dismiss), then
+  either flies home — the dialog's close zooms it back into whatever it
+  opened from, see zoom-transition.ts — or springs back if the swipe was
+  short. Vertical scrolling must never trip it, so the
   gesture only takes over once the movement is clearly horizontal and
   rightward; from then on the sheet tracks the finger 1:1 until release.
 
@@ -34,12 +37,6 @@ export const BACK_FLICK_VELOCITY = 0.35;
 export function isBackSwipe(dx: number, velocityX: number): boolean {
   if (velocityX <= -BACK_FLICK_VELOCITY) return false;
   return dx >= BACK_SWIPE_MIN_X || (dx >= BACK_FLICK_MIN_X && velocityX >= BACK_FLICK_VELOCITY);
-}
-
-/** How long the sheet takes to slide the rest of the way: quicker after a quicker flick. */
-export function slideOffMs(remainingPx: number, velocityX: number): number {
-  const ms = remainingPx / Math.max(velocityX, 1.6);
-  return Math.round(Math.min(200, Math.max(120, ms)));
 }
 
 /** Swipe speed over roughly the last 100ms of samples. */
@@ -108,7 +105,8 @@ export function attachSwipeBack(el: HTMLElement, onBack: () => void, canGoBack: 
     lastDx = Math.max(0, dx);
     samples.push({ t: now(event), x: touch.clientX });
     if (samples.length > 20) samples = samples.slice(-20);
-    el.style.transform = `translateX(${lastDx}px)`;
+    el.style.transformOrigin = "0 0";
+    Object.assign(el.style, dragFrame({ left: 0, top: 0, width: el.clientWidth, height: el.clientHeight }, lastDx, dy));
     const bd = backdrop();
     if (bd) bd.style.opacity = String(Math.max(0, 1 - lastDx / Math.max(el.clientWidth, 1)));
   };
@@ -123,41 +121,32 @@ export function attachSwipeBack(el: HTMLElement, onBack: () => void, canGoBack: 
     if (!wasDrag) return;
 
     if (isBackSwipe(dx, vx) && canGoBack()) {
-      // Complete the slide the finger started, then hand over to the
-      // dialog's own close once the sheet is (nearly) off screen. The
-      // exit animation is switched off first: a CSS animation outranks
-      // the inline transform, so it would snap the sheet back to the
-      // middle of the screen just to fade it out there — the "goes back
-      // twice" bug. A refused close (canGoBack says no) falls into the
-      // spring-back below instead of stranding the sheet off screen.
-      const target = el.clientWidth + 48;
-      const ms = slideOffMs(target - dx, vx);
-      el.style.transition = `transform ${ms}ms ${SLIDE_EASING}`;
-      el.style.transform = `translateX(${target}px)`;
+      // The sheet is left where the finger let go of it: the dialog's close
+      // flies it home from there (zoom-transition.ts), so the swipe and the
+      // landing read as one movement. A refused close (canGoBack says no)
+      // falls into the spring-back below instead of stranding the card.
+      // The CSS exit animation is switched off first: it outranks the inline
+      // transform, so it would snap the card back to the middle of the
+      // screen just to fade it out there — the "goes back twice" bug.
+      el.style.animation = "none";
+      onBack();
+    } else {
+      const ms = 280;
+      el.style.transition = `transform ${ms}ms ${SLIDE_EASING}, clip-path ${ms}ms ${SLIDE_EASING}`;
+      el.style.transform = "translate(0px, 0px) scale(1)";
+      el.style.clipPath = "inset(0px 0px 0px 0px round 0px)";
       const bd = backdrop();
       if (bd) {
         bd.style.transition = `opacity ${ms}ms ${SLIDE_EASING}`;
-        bd.style.opacity = "0";
-      }
-      window.setTimeout(() => {
-        el.style.animation = "none";
-        onBack();
-      }, ms - 10);
-    } else {
-      el.style.transition = `transform 240ms ${SLIDE_EASING}`;
-      el.style.transform = "translateX(0px)";
-      const bd = backdrop();
-      if (bd) {
-        bd.style.transition = `opacity 240ms ${SLIDE_EASING}`;
         bd.style.opacity = "";
       }
-      const clear = () => {
+      window.setTimeout(() => {
         el.style.transition = "";
         el.style.transform = "";
+        el.style.clipPath = "";
+        el.style.transformOrigin = "";
         if (bd) bd.style.transition = "";
-        el.removeEventListener("transitionend", clear);
-      };
-      el.addEventListener("transitionend", clear);
+      }, ms + 20);
     }
   };
 
