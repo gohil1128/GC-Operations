@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { FileText, X } from "lucide-react";
+import { AlertTriangle, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhotoInput } from "@/components/ui/photo-input";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CategorySelect } from "@/components/ui/category-select";
 import { INVOICE_CATEGORIES } from "@/lib/gc-categories";
 import { updateInvoiceAction, setInvoiceEventAction, setInvoiceCategoryAction, setInvoiceImageAction } from "@/modules/invoices/actions";
+import { impossibleInvoiceReason, invoiceDiscountWarning } from "@/modules/invoices/checks";
 import { fileToAttachmentDataUrl } from "@/lib/image-client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -39,6 +40,9 @@ type Initial = {
 };
 
 const fmt = (n: number) => `$${n.toFixed(2)}`;
+// Rounded the way toCents rounds on the server, so the check the form runs
+// and the check the action runs cannot disagree on a half-cent.
+const cents = (n: number) => Math.round(n * 100);
 
 export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }: { invoiceId: string; initial: Initial; events?: Event[]; readOnly: boolean }) {
   const router = useRouter();
@@ -117,6 +121,25 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
     (Number(shipping) || 0) -
     (Number(rebate) || 0);
 
+  /*
+    The same two checks the server runs, against what is on screen right now.
+    Shown while typing rather than only on save, because the figure that
+    breaks them — the rebate — is three boxes away from the total it drags
+    under, and the connection is not obvious once the form has been submitted
+    and the page has moved.
+  */
+  const amounts = {
+    subtotalCents: cents(effectiveSubtotal),
+    gstCents: cents(Number(gst) || 0),
+    pstCents: cents(Number(pst) || 0),
+    shippingCents: cents(Number(shipping) || 0),
+    rebateCents: cents(Number(rebate) || 0),
+  };
+  const refusal = impossibleInvoiceReason(amounts);
+  const discountNote = refusal
+    ? null
+    : invoiceDiscountWarning({ subtotalCents: amounts.subtotalCents, totalCents: cents(liveTotal) });
+
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     const fd = new FormData();
@@ -130,7 +153,11 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
     fd.set("rebateDollars", rebate);
     start(async () => {
       try {
-        await updateInvoiceAction(invoiceId, fd);
+        const res = await updateInvoiceAction(invoiceId, fd);
+        if ("error" in res) {
+          toast({ title: "Not saved", description: res.error, variant: "destructive" });
+          return;
+        }
         toast({ title: "Invoice updated" });
         router.refresh();
       } catch (err: any) {
@@ -171,6 +198,20 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
         <Read label="Total" value={fmt(liveTotal)} bold accent />
         <Read label="Items / Qty Received" value={`${initial.numberOfItems} · ${initial.qtyReceived.toFixed(2)}`} />
       </div>
+
+      {(refusal || discountNote) && (
+        <p
+          data-testid={refusal ? "invoice-refusal" : "invoice-discount-note"}
+          className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs leading-relaxed ${
+            refusal
+              ? "border-destructive/40 bg-destructive/10 text-destructive"
+              : "border-warning/40 bg-warning/10 text-warning"
+          }`}
+        >
+          <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span>{refusal ?? discountNote}</span>
+        </p>
+      )}
 
       {/* Attached photo of the paper invoice — editable even when closed */}
       <div className="grid gap-1.5">
@@ -238,7 +279,10 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
 
       <div className="flex justify-end items-center gap-2 border-t pt-3 mt-2">
         {readOnly && <span className="text-xs text-muted-foreground">Re-open the invoice to save changes</span>}
-        <Button type="submit" disabled={pending || readOnly} size="default">
+        {/* Held rather than left to fail on the server: the reason is already
+            on screen above, and letting the click through would only replace
+            it with the same sentence in a toast. */}
+        <Button type="submit" disabled={pending || readOnly || refusal !== null} size="default">
           {pending ? "Saving..." : "Update invoice"}
         </Button>
       </div>

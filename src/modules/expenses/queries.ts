@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { startOfDay, endOfDay } from "@/lib/date";
+import { businessDayOrNull, endOfBusinessDayOrNull } from "@/lib/date";
 import type { ExpenseCategory } from "@prisma/client";
 
 export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
@@ -27,8 +27,10 @@ export async function listExpenses(locationId: string, filters: ExpenseFilters =
   if (filters.eventId) where.eventId = filters.eventId;
   if (filters.from || filters.to) {
     where.businessDate = {};
-    if (filters.from) where.businessDate.gte = startOfDay(new Date(filters.from));
-    if (filters.to) where.businessDate.lte = endOfDay(new Date(filters.to));
+    const from = businessDayOrNull(filters.from);
+    const to = endOfBusinessDayOrNull(filters.to);
+    if (from) where.businessDate.gte = from;
+    if (to) where.businessDate.lte = to;
   }
   return prisma.expense.findMany({
     where,

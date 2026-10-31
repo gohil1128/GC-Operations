@@ -8,7 +8,14 @@
   Warm cream canvas, rounded bento cards on hairline borders, espresso ink,
   a single chai-rust accent, and one dark card per screen for contrast.
   Display numerals use Bricolage Grotesque; UI text uses DM Sans.
-  Shadows are deliberately absent — depth comes from borders and gradients.
+
+  Colour: every brown and orange is a shade of one of the two colours actually
+  in public/logo.png (#3C2216 and #B85D3C), held at a fixed hue. Beige is the
+  one non-logo family, kept because it is what gives a highlighted row or a
+  bar track separation from the card without adding a third accent.
+
+  Depth: the handoff specifies no shadows; a warm elevation scale was added on
+  request. It is tinted with the logo brown, never black.
 */
 @layer base {
   :root {
@@ -17,32 +24,93 @@
     --font-display: var(--font-display-src), ui-sans-serif, system-ui, sans-serif;
     --font-sans: var(--font-sans-src), ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-    /* Canvas + surfaces */
-    --background: 39 25% 89%;          /* #EAE5DC flat canvas */
-    --canvas-from: 40 46% 95%;         /* #F8F4EC ─┐ page gradient */
-    --canvas-via:  38 38% 92%;         /* #F2ECE2  │ */
-    --canvas-to:   33 64% 91%;         /* #F7EADA ─┘ */
-    --foreground: 23 45% 11%;          /* #2A1A10 espresso ink */
-    --card: 40 50% 98%;                /* #FCFAF6 bento card */
-    --card-foreground: 23 45% 11%;
+    /* ── Logo ramps ────────────────────────────────────────────────────────
+       Sampled from public/logo.png: the mark uses exactly two colours, a dark
+       roast brown #3C2216 (64% of opaque pixels) and a chai rust #B85D3C
+       (16%). Every brown and orange below is one of those two hues held fixed
+       while lightness/saturation move, so the whole app reads as shades of
+       the logo rather than a palette that merely sits near it. */
+    --ink-950: 19 48% 9%;              /* #22130C */
+    --ink-900: 19 47% 12%;             /* #2D1910 */
+    --ink-800: 19 46% 16%;             /* #3C2216 ← logo brown, exact */
+    --ink-700: 19 42% 22%;             /* #502F21 */
+    --ink-600: 20 34% 30%;             /* #674432 */
+    --ink-500: 21 24% 40%;             /* #7E5F4E */
+    --ink-400: 24 18% 52%;             /* #9B806F */
+    --ink-300: 28 18% 66%;             /* #B8A799 taupe */
+
+    --rust-800: 16 58% 30%;            /* #793820 */
+    --rust-700: 16 56% 36%;            /* #8F4428 */
+    --rust-600: 16 54% 42%;            /* #A55031 */
+    --rust-500: 16 51% 48%;            /* #B95D3C ← logo rust, exact */
+    --rust-400: 16 56% 60%;            /* #D27E60 */
+    --rust-300: 17 62% 74%;            /* #E6AB94 */
+    --rust-200: 20 55% 87%;            /* #F0D8CC */
+    --rust-100: 24 52% 94%;            /* #F8EEE8 */
+
+    /* Beige — the contrast band. Deliberately kept alongside the logo hues:
+       it is what separates a highlighted row or a bar track from the card
+       without introducing a colour the mark doesn't have. */
+    --beige: 37 30% 90%;               /* #EDE7DE highlight row, bar tracks */
+    --beige-deep: 35 26% 85%;          /* #E3DACF pressed / nested beige */
+    /* Cross-highlight tint for the P&L statement's hovered row and column. */
+    --cell-hot: 32 34% 92%;
+
+    /* Canvas + surfaces.
+       Soft glass puts a photograph behind the top of every page and floats
+       frosted panels on it, so the canvas is a flat cream rather than the
+       gradient the solid-card system used — a gradient under translucent
+       panels shows through them and makes identical cards read as different
+       shades depending on where they sit. */
+    --background: 37 37% 93%;          /* #F4EFE7 */
+    --canvas-from: 37 37% 93%;
+    --canvas-via:  37 37% 93%;
+    --canvas-to:   37 37% 93%;
+
+    /* Glass. --panel-glass is the cream the frosted cards are tinted with,
+       --glass-edge the white their borders and the toolbar are drawn from,
+       --scrim the ink the photograph is darkened with so display type over
+       it clears 3:1. */
+    --panel-glass: 40 50% 98%;         /* #FDFBF7 */
+    --glass-edge: 0 0% 100% / 0.8;     /* the lit edge that bounds a frosted card */
+    --pill-bg: 0 0% 100% / 0.84;       /* toolbar + rail; .84 is the contrast floor */
+    --scrim: 24 51% 7%;                /* #1C1009 */
+    /* The photograph. Its band is sized by the masthead it sits behind, so
+       there is no height to set here. */
+    --app-photo-src: url("/hero-chai.jpg");
+
+    /* Orders board. The handoff gives the dark screen its own status colours
+       rather than reusing the light ones: #2F8F5B and #C63F3F are tuned to sit
+       on cream and go muddy on espresso, so the board lifts them to
+       #8FD9AE / #FFC9C9 / #FFD9A0. These are theme-independent — the board is
+       dark in both themes, the way a stall-side screen has to be. */
+    --board-ground: 24 51% 6%;
+    --board-ink: 37 56% 94%;           /* #F8F1E6 */
+    --board-dim: 33 22% 70%;
+    --board-green: 148 52% 71%;        /* #8FD9AE */
+    --board-amber: 36 100% 81%;        /* #FFD9A0 */
+    --board-red: 0 100% 89%;           /* #FFC9C9 */
+    --foreground: var(--ink-950);      /* 17.4:1 on card */
+    --card: 40 50% 98%;                /* #FCFBF7 */
+    --card-foreground: var(--ink-950);
     --popover: 40 50% 98%;
-    --popover-foreground: 23 45% 11%;
+    --popover-foreground: var(--ink-950);
 
     /* Espresso — dark cards, active nav pill, primary buttons */
-    --primary: 24 47% 16%;             /* #3A2415 */
-    --primary-foreground: 37 56% 94%;  /* #F8F1E6 */
-    --espresso: 24 47% 16%;
+    --primary: var(--ink-800);
+    --primary-foreground: 37 56% 94%;  /* #F8F2E7 — 13.2:1 on the logo brown */
+    --espresso: var(--ink-800);
     --espresso-foreground: 37 56% 94%;
     /* Chart ink: the data series must stay the strongest mark on the card in
        BOTH themes. --espresso is correct on cream but disappears on dark. */
-    --chart-ink: 24 47% 16%;
+    --chart-ink: var(--ink-800);
 
-    --secondary: 40 47% 96%;           /* #FAF7F1 */
-    --secondary-foreground: 26 21% 30%;
-    --muted: 40 47% 96%;
-    --muted-foreground: 29 14% 38%;    /* darkened from #8B7B6C for 4.5:1 on card + canvas */
-    --accent: 33 36% 92%;
-    --accent-foreground: 26 21% 30%;
+    --secondary: 38 44% 96%;
+    --secondary-foreground: var(--ink-600);
+    --muted: 38 40% 95%;
+    --muted-foreground: var(--ink-500);  /* 5.6:1 on card, 4.8:1 on canvas */
+    --accent: 32 32% 92%;
+    --accent-foreground: var(--ink-600);
 
     /* Status — foreground on its own tinted background */
     --destructive: 0 60% 42%;          /* darkened for 4.5:1 as text on its tint and white on fill */
@@ -56,62 +124,119 @@
     --warning-muted: 41 81% 92%;       /* #FBF0D9 */
 
     /* Single accent + data highlight */
-    --brand: 17 54% 50%;               /* #C4623A chai rust — fills, dots, borders */
+    --brand: var(--rust-500);          /* logo rust — fills, dots, borders */
     --brand-foreground: 0 0% 100%;
-    /* Text-only rust: #C4623A is 3.4:1 on cream and fails as body text, so
-       links/labels use this darker shade while fills keep the design colour. */
-    --brand-ink: 17 60% 36%;
+    /* Text-only rust: the logo rust is 4.3:1 on cream and marginal as body
+       text, so links and labels use the darker step (6.7:1). */
+    --brand-ink: var(--rust-700);
     /* Filled brand buttons need a darker ground for white text to pass. */
-    --brand-strong: 17 56% 42%;
-    --amber: 36 79% 58%;               /* #E8A33D data highlight */
-    --amber-foreground: 24 47% 16%;
+    --brand-strong: var(--rust-600);   /* white on it: 5.5:1 */
+    --brand-muted: var(--rust-100);
+    --amber: 34 76% 58%;               /* #E59F43 — rust hue rotated to gold */
+    --amber-foreground: var(--ink-950);/* 8.0:1 on the amber fill */
+    --amber-deep: 34 62% 46%;          /* #BE7F2D legend / second event colour */
 
-    --border: 33 36% 87%;              /* #EADFD2 hairline */
-    --input: 34 32% 86%;               /* #E6DCCF */
-    --ring: 17 54% 50%;
+    --border: 30 30% 88%;              /* hairline */
+    --input: 30 28% 86%;
+    --ring: var(--rust-500);
     --radius: 1.5rem;                  /* 24px bento card */
+
+    /* Warm elevation. The handoff specifies no shadows; these were added on
+       request. Every layer is tinted with the logo brown rather than black,
+       so depth reads as the paper warming rather than a grey haze. */
+    --shadow-color: 19 46% 16%;
+    --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 0.04);
+    --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.05), 0 2px 6px -2px hsl(var(--shadow-color) / 0.07);
+    --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.04), 0 8px 20px -8px hsl(var(--shadow-color) / 0.13);
+    --shadow-lg: 0 2px 4px hsl(var(--shadow-color) / 0.04), 0 18px 44px -14px hsl(var(--shadow-color) / 0.20);
+    --shadow-pop: 0 4px 10px -2px hsl(var(--shadow-color) / 0.10), 0 24px 56px -18px hsl(var(--shadow-color) / 0.26);
   }
 
-  /* Espresso dark mode — same system inverted onto the dark card colour. */
+  /* Espresso dark mode — same ramps inverted onto the dark card colour. */
   .dark {
-    --background: 23 45% 8%;
-    --canvas-from: 23 45% 9%;
-    --canvas-via:  24 40% 8%;
-    --canvas-to:   20 42% 10%;
+    --ink-950: 37 56% 96%;
+    --ink-900: 37 56% 94%;
+    --ink-800: 24 26% 27%;
+    --ink-700: 24 26% 22%;
+    --ink-600: 30 18% 62%;
+    --ink-500: 33 20% 72%;
+    --ink-400: 30 16% 58%;
+    --ink-300: 26 14% 44%;
+
+    --rust-800: 16 62% 38%;
+    --rust-700: 17 70% 68%;
+    --rust-600: 16 62% 38%;
+    --rust-500: 17 62% 58%;
+    --rust-400: 17 62% 66%;
+    --rust-300: 17 50% 40%;
+    --rust-200: 17 40% 26%;
+    --rust-100: 18 32% 18%;
+
+    --beige: 24 22% 20%;
+    --beige-deep: 24 24% 24%;
+    --cell-hot: 24 24% 22%;
+
+    --background: 19 45% 7%;
+    --canvas-from: 19 44% 8%;
+    --canvas-via:  20 38% 8%;
+    --canvas-to:   17 40% 10%;
+
+    /* Glass, inverted. The panel tint becomes a lifted brown rather than
+       cream, and the edge that gives a frosted card its boundary has to be a
+       low-alpha white here — a solid white hairline on a dark panel reads as
+       a drawn outline rather than a lit edge. The scrim stays ink: the
+       photograph is darkened toward the dark canvas either way. */
+    --panel-glass: 21 36% 14%;
+    --glass-edge: 37 40% 88% / 0.14;
+    --pill-bg: 21 36% 16% / 0.86;
+    --scrim: 19 50% 4%;
+
     --foreground: 37 56% 94%;
-    --card: 24 42% 12%;
+    --card: 21 36% 12%;
     --card-foreground: 37 56% 94%;
-    --popover: 24 42% 13%;
+    --popover: 21 34% 14%;
     --popover-foreground: 37 56% 94%;
     --primary: 37 56% 94%;
-    --primary-foreground: 24 47% 14%;
+    --primary-foreground: 19 46% 13%;
     --espresso: 24 26% 27%;            /* lifted: was only 6 L-points above --card, so .bento-dark had no contrast */
     --espresso-foreground: 37 56% 94%;
     --chart-ink: 37 56% 94%;
-    --secondary: 24 26% 18%;
+    --secondary: 22 24% 18%;
     --secondary-foreground: 37 56% 94%;
-    --muted: 24 26% 17%;
+    --muted: 22 24% 17%;
     --muted-foreground: 33 20% 72%;
-    --accent: 24 26% 20%;
+    --accent: 22 24% 21%;
     --accent-foreground: 37 56% 94%;
     --destructive: 0 72% 72%;
-    --destructive-foreground: 24 47% 14%;
+    --destructive-foreground: 19 46% 13%;
     --destructive-muted: 0 45% 16%;
     --success: 148 52% 58%;
     --success-foreground: 0 0% 100%;
     --success-muted: 148 34% 20%;
     --warning: 39 82% 62%;
-    --warning-foreground: 24 47% 14%;
+    --warning-foreground: 19 46% 13%;
     --warning-muted: 39 44% 22%;
     --brand: 17 62% 58%;
     --brand-foreground: 0 0% 100%;
     --brand-ink: 17 70% 68%;
-    --brand-strong: 17 62% 38%;   /* white label was 3.8:1 at 52% */
+    --brand-strong: 16 62% 38%;        /* white label was 3.8:1 at 52% */
+    --brand-muted: 18 32% 18%;
     --amber: 36 79% 60%;
-    --amber-foreground: 24 47% 14%;
-    --border: 26 22% 22%;
-    --input: 26 22% 24%;
+    --amber-foreground: 19 46% 13%;
+    --amber-deep: 36 60% 50%;
+    --border: 24 20% 22%;
+    --input: 24 20% 25%;
     --ring: 17 62% 58%;
+
+    /* On a dark ground a warm-brown shadow is invisible; the elevation cue
+       has to come from something darker than the card, so these deepen to
+       near-black while keeping the brown hue. */
+    --shadow-color: 19 60% 3%;
+    --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 0.30);
+    --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.34), 0 2px 6px -2px hsl(var(--shadow-color) / 0.40);
+    --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.34), 0 8px 20px -8px hsl(var(--shadow-color) / 0.55);
+    --shadow-lg: 0 2px 4px hsl(var(--shadow-color) / 0.34), 0 18px 44px -14px hsl(var(--shadow-color) / 0.62);
+    --shadow-pop: 0 4px 10px -2px hsl(var(--shadow-color) / 0.45), 0 24px 56px -18px hsl(var(--shadow-color) / 0.70);
   }
 }
 
@@ -147,12 +272,38 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background-image: linear-gradient(
-      135deg,
-      hsl(var(--canvas-from)) 0%,
-      hsl(var(--canvas-via)) 55%,
-      hsl(var(--canvas-to)) 100%
-    );
+    /*
+      The ambient field, and the reason the material works at all.
+
+      Glass is only visible by what it does to what is behind it. The canvas
+      used to be one flat cream — deliberately, because the old translucent
+      cards sat directly on it and a gradient showed through them unevenly.
+      Those cards are opaque now, so that constraint is gone; and the floating
+      chrome that replaced them had nothing to refract. A pane of glass over a
+      single flat colour is indistinguishable from that colour. The rail read
+      as a white rectangle, because optically that is exactly what it was.
+
+      So the canvas carries light: three very wide, very low-contrast washes in
+      the logo hues, placed where the chrome actually floats — behind the rail
+      at the left, behind the switchers at the top right, and low on the right
+      where the page runs out. Wide enough that no edge of any wash is ever
+      visible, faint enough that a figure on an opaque card beside it is
+      unaffected, and present enough that the glass has something to bend.
+    */
+    background-image:
+      radial-gradient(70rem 48rem at 4% -10%, hsl(var(--rust-300) / 0.32), transparent 58%),
+      radial-gradient(56rem 40rem at 96% -4%, hsl(var(--amber) / 0.22), transparent 60%),
+      radial-gradient(80rem 56rem at 78% 104%, hsl(var(--rust-200) / 0.34), transparent 58%),
+      linear-gradient(
+        135deg,
+        hsl(var(--canvas-from) / var(--lg-veil)) 0%,
+        hsl(var(--canvas-via) / var(--lg-veil)) 55%,
+        hsl(var(--canvas-to) / var(--lg-veil)) 100%
+      ),
+      var(--lg-wallpaper);
+    background-size: auto, auto, auto, auto, cover;
+    background-position: center, center, center, center, center;
+    background-repeat: no-repeat;
   }
 
   /* One strong, consistent keyboard focus indicator. The rust --ring alone is
@@ -223,6 +374,9 @@
   @media (pointer: coarse) {
     .touch-target { min-height: 44px; }
   }
+  @media (pointer: coarse) {
+    :root { --lg-press-scale: 0.955; }
+  }
 
   .scroll-fluid {
     -webkit-overflow-scrolling: touch;
@@ -238,18 +392,227 @@
     overscroll-behavior-y: auto;
   }
 
-  /* Bento card — the system's primary surface. */
+  /* Bento card — the system's primary surface, now a frosted panel.
+     The soft-glass handoff keeps the palette and changes the material: cards
+     are translucent cream over the page photograph rather than solid fills on
+     a hairline, so the ground reads through them.
+
+     The white top border is what gives the glass an edge; without it a
+     translucent panel on a light ground has no boundary at all. The shadow is
+     a long, soft, warm one rather than the tight elevation the solid cards
+     used. */
   .bento {
+    /*
+      The content layer, and no longer glass.
+
+      It was frosted, and under the floating rail that meant glass on glass —
+      the rail had nothing to refract but more frost, and a table of money sat
+      on a translucent ground whose contrast moved with whatever scrolled
+      beneath it. Apple's rule is that the material is a layer ABOVE content,
+      never applied to content, and the reason is exactly this.
+
+      So this is opaque now. It is also the surface people read figures off, so
+      opacity is not a compromise here — it is the point. The hairline and the
+      soft lift do the separating that translucency used to.
+    */
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
-    border-radius: 1.5rem;
+    border-radius: var(--lg-r-xl);
+    box-shadow: var(--lg-shadow);
   }
-  /* The one dark card per screen that carries contrast. */
+  /* The one dark panel per screen that carries contrast. Translucent for the
+     same reason, so the photograph is faintly present through it too. */
   .bento-dark {
+    /* The one dark panel per screen. Content layer too, so opaque for the same
+       reason — and more so: pale type on a translucent dark ground is the
+       worst case for legibility, because the ground gets lighter exactly where
+       something bright passes behind it. */
     background-color: hsl(var(--espresso));
     color: hsl(var(--espresso-foreground));
     border: 1px solid hsl(var(--espresso));
-    border-radius: 1.5rem;
+    border-radius: var(--lg-r-xl);
+    box-shadow: var(--lg-shadow-high);
+  }
+
+  /*
+    The chrome layer: the rail, the header pills, the toolbars. THIS is where
+    Liquid Glass belongs — a thing that floats over content, with content
+    moving behind it to refract.
+
+    Kept under its old name so the markup did not have to be rewritten in a
+    hundred and thirty-seven files to change what the material is. What it
+    means is unchanged; what it is made of is not.
+
+    The tint alpha is still a floor and still load-bearing, for the same reason
+    it always was: below it a label on this pill drops under 4.5:1 against the
+    darkest part of the photograph behind it. Apple raised the opacity of its
+    own material through the iOS 26 betas after shipping it too transparent to
+    read. Learning that second-hand is cheaper.
+  */
+  .glass-pill {
+    position: relative;
+    isolation: isolate;
+    background-color: hsl(var(--lg-tint) / var(--lg-tint-a));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    border: var(--lg-rim-w) solid hsl(var(--lg-rim-light));
+    box-shadow:
+      inset 0 var(--lg-rim-w) 0 0 hsl(var(--lg-rim-light)),
+      inset 0 calc(-1 * var(--lg-rim-w)) 0 0 hsl(var(--lg-rim-dark)),
+      var(--lg-shadow-chrome);
+  }
+  .lg-probe-ok .glass-pill {
+    backdrop-filter: url(#lg-lens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    -webkit-backdrop-filter: url(#lg-lens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  }
+  /* The specular rim, built in rather than bolted on, so every pill gets it
+     without a second class in the markup. See .lg-rim for how the ring is cut. */
+  .glass-pill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    pointer-events: none;
+    z-index: 1;
+    background: var(--lg-rim-paint);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+
+
+  /* The photograph band behind the top of every page.
+
+     A real bounded element rather than a background on the scrolling column:
+     as a background the photo layer could only be sized `cover` against the
+     whole column, so it painted the entire page instead of a header strip.
+     Bounded, `cover` means what it should — fill the band, keep the crop.
+
+     Sits under the content, which is why the band is aria-hidden and pages
+     needed no markup change to sit on it. */
+  .app-photo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    /*
+      The handoff's scrim is 0.66 → 0.5 → cream by 92%. Measured against this
+      photograph — a bright, sunlit shot, not the darker one the values were
+      drawn for — white masthead type landed at 2.49:1, under the 3:1 large
+      text needs, because the masthead reaches into the stretch where the
+      gradient has already turned to cream.
+
+      So the scrim holds its strength until 72% and only then releases, and
+      the band is deep enough that the whole masthead sits above that point.
+      The photo is also encoded a stop and a half down. Same look, type that
+      actually clears.
+    */
+    background-image:
+      linear-gradient(
+        180deg,
+        hsl(var(--scrim) / 0.78) 0%,
+        hsl(var(--scrim) / 0.72) 45%,
+        hsl(var(--scrim) / 0.6) 72%,
+        hsl(var(--canvas-from) / 0.92) 94%,
+        hsl(var(--canvas-from)) 100%
+      ),
+      var(--app-photo-src);
+    background-size: cover, cover;
+    background-position: center, center 42%;
+    background-repeat: no-repeat, no-repeat;
+  }
+  /* The logo is a two-colour mark and 64% of it is the roast brown, which
+     falls to 1.26:1 on the dark canvas — the CHAI wordmark simply vanishes,
+     leaving only the rust half legible. Filtering the image would distort the
+     very colours this palette is derived from, so dark mode gives the mark the
+     cream paper it was drawn for instead. No-op in light mode.
+     (The login page's brand panel is dark in both themes and keeps its own
+     treatment.) */
+  .dark .logo-plate {
+    background-color: hsl(var(--espresso-foreground));
+    border-radius: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Panel — the ledger layout's smaller card. Content layer, so opaque, and
+     on the same radius scale as everything else so a panel nested in a bento
+     is concentric with it rather than merely near it. */
+  .panel {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--lg-r-md);
+    box-shadow: var(--lg-shadow);
+  }
+
+  /* A heavy top rule in the logo brown opens the KPI strip and the P&L
+     statement; hairlines separate the rows inside them. */
+  .rule-strong { border-color: hsl(var(--espresso)); }
+
+  /* The P&L statement is a grid, not a table: the label column takes the
+     slack, each event gets an equal money column, Overall is wider.
+
+     Every track has a floor. minmax(0, …) on the label and the money columns
+     let them collapse to nothing once the event count outgrew the viewport —
+     at 11 events the label track computed to 0px and the row headers painted
+     on top of the figures. The statement scrolls sideways instead, with the
+     label column pinned, the same treatment .report-matrix gives the wide
+     tables on /reports. */
+  .ledger-row {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) repeat(var(--ledger-cols, 4), 96px) 116px;
+    gap: 8px;
+    align-items: baseline;
+  }
+  /* Row headers stay readable while the event columns scroll past. The
+     background has to be opaque or the figures show through underneath, which
+     is why the statement sits on a panel rather than straight on the canvas
+     gradient — a sticky cell cannot reproduce a gradient behind itself. */
+  .ledger-row > :first-child,
+  .ledger-row > :last-child {
+    position: sticky;
+    z-index: 1;
+    background-color: hsl(var(--card));
+  }
+  /* Row labels on the left, Overall on the right: the two things you need to
+     keep in view while the event columns scroll between them. Hairlines mark
+     both pinned edges, same as .report-matrix. */
+  .ledger-row > :first-child {
+    left: 0;
+    padding-left: 1rem;
+    box-shadow: 1px 0 0 hsl(var(--border));
+  }
+  .ledger-row > :last-child {
+    right: 0;
+    padding-right: 1rem;
+    box-shadow: -1px 0 0 hsl(var(--border));
+  }
+  .ledger-highlight,
+  .ledger-highlight > :first-child,
+  .ledger-highlight > :last-child {
+    background-color: hsl(var(--beige));
+  }
+
+  /* Cross-highlight. The tint goes on the row element so it covers the column
+     gaps too, and is repeated on the pinned cells because their own opaque
+     background would otherwise punch a hole through it. These rules come last
+     deliberately: they tie on specificity with the surface colours above and
+     win on source order. */
+  .ledger-row[data-hot="1"],
+  .ledger-row[data-hot="1"] > :first-child,
+  .ledger-row[data-hot="1"] > :last-child,
+  .ledger-row > [data-hot="1"] {
+    background-color: hsl(var(--cell-hot));
+  }
+  .ledger-highlight[data-hot="1"],
+  .ledger-highlight[data-hot="1"] > :first-child,
+  .ledger-highlight[data-hot="1"] > :last-child,
+  .ledger-highlight > [data-hot="1"] {
+    background-color: hsl(var(--beige-deep));
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ledger-row > *, .ledger-row { transition: background-color 90ms linear; }
   }
 
   @keyframes fade-in-up {
@@ -263,10 +626,14 @@
   .animate-page { animation: fade-in-up 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
   .animate-fade { animation: fade-in 0.3s ease-out; }
 
+  /* The full-width chrome bands — the mobile tab bar and the sticky toolbars.
+     Same material as the pills; no lens, because an edge-to-edge band has no
+     rim on two of its sides and refracting only the other two looks like a
+     rendering fault rather than like glass. */
   .glass {
-    background-color: hsl(var(--canvas-from) / 0.92);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    background-color: hsl(var(--lg-tint) / var(--lg-tint-a));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
   }
 
   .cascade > * {
@@ -298,5 +665,1030 @@
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .animate-page, .animate-fade, .cascade > * { animation: none; opacity: 1; }
+  }
+}
+
+/*
+  ═══════════════════════════════════════════════════════════════════════════
+  LIQUID GLASS
+  ═══════════════════════════════════════════════════════════════════════════
+
+  The material and the motion, rebuilt after Apple's Liquid Glass.
+
+  What follows is a faithful reconstruction, not a copy. Apple's material is a
+  native GPU shader with real-time refraction and a specular response to device
+  tilt; the web gets backdrop-filter, one SVG displacement pass and a pointer.
+  Where the platform cannot reach, this says so at the rule rather than
+  pretending.
+
+  THE IDEA, in one paragraph. Frosted glass is blur. Liquid Glass is a lens:
+  it bends what is behind it, brightest at the rim where the curvature is, and
+  it carries a highlight that moves with the light. It is a distinct layer that
+  FLOATS ABOVE content rather than a decoration applied to content. And it
+  moves on springs — carrying momentum, overshooting slightly, settling —
+  rather than on bezier curves that arrive dead.
+
+  THE LAYER RULE, which is the structural change here. Apple is explicit that
+  Liquid Glass is a functional layer above the content layer, and that glass
+  must not stack on glass. This app had it on both: the floating rail was
+  frosted and so was every card beneath it, so the rail had nothing to refract
+  but more frost, and dense tables of money sat on a translucent ground. So:
+
+      chrome  (rail, tab bar, toolbars, sheets, menus, toasts)  →  GLASS
+      content (cards, tables, the P&L, anything you read)       →  SOLID
+
+  That is both more faithful and — because this app's job is showing people
+  money — more legible. A figure that cannot be read is worse than a figure
+  that is not pretty.
+
+  WHAT IS NOT NEGOTIABLE. The contrast floors the previous system documented
+  are kept: the tint alpha below is the floor at which a label on this material
+  still clears 4.5:1 against the darkest part of the photograph behind it.
+  Apple itself raised the opacity of this material through the iOS 26 betas for
+  exactly this reason. Transparency is a look; legibility is the product.
+*/
+
+/*
+  Registered so they can be animated and interpolated. An unregistered custom
+  property is a string to the engine and jumps between values; registered with
+  a syntax it tweens, which is what makes the specular highlight travel rather
+  than teleport.
+*/
+@property --lg-px {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+@property --lg-py {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --lg-press {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+/*
+  The two that make glass materialize instead of fade.
+
+  An unregistered custom property is an opaque string to the engine: it can be
+  swapped at a keyframe but not interpolated, so animating it produces a jump.
+  Registered with a syntax, both of these tween — which is the whole mechanism
+  behind an overlay that condenses out of the background rather than appearing
+  as a ghost of itself.
+*/
+/*
+  How far the page has scrolled under the chrome, 0 to 1.
+
+  Apple does not publish a shadow scale for this material; what it publishes is
+  the behaviour — depth comes from the optics plus a shadow that DEEPENS as
+  content passes beneath. At rest on an unscrolled page the chrome is nearly
+  flush, and it lifts as something goes under it. That is the cue that says the
+  bar is a separate plane rather than part of the page, and it only reads when
+  it changes.
+
+  Registered so it interpolates: unregistered it would be a string, and the
+  shadow would step between values instead of deepening.
+*/
+@property --lg-scrolled {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --lg-blur {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 28px;
+}
+@property --lg-tint-a {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.72;
+}
+
+@layer base {
+  :root {
+    /* Springs, solved — see scripts/gen-springs.ts. Do not hand-edit. */
+    /* micro: response 0.12s, damping 1 — dead-flat and quick — hover tints and other colour changes that must not wobble */
+    --lg-dur-micro: 144ms;
+    --lg-ease-micro: linear(0, 0.0111, 0.0401, 0.0816, 0.1313, 0.186, 0.2431, 0.3008, 0.3577, 0.4129, 0.4656, 0.5154, 0.562, 0.6053, 0.6452, 0.6819, 0.7154, 0.7459, 0.7736, 0.7985, 0.821, 0.8412, 0.8594, 0.8756, 0.89, 0.9029, 0.9144, 0.9246, 0.9336, 0.9416, 0.9487, 0.9549, 0.9605, 0.9653, 0.9696, 0.9734, 0.9767, 0.9796, 0.9822, 0.9844, 0.9864, 0.9881, 0.9896, 0.991, 0.9921, 0.9931, 0.994, 0.9948, 1);
+    /* smooth: response 0.25s, damping 1 — .smooth damping — no overshoot, for layout that should settle calmly */
+    --lg-dur-smooth: 297ms;
+    --lg-ease-smooth: linear(0, 0.0109, 0.0394, 0.0802, 0.1292, 0.1832, 0.2396, 0.2968, 0.3532, 0.408, 0.4604, 0.51, 0.5565, 0.5998, 0.6398, 0.6766, 0.7103, 0.7409, 0.7688, 0.794, 0.8167, 0.8372, 0.8555, 0.872, 0.8867, 0.8998, 0.9115, 0.9219, 0.9312, 0.9394, 0.9467, 0.9531, 0.9588, 0.9638, 0.9682, 0.9721, 0.9756, 0.9786, 0.9812, 0.9836, 0.9856, 0.9874, 0.989, 0.9904, 0.9916, 0.9927, 0.9936, 0.9944, 1);
+    /* snappy: response 0.22s, damping 0.85 — .snappy damping — the default: controls, overlays, the selection indicator */
+    --lg-dur-snappy: 239ms;
+    --lg-ease-snappy: linear(0, 0.0093, 0.0344, 0.0714, 0.1172, 0.1689, 0.2244, 0.2819, 0.34, 0.3974, 0.4533, 0.507, 0.558, 0.606, 0.6507, 0.6921, 0.7301, 0.7648, 0.7963, 0.8247, 0.8501, 0.8727, 0.8928, 0.9105, 0.926, 0.9394, 0.9511, 0.9612, 0.9698, 0.977, 0.9832, 0.9883, 0.9925, 0.996, 0.9988, 1.001, 1.0027, 1.004, 1.0049, 1.0056, 1.006, 1.0062, 1.0063, 1.0062, 1.0061, 1.0058, 1.0055, 1.0052, 1);
+    /* bouncy: response 0.22s, damping 0.7 — .bouncy damping — only where a bounce means something */
+    --lg-dur-bouncy: 246ms;
+    --lg-ease-bouncy: linear(0, 0.01, 0.0373, 0.0781, 0.1292, 0.1877, 0.2511, 0.3172, 0.3842, 0.4507, 0.5156, 0.5778, 0.6366, 0.6915, 0.7423, 0.7886, 0.8304, 0.8678, 0.9008, 0.9296, 0.9544, 0.9755, 0.9932, 1.0077, 1.0194, 1.0285, 1.0354, 1.0404, 1.0436, 1.0454, 1.046, 1.0456, 1.0444, 1.0425, 1.0402, 1.0375, 1.0346, 1.0316, 1.0285, 1.0254, 1.0224, 1.0196, 1.0169, 1.0143, 1.012, 1.0098, 1.0079, 1.0062, 1);
+    /* press: response 0.15s, damping 0.86 — SwiftUI .interactiveSpring — the release after a press */
+    --lg-dur-press: 150ms;
+    --lg-ease-press: linear(0, 0.0079, 0.0295, 0.0616, 0.1015, 0.1472, 0.1968, 0.2486, 0.3016, 0.3545, 0.4067, 0.4574, 0.5062, 0.5528, 0.5968, 0.6381, 0.6766, 0.7124, 0.7453, 0.7755, 0.803, 0.828, 0.8506, 0.871, 0.8892, 0.9054, 0.9198, 0.9326, 0.9438, 0.9536, 0.9621, 0.9695, 0.9759, 0.9813, 0.986, 0.9899, 0.9932, 0.9959, 0.9982, 1, 1.0014, 1.0026, 1.0034, 1.0041, 1.0045, 1.0048, 1.005, 1.005, 1);
+
+    /* ── Geometry ──────────────────────────────────────────────────────────
+       Concentric. Apple's rule is that a nested rounded shape shares a centre
+       of curvature with its parent, so an inner radius is the outer radius
+       less the gap between them. Nest with calc(var(--lg-r-lg) - 8px) rather
+       than picking the next step down by eye — picking by eye is what produces
+       the thin crescent of mismatched curve in a corner that makes a careful
+       layout look careless. */
+    --lg-r-xs: 8px;
+    --lg-r-sm: 12px;
+    --lg-r-md: 18px;
+    --lg-r-lg: 26px;
+    --lg-r-xl: 32px;
+
+    /*
+      Deliberately NOT squircles.
+
+      The obvious move is corner-shape: superellipse(), now that Chromium
+      ships it, on the reasoning that Apple's corners are continuous rather
+      than circular. Measured, that is backwards: against a real continuous
+      corner at the same radius, the CSS squircle deviates by up to 0.187r
+      while an ordinary circular border-radius deviates by 0.019r. The
+      squircle is about ten times further from Apple's shape than the thing it
+      was meant to improve on. So: plain border-radius, and the discipline
+      goes into the scale and the concentric arithmetic below, which is where
+      it was doing the real work anyway.
+    */
+
+    /* ── The material ──────────────────────────────────────────────────────
+       Four separable parts: how far it blurs, how much it lifts colour out of
+       what is behind, how far the lens bends at the rim, and the tint that
+       guarantees the floor. */
+    --lg-blur: 28px;
+    --lg-blur-rim: 8px;
+    --lg-sat: 180%;
+    /*
+      Below one, on a light canvas — and this was measured rather than chosen.
+
+      The instinctive value here is a lift: glass catches light, so brighten
+      what is behind it. Over a cream ground that is actively destructive.
+      brightness(1.05) on this palette clips essentially the whole panel to
+      L>=250 and drops how much of the backdrop survives from roughly a quarter
+      to under a tenth — the pane goes white and stops being a pane. It is the
+      single reason the rail read as a painted rectangle rather than as glass.
+
+      Apple's adaptive luminosity layer darkens over bright content for exactly
+      this reason. So light mode takes a fraction off, and only dark mode —
+      where there is headroom above the backdrop rather than below it — has any
+      business lifting at all, and still does not.
+    */
+    --lg-bright: 0.97;
+    --lg-lens-scale: 22;
+
+    /* The tint, and its alpha.
+
+       0.72 is a floor, not a taste. Below it a 13px label on this material
+       drops under 4.5:1 against the darkest region of the header photograph.
+       The Clear variant goes lower and is therefore only allowed where nothing
+       has to be read — Apple's own rule, and it requires a dimming layer. */
+    --lg-tint: 0 0% 100%;
+    --lg-tint-a: 0.72;
+    --lg-tint-a-clear: 0.34;
+
+    /* The rim. A lit top edge and a shadowed bottom one is what gives a pane
+       thickness; without it a translucent rectangle reads as a hole. */
+    --lg-rim-light: 0 0% 100% / 0.75;
+    --lg-rim-dark: var(--ink-900) / 0.12;
+    --lg-rim-w: 1px;
+
+    /*
+      What the rim is painted with. Two layers, and the second is the one that
+      does the work on a light interface.
+
+      The specular highlight on its own — white, travelling with the pointer —
+      is invisible on a pale material over a pale page: it is white light on a
+      white edge. Real glass is legible there because refraction darkens the
+      rim as much as it brightens it; the bright caustic is only readable
+      against the shadow beside it.
+
+      So underneath the highlight is a fixed raking gradient, lit at the top
+      left and shading to the bottom right, which gives the edge a form even
+      when the pointer is nowhere near it. The highlight then rides on top of
+      that and is the part that moves.
+    */
+    --lg-rim-paint:
+      radial-gradient(
+        140% 120% at calc(var(--lg-px) * 100%) calc(var(--lg-py) * 100%),
+        hsl(0 0% 100% / 0.95) 0%,
+        hsl(0 0% 100% / 0.50) 20%,
+        hsl(0 0% 100% / 0.10) 46%,
+        transparent 68%
+      ),
+      linear-gradient(
+        158deg,
+        hsl(0 0% 100% / 0.85) 0%,
+        hsl(0 0% 100% / 0.30) 30%,
+        hsl(var(--ink-800) / 0.10) 62%,
+        hsl(var(--ink-800) / 0.26) 100%
+      );
+
+    /* Separation. Long and soft and tinted with the logo brown, never black —
+       the previous system's rule, kept, because it is right. */
+    --lg-shadow: 0 10px 30px -12px hsl(var(--ink-800) / 0.30), 0 2px 8px -4px hsl(var(--ink-800) / 0.18);
+    --lg-shadow-high: 0 24px 60px -20px hsl(var(--ink-800) / 0.42), 0 4px 14px -6px hsl(var(--ink-800) / 0.22);
+    /* The chrome's own shadow, which rides --lg-scrolled. Nearly flush on an
+       unscrolled page, lifting as content passes under it. */
+    --lg-shadow-chrome:
+      0 calc(4px + var(--lg-scrolled) * 10px) calc(14px + var(--lg-scrolled) * 20px) -10px
+        hsl(var(--ink-800) / calc(0.14 + var(--lg-scrolled) * 0.20)),
+      0 2px 8px -4px hsl(var(--ink-800) / calc(0.08 + var(--lg-scrolled) * 0.12));
+
+    /* The scroll edge: how deep the band is where content passes under chrome. */
+    --lg-edge-h: 84px;
+
+    /*
+      How far a control squishes, and it is deliberately larger under a finger.
+
+      Apple is explicit that the material "responds to direct touch interaction
+      with greater emphasis to reinforce the feeling of a tactile experience,
+      but produces a more subdued effect when a person interacts using a
+      trackpad". A finger covers the control it is pressing, so the motion is
+      most of the feedback; a cursor sits beside it and the same amplitude
+      reads as the page twitching.
+    */
+    --lg-press-scale: 0.98;
+
+    /*
+      The wallpaper.
+
+      Apple's material has an operating system underneath it — a photograph,
+      a desktop, a list scrolling past. That is not decoration, it is the
+      thing the glass is for: a lens over nothing looks like paint.
+
+      This is the app's own hero photograph at forty pixels wide, stretched
+      back over the viewport. Upscaling a 40px image IS a forty-pixel blur,
+      produced by the image decoder for free — where filter: blur(40px) on a
+      full-viewport layer is a real GPU pass the compositor repeats. Same
+      result, none of the cost, and it ships as nine hundred bytes.
+
+      Held under a near-opaque cream veil, so what reaches the eye is warmth
+      and slow variation rather than a picture. Content cards sit opaque on
+      top of it and are unaffected; it exists for the margins and for the
+      chrome that floats over them.
+    */
+    --lg-wallpaper: url("/wallpaper.jpg");
+    --lg-veil: 0.78;
+  }
+
+  .dark {
+    /* Inverted. Note the material does not simply darken — it stops lifting.
+       On a dark ground a brightness above 1 turns the glass milky, so the lift
+       goes below 1 and the saturation does the work of keeping colour alive. */
+    --lg-bright: 0.92;
+    --lg-sat: 190%;
+    --lg-tint: 24 26% 14%;
+    --lg-tint-a: 0.74;
+    --lg-tint-a-clear: 0.42;
+    --lg-rim-light: 37 40% 88% / 0.16;
+    --lg-rim-dark: 19 60% 3% / 0.40;
+    /* Inverted: the caustic is warm rather than white, and the shaded half
+       goes to near-black rather than to brown, because on a dark ground the
+       edge has to be darker than the material to read at all. */
+    --lg-rim-paint:
+      radial-gradient(
+        140% 120% at calc(var(--lg-px) * 100%) calc(var(--lg-py) * 100%),
+        hsl(37 50% 92% / 0.60) 0%,
+        hsl(37 50% 92% / 0.26) 20%,
+        hsl(37 50% 92% / 0.06) 46%,
+        transparent 68%
+      ),
+      linear-gradient(
+        158deg,
+        hsl(37 40% 88% / 0.26) 0%,
+        hsl(37 40% 88% / 0.08) 30%,
+        hsl(19 60% 3% / 0.22) 62%,
+        hsl(19 60% 3% / 0.45) 100%
+      );
+    --lg-veil: 0.86;
+    --lg-shadow-chrome:
+      0 calc(4px + var(--lg-scrolled) * 10px) calc(14px + var(--lg-scrolled) * 20px) -10px
+        hsl(19 60% 3% / calc(0.30 + var(--lg-scrolled) * 0.34)),
+      0 2px 8px -4px hsl(19 60% 3% / calc(0.22 + var(--lg-scrolled) * 0.24));
+    --lg-shadow: 0 10px 30px -12px hsl(19 60% 3% / 0.60), 0 2px 8px -4px hsl(19 60% 3% / 0.45);
+    --lg-shadow-high: 0 24px 60px -20px hsl(19 60% 3% / 0.72), 0 4px 14px -6px hsl(19 60% 3% / 0.50);
+  }
+}
+
+@layer utilities {
+  /*
+    ── .lg ───────────────────────────────────────────────────────────────────
+    The material itself. Everything that floats gets this; nothing that holds
+    body text or a table does.
+
+    isolation: isolate, and deliberately NOT contain: paint. Paint containment
+    would be the obvious performance hint here, and it clips the element's own
+    outer box-shadow to its border box — which is the shadow that separates the
+    pane from the page. The float disappears and the material reads as a patch
+    of blur lying flat on the content. The engine already limits backdrop
+    sampling to the element's bounds; there is nothing to win and a visible
+    thing to lose.
+  */
+  .lg {
+    position: relative;
+    isolation: isolate;
+    background-color: hsl(var(--lg-tint) / var(--lg-tint-a));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    box-shadow:
+      inset 0 var(--lg-rim-w) 0 0 hsl(var(--lg-rim-light)),
+      inset 0 calc(-1 * var(--lg-rim-w)) 0 0 hsl(var(--lg-rim-dark)),
+      var(--lg-shadow);
+    border: var(--lg-rim-w) solid hsl(var(--lg-rim-light));
+  }
+
+  /* Clear: Apple's second variant. Far more transparent, and therefore only
+     legitimate over something that is already dim — which is why it carries
+     its own dimming layer rather than trusting whatever is behind it. */
+  .lg-clear {
+    background-color: hsl(var(--lg-tint) / var(--lg-tint-a-clear));
+  }
+  .lg-clear::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(hsl(var(--scrim) / 0.22), hsl(var(--scrim) / 0.10));
+    pointer-events: none;
+  }
+
+  /*
+    ── .lg-rim ───────────────────────────────────────────────────────────────
+    The lens and the specular highlight, both painted into a band that follows
+    the element's own corner radius.
+
+    The band is cut with two masks composited to exclude: one covering the
+    whole box, one covering everything inside the padding, so what survives is
+    the ring between them. It is the only way to get a gradient that follows an
+    arbitrary border-radius — a border-image cannot, and an inset box-shadow
+    cannot carry a gradient.
+
+    Two things happen in that ring. The lens: a second, lighter backdrop pass,
+    so the rim refracts differently from the face — which is what the eye reads
+    as curvature even before the displacement filter is involved. The specular:
+    a highlight positioned from --lg-px/--lg-py, which a single pointer listener
+    writes to the document root. One light source for the whole page, because
+    that is how light works, and because per-element listeners would be an
+    unaffordable number of them.
+  */
+  .lg-rim::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    pointer-events: none;
+    background: var(--lg-rim-paint);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+
+  /*
+    ── .lg-lens ──────────────────────────────────────────────────────────────
+    Real refraction, where the engine will do it.
+
+    backdrop-filter: url(#…) is the only way to get a displacement pass applied
+    to what is BEHIND an element rather than to the element itself, and engine
+    support for it is uneven. So it is additive and gated: .lg already looks
+    like glass without this, and this makes it bend. The gate is a class the
+    runtime adds after probing, not an @supports — @supports can confirm the
+    property parses and cannot confirm the filter resolves.
+  */
+  .lg-probe-ok .lg-lens {
+    backdrop-filter: url(#lg-lens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    -webkit-backdrop-filter: url(#lg-lens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  }
+
+  /*
+    ── Presets ───────────────────────────────────────────────────────────────
+    Two, matching the layer rule at the top of this block. Reach for a preset
+    rather than composing .lg by hand, so that the chrome/content split stays
+    legible in the markup.
+  */
+  /*
+    The material is not one recipe at every size.
+
+    Apple is explicit that glass gets THICKER as it gets larger: a menu
+    expanded from a toolbar button casts deeper shadows, lenses harder, and
+    scatters light more softly than the button it came from. Using one recipe
+    everywhere is the most common mistake in web recreations, and it reads as
+    wrong before anyone can say why — a large pane that is as thin as a small
+    one looks like a decal rather than like a slab.
+
+    Three tiers. A small control, a bar, a sheet.
+  */
+  .lg-sm {
+    --lg-blur: 16px;
+    --lg-tint-a: 0.62;
+    --lg-shadow: 0 4px 12px -6px hsl(var(--ink-800) / 0.24);
+  }
+  .lg-lgr {
+    --lg-blur: 40px;
+    --lg-tint-a: 0.80;
+    --lg-sat: 200%;
+    box-shadow:
+      inset 0 var(--lg-rim-w) 0 0 hsl(var(--lg-rim-light)),
+      inset 0 calc(-1 * var(--lg-rim-w)) 0 0 hsl(var(--lg-rim-dark)),
+      var(--lg-shadow-high);
+  }
+
+  /*
+    Overlays materialize; they do not fade.
+
+    Apple, on exactly this: "Instead of fading, Liquid Glass objects
+    materialize in and out by gradually modulating the light bending and
+    lensing." An opacity transition is the giveaway that a recreation is
+    skin-deep — the pane arrives as a ghost of itself rather than condensing
+    out of the background.
+
+    So what animates is the blur and the scale, not the alpha. The pane starts
+    optically flat and slightly small, and thickens into place.
+  */
+  /*
+    The independent `scale` property, not `transform: scale()`.
+
+    These keyframes run on elements that are already using `transform` for
+    something else — a dialog is centred with translate(-50%, -50%), and a
+    keyframe setting `transform: scale()` replaces that wholesale, which throws
+    the dialog into the bottom-right corner on the first frame of its own
+    opening animation. `scale` is a separate property that composes with
+    whatever `transform` is doing, so the two never have to negotiate.
+  */
+  @keyframes lg-materialize {
+    from {
+      --lg-blur: 0px;
+      --lg-tint-a: 0;
+      scale: 0.92;
+    }
+    to {
+      scale: 1;
+    }
+  }
+  @keyframes lg-dematerialize {
+    to {
+      --lg-blur: 0px;
+      --lg-tint-a: 0;
+      scale: 0.96;
+    }
+  }
+
+  /*
+    Overlays: menus, selects, dialogs, toasts.
+
+    Two things, and both of them are what separates this from a clone.
+
+    It materializes rather than fades. What animates is the blur and the tint —
+    the material thickening into existence — not the alpha of a finished pane.
+    Apple is explicit: "Instead of fading, Liquid Glass objects materialize in
+    and out by gradually modulating the light bending and lensing."
+
+    And it opens OUT OF the control that opened it, rather than arriving from
+    somewhere. Radix already computes the geometric origin and publishes it as
+    a custom property on the content element, so the transform-origin is simply
+    read from whichever primitive this is — the menu grows from the corner
+    nearest its trigger, which is what makes the relationship between the two
+    legible without an arrow or a line.
+  */
+  .lg-overlay {
+    transform-origin: var(
+      --radix-dropdown-menu-content-transform-origin,
+      var(
+        --radix-select-content-transform-origin,
+        var(--radix-popover-content-transform-origin, center)
+      )
+    );
+  }
+  .lg-overlay[data-state="open"] {
+    animation: lg-materialize var(--lg-dur-snappy) var(--lg-ease-snappy);
+  }
+  .lg-overlay[data-state="closed"] {
+    animation: lg-dematerialize var(--lg-dur-micro) var(--lg-ease-micro) forwards;
+  }
+  /* A dialog has no trigger geometry to grow from and is centred on the
+     screen, so it scales about its own middle. */
+  .lg-overlay-center {
+    transform-origin: center;
+  }
+
+  .lg-chrome {
+    border-radius: var(--lg-r-lg);
+  }
+  /*
+    Chrome with nothing to read on it can be thinner.
+
+    The tint floor exists to keep LABELS legible. The icon rail has no labels —
+    its items are symbols with accessible names, and a symbol needs 3:1 rather
+    than 4.5:1. Holding it at the text floor made it the most opaque thing on
+    the page, and it is the surface with the most interesting thing behind it.
+    This is the honest exception, and it is narrow on purpose: it applies where
+    there is genuinely no text, not wherever the glass would look nicer.
+  */
+  .lg-thin {
+    background-color: hsl(var(--lg-tint) / 0.55);
+  }
+  .lg-chrome-pill {
+    border-radius: 9999px;
+  }
+
+  /* The content layer. Deliberately NOT glass: opaque, so a column of figures
+     has a stable ground under it and a sticky cell can reproduce its own
+     background. The hairline and the soft lift are what separate it from the
+     canvas now that translucency no longer does. */
+  .lg-content {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--lg-r-lg);
+    box-shadow: var(--lg-shadow);
+  }
+  .lg-content-sm {
+    border-radius: var(--lg-r-md);
+  }
+
+  /*
+    Concentricity, as arithmetic rather than as taste.
+
+    Apple's rule is literal: a nested shape's radius is its container's radius
+    minus the distance between their corners. The failure mode has a name —
+    corners that read as "pinched" or "flared", which "create tension and break
+    the sense of balance" — and it is exactly what you get by picking the next
+    radius down the scale by eye, which is what everyone does.
+
+    A pane publishes its own radius and the gap it imposes; anything nested
+    subtracts. The max() is Apple's own fallback pattern, for a card that has
+    to work both nested and standalone: outside a pane --lg-r is undefined,
+    var() falls back to zero, and the floor wins.
+  */
+  .lg-pane {
+    --lg-r: var(--lg-r-xl);
+    border-radius: var(--lg-r);
+  }
+  .lg-nested {
+    border-radius: max(var(--lg-r-min, var(--lg-r-sm)), calc(var(--lg-r, 0px) - var(--lg-gap, 12px)));
+  }
+  /* A capsule inside a capsule under even padding is concentric for free —
+     the radius clamps to half the shorter side at both levels, which is
+     Apple's own definition. It is the cheapest correct answer, and the reason
+     the system defaults its controls to capsules. */
+  .lg-capsule {
+    border-radius: 9999px;
+  }
+
+  /*
+    ── Motion ────────────────────────────────────────────────────────────────
+    Springs, applied. .lg-press is the one every control wants: a squish on
+    pointer-down that releases on the press spring, so a tap has a physical
+    answer instead of a colour change.
+
+    transform only. Animating width, height or padding on press would lay the
+    page out again sixty times a second; a scale is composited and costs
+    nothing.
+  */
+  .lg-press {
+    transition:
+      scale var(--lg-dur-press) var(--lg-ease-press),
+      background-color var(--lg-dur-micro) var(--lg-ease-micro),
+      border-color var(--lg-dur-micro) var(--lg-ease-micro),
+      box-shadow var(--lg-dur-micro) var(--lg-ease-micro);
+    /*
+      No will-change here on purpose. It is a hint that an animation is
+      IMMINENT, not a performance setting, and it works by promoting the
+      element to its own compositor layer and KEEPING it there. There are
+      fourteen .lg-press controls on a busy route, so declaring it
+      unconditionally asks a tablet to hold fourteen permanent layers against
+      the chance that any of them is pressed. `scale` is composited anyway, so
+      there is nothing to win. If a specific control ever janks on press, hang
+      it on :hover or :focus-visible there, where the press really is next.
+    */
+  }
+  /*
+    Press DOWN is not a spring. Going to the pressed state is a direct, short
+    ease — a spring on the way down would overshoot past the squish and look
+    like the control was struck rather than pressed. The spring is on the
+    release, which is where the energy actually is.
+  */
+  .lg-press:active {
+    scale: var(--lg-press-scale);
+    transition-duration: 100ms;
+    transition-timing-function: ease-out;
+  }
+  /* A control large enough that the full squish would be a lurch. */
+  .lg-press-soft:active {
+    scale: calc(1 - (1 - var(--lg-press-scale)) * 0.4);
+  }
+
+  .lg-spring {
+    transition-timing-function: var(--lg-ease-snappy);
+    transition-duration: var(--lg-dur-snappy);
+  }
+
+  /*
+    ── .lg-edge ──────────────────────────────────────────────────────────────
+    The scroll edge effect: the band at the top of the viewport where content
+    passes beneath floating chrome and dissolves rather than being cut off.
+
+    Six stacked layers, each blurring harder than the last and masked to start
+    lower, so the blur ramps instead of stepping. One layer with a masked blur
+    gives a visible seam where the mask ends — the blur is uniform right up to
+    the point it vanishes. Stacking is what makes it a gradient.
+  */
+  /*
+    Placement matters more than the effect does. A band of progressive blur
+    only dissolves anything where a long page scrolls beneath fixed chrome —
+    which here is the mobile tab bar, at the bottom. At the top this layout has
+    a photographic masthead that scrolls away, and a blur band laid over a
+    photograph does not dissolve it, it smears it. Bottom-anchored; the top is
+    left alone.
+  */
+  .lg-edge {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    height: var(--lg-edge-h);
+    z-index: 25;
+    pointer-events: none;
+  }
+  /*
+    NESTED, not siblings — and this is the whole reason it works.
+
+    Sibling backdrop-filters do not compose. Each one samples the ORIGINAL
+    backdrop independently, so six stacked siblings are six copies of the same
+    single blur painted over each other: no ramp, just a muddier version of the
+    weakest layer. Nested, each filter samples the output of the one above it,
+    which is what actually accumulates.
+
+    Blur composes in quadrature rather than additively — the effective sigma is
+    the root of the sum of squares — so the per-layer values are much smaller
+    than the final blur they add up to. 0.5, 1, 2, 4, 8, 16 nested gives an
+    effective radius around 18px at the bar and nothing at the top of the band.
+  */
+  .lg-edge i {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  .lg-edge > i            { backdrop-filter: blur(0.5px); -webkit-backdrop-filter: blur(0.5px); -webkit-mask: linear-gradient(to top, #000 0%, #000 12%, transparent 30%); mask: linear-gradient(to top, #000 0%, #000 12%, transparent 30%); }
+  .lg-edge i i            { backdrop-filter: blur(1px);   -webkit-backdrop-filter: blur(1px);   -webkit-mask: linear-gradient(to top, #000 0%, #000 24%, transparent 44%); mask: linear-gradient(to top, #000 0%, #000 24%, transparent 44%); }
+  .lg-edge i i i          { backdrop-filter: blur(2px);   -webkit-backdrop-filter: blur(2px);   -webkit-mask: linear-gradient(to top, #000 0%, #000 38%, transparent 58%); mask: linear-gradient(to top, #000 0%, #000 38%, transparent 58%); }
+  .lg-edge i i i i        { backdrop-filter: blur(4px);   -webkit-backdrop-filter: blur(4px);   -webkit-mask: linear-gradient(to top, #000 0%, #000 52%, transparent 72%); mask: linear-gradient(to top, #000 0%, #000 52%, transparent 72%); }
+  .lg-edge i i i i i      { backdrop-filter: blur(8px);   -webkit-backdrop-filter: blur(8px);   -webkit-mask: linear-gradient(to top, #000 0%, #000 66%, transparent 86%); mask: linear-gradient(to top, #000 0%, #000 66%, transparent 86%); }
+  .lg-edge i i i i i i    { backdrop-filter: blur(16px);  -webkit-backdrop-filter: blur(16px);  -webkit-mask: linear-gradient(to top, #000 0%, #000 80%, transparent 100%); mask: linear-gradient(to top, #000 0%, #000 80%, transparent 100%); }
+
+  /*
+    ── .lg-indicator ─────────────────────────────────────────────────────────
+    The travelling selection pill — the signature Liquid Glass interaction.
+
+    One element per nav, moved to sit under whichever item is current, rather
+    than a background that switches on and off per item. Switching backgrounds
+    cross-fades; moving one element travels, and travel is the whole point.
+
+    The stretch during travel is what makes it read as liquid rather than as a
+    sliding rectangle: a droplet pulled sideways elongates along the direction
+    of travel and recovers when it stops. --lg-stretch is set by the component
+    for the duration of the move.
+  */
+  .lg-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* The travel. Spring, so it carries momentum into the stop and settles
+       rather than arriving dead on a bezier. */
+    transition:
+      transform var(--lg-dur-snappy) var(--lg-ease-snappy),
+      width var(--lg-dur-snappy) var(--lg-ease-snappy),
+      height var(--lg-dur-snappy) var(--lg-ease-snappy);
+    will-change: transform;
+  }
+
+  /*
+    The skin, and the stretch.
+
+    Separate from the travelling element because the two need different curves
+    on the same property: the parent translates on a spring that overshoots
+    once, this one scales UP and back DOWN within the same window. A single
+    element cannot hold both.
+
+    The distortion is along the axis of travel and compensated across it — a
+    droplet pulled sideways gets longer and thinner, it does not get bigger.
+    Without the compensation the pill visibly gains area mid-flight and the
+    effect reads as a glitch rather than as liquid.
+  */
+  .lg-indicator-skin {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background-color: hsl(var(--espresso));
+    box-shadow: 0 6px 16px -8px hsl(var(--ink-800) / 0.75);
+    transform-origin: center;
+  }
+  /* The tab bar's indicator is a tint behind an icon that keeps its own ink,
+     not a filled pill that inverts it — a 56px-wide espresso slab under a
+     32px row would be the loudest thing on a phone screen. */
+  .lg-indicator-soft {
+    background-color: hsl(var(--brand) / 0.14);
+    box-shadow: none;
+  }
+  .lg-indicator-skin[data-axis="y"] {
+    animation: lg-stretch-y var(--lg-dur-snappy) var(--lg-ease-smooth);
+  }
+  .lg-indicator-skin[data-axis="x"] {
+    animation: lg-stretch-x var(--lg-dur-snappy) var(--lg-ease-smooth);
+  }
+  /*
+    The opacity dip is not decoration.
+
+    A filled pill travelling along a row of labels passes over the ones in
+    between, and for the quarter-second it is on top of one, that label is dark
+    ink on a dark fill. Apple solves this properly: the pill clips an inverted
+    copy of the labels, so text crossing it flips to the light colour. Doing
+    that here would mean rendering the Radix triggers a second time inside the
+    indicator, which duplicates their ids and their state — a real
+    accessibility fault traded for a cosmetic one.
+
+    So the pill thins while it is moving and returns to full at both ends. The
+    label underneath stays readable in transit, the two resting states are
+    unchanged, and nothing has to be rendered twice. It is a smaller fix than
+    Apple's and it is honest about being one.
+  */
+  @keyframes lg-stretch-y {
+    0%   { transform: scale(1, 1); opacity: 1; }
+    38%  { transform: scale(calc(2 - var(--lg-amp, 1)), var(--lg-amp, 1)); opacity: 0.72; }
+    100% { transform: scale(1, 1); opacity: 1; }
+  }
+  @keyframes lg-stretch-x {
+    0%   { transform: scale(1, 1); opacity: 1; }
+    38%  { transform: scale(var(--lg-amp, 1), calc(2 - var(--lg-amp, 1))); opacity: 0.72; }
+    100% { transform: scale(1, 1); opacity: 1; }
+  }
+
+  /*
+    ── Accessibility ─────────────────────────────────────────────────────────
+    The three settings Apple requires this material to honour. Each is a real
+    switch-off, not a softening: somebody who has asked for less transparency
+    has asked for the effect to stop, not to be reduced by a fifth.
+  */
+  /*
+    The same two outcomes as the system settings below, reachable by anyone.
+
+    Written as attribute selectors rather than folded into the media queries
+    because they have to WIN over them in one direction: somebody whose system
+    asks for reduced transparency, who then explicitly chooses Regular here,
+    has made the more specific statement and should get it.
+  */
+  :root[data-lg-density="reduced"] {
+    --lg-tint-a: 0.92;
+    --lg-tint-a-clear: 0.80;
+    --lg-blur: 18px;
+  }
+  /* The rail sets its own alpha, being the one surface with no text on it, so
+     a value inherited from the root would never reach it. Named explicitly
+     rather than left to lose quietly — a transparency control that visibly
+     skips the most transparent thing on the page is worse than none. */
+  :root[data-lg-density="reduced"] .lg-thin {
+    background-color: hsl(var(--lg-tint) / 0.90);
+  }
+  :root[data-lg-density="solid"] .lg,
+  :root[data-lg-density="solid"] .lg-clear,
+  :root[data-lg-density="solid"] .glass-pill,
+  :root[data-lg-density="solid"] .glass {
+    background-color: hsl(var(--card));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  :root[data-lg-density="solid"] .glass-pill::after,
+  :root[data-lg-density="solid"] .lg-rim::after,
+  :root[data-lg-density="solid"] .lg-clear::before {
+    display: none;
+  }
+  :root[data-lg-density="solid"] .lg-edge {
+    display: none;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .lg,
+    .lg-clear {
+      background-color: hsl(var(--card));
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .lg-probe-ok .lg-lens {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .lg-rim::after,
+    .lg-clear::before {
+      display: none;
+    }
+    .lg-edge {
+      display: none;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .lg,
+    .lg-clear {
+      background-color: hsl(var(--card));
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-color: hsl(var(--foreground) / 0.45);
+    }
+    .lg-rim::after {
+      display: none;
+    }
+    .lg-content {
+      border-color: hsl(var(--foreground) / 0.45);
+    }
+  }
+
+  /*
+    Reduce Motion is not an off switch, and treating it as one is its own
+    accessibility failure.
+
+    Apple's own description: it "decreases the intensity of some effects and
+    disables any elastic properties for the material". The material still
+    materializes and the indicator still travels — it has to, because it is the
+    only thing marking which section you are in, and teleporting it between
+    items is harder to follow than moving it, not easier. What goes is the
+    elasticity: the springs become non-overshooting, the durations shorten, and
+    the press stops squishing.
+  */
+  @media (prefers-reduced-motion: reduce) {
+    /*
+      Apple lists "avoiding animating into and out of blurs" under Reduce
+      Motion specifically, and animating a blur is the most obvious way to
+      make glass materialize — which makes it the thing most likely to be
+      left in. The overlay still scales into place; what stops is the
+      material thickening, so the blur is simply at its final value
+      throughout.
+    */
+    .lg-overlay[data-state="open"],
+    .lg-overlay[data-state="closed"],
+    .lg-materialize {
+      animation-name: none;
+    }
+    :root {
+      --lg-ease-snappy: var(--lg-ease-micro);
+      --lg-ease-bouncy: var(--lg-ease-micro);
+      --lg-ease-press: var(--lg-ease-micro);
+      /*
+        micro belongs in this list and was missing from it. It is the shortest
+        spring, which is exactly why it was easy to overlook — and it is also
+        the one attached to every hover tint on the site, so it fires far more
+        often than the other three put together. Leaving it out meant somebody
+        who had asked the system for less motion still got every colour change
+        animated at full length.
+      */
+      --lg-dur-micro: 120ms;
+      --lg-dur-snappy: 200ms;
+      --lg-dur-bouncy: 200ms;
+      --lg-dur-smooth: 200ms;
+      --lg-press-scale: 1;
+    }
+    .lg-indicator-skin {
+      animation: none;
+    }
+  }
+}
+
+/*
+  Paper.
+
+  Exports were CSV only, which is fine for getting figures into a spreadsheet
+  and no use at all for the thing a small business actually has to do with a
+  P&L: hand it to an accountant, a landlord or a lender. This makes every page
+  printable — and "Save as PDF" is a print destination on every browser worth
+  the name, so it is the PDF export without a library, a server renderer or a
+  second copy of the layout to keep in step with the real one.
+
+  Outside @layer on purpose. Tailwind's layers are ordered, and these rules
+  have to beat utility classes that set a colour or a background on the
+  element itself; a layered block would lose to them.
+
+  What is stripped is everything that is navigation rather than content — the
+  rail, the header, the tab bar, buttons — plus the two things that only work
+  on a screen: the photograph behind the masthead, whose type is white and
+  would print invisibly, and the frosted glass, which renders as a grey smear
+  on a page that has no gradient behind it.
+*/
+@media print {
+  /* Chrome, not content. */
+  nav,
+  header,
+  .app-photo,
+  [data-print="hide"],
+  [data-ui="button"]:not([data-print="keep"]),
+  button:not([data-print="keep"]) {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  /* The fixed cream gradient would otherwise be asked for as a full-bleed
+     background on every sheet. */
+  body::before { display: none !important; }
+
+  /* The masthead is light type over a photograph. With the photograph gone
+     it has to become ordinary black-on-white, headline included. */
+  [data-on-photo],
+  [data-on-photo] * {
+    color: #000 !important;
+  }
+
+  /* Cards become ruled blocks. Frosted glass has nothing to frost on paper,
+     and a drop shadow prints as a grey band. */
+  .bento,
+  .bento-dark,
+  .panel,
+  .glass,
+  .glass-pill {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #999 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Keep a card whole where it fits on the sheet, and never split a row of
+     figures across the fold. */
+  .bento,
+  .panel,
+  tr,
+  li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* A table running over the page break repeats its headings, so the second
+     sheet of a long P&L is still readable on its own. */
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+
+  /*
+    Wide matrices scroll sideways on a screen and cannot on paper — a sheet
+    has one width and everything past it is simply gone. So they are made to
+    fit: the content-sized minimum is dropped, the nowrap that keeps event
+    names on one line is released, and the type comes down a couple of points,
+    which is what a P&L with six event columns needs to land on A4 at all.
+  */
+  .report-matrix table,
+  [role="table"] {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 8.5pt !important;
+  }
+  .report-matrix th,
+  .report-matrix td {
+    /* Released so a long event name wraps onto a second line instead of
+       forcing the table wider than the sheet. Wrapping only — deliberately
+       no word-break, which splits inside a word when there is no space to
+       break at, and a column heading reading "DELET E" is a nuisance while
+       a figure reading "$53,812.9 8" is a lie. */
+    white-space: normal !important;
+    padding: 4px 6px !important;
+  }
+  .report-matrix thead th:first-child,
+  .report-matrix tbody td:first-child {
+    position: static !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  /* The scrollports those matrices live in would clip at their own edge. */
+  [class*="overflow-"] {
+    overflow: visible !important;
+  }
+  /* Nothing casts a shadow on paper, and a frosted surface has nothing to
+     frost — both print as grey smears. */
+  * {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Muted ink is a screen affordance; on paper it is just faint. */
+  .text-muted-foreground { color: #444 !important; }
+
+  /* Printed from a running app, so nothing should still be mid-animation. */
+  .animate-page,
+  .animate-fade,
+  .cascade > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  @page {
+    margin: 14mm;
   }
 }

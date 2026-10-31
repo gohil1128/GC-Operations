@@ -1,4 +1,4 @@
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listEmployees } from "@/modules/labor/queries";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -12,7 +12,7 @@ import { deleteEmployeeAction } from "@/modules/labor/actions";
 export const dynamic = "force-dynamic";
 
 export default async function EmployeesPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("labor");
   const employees = await listEmployees(scope.businessId);
   return (
     <div>

@@ -42,8 +42,9 @@ export function InviteUserButton() {
           <DialogHeader>
             <DialogTitle>Add a new user</DialogTitle>
             <DialogDescription>
-              Creates an account they can log in with. They&apos;ll get access to all your locations.
-              You&apos;ll see a generated password to send them.
+              Creates an account they can sign in with. You&apos;ll get a temporary password to pass
+              on — they have to choose their own before the app will let them in, so it only ever
+              works once.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="grid gap-3">
@@ -57,13 +58,19 @@ export function InviteUserButton() {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="iu-role">Role</Label>
-              <Select name="role" defaultValue="OWNER">
+              {/* Staff is the default: it is the role most people added to a
+                  team should have, and the one whose mistake is cheapest. */}
+              <Select name="role" defaultValue="STAFF">
                 <SelectTrigger id="iu-role"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="OWNER">Owner — full access, can invite more users</SelectItem>
-                  <SelectItem value="MANAGER">Manager — operational access only, no settings</SelectItem>
+                  <SelectItem value="STAFF">Staff — cash closes and inventory counts only</SelectItem>
+                  <SelectItem value="MANAGER">Manager — everything day to day, no settings</SelectItem>
+                  <SelectItem value="OWNER">Owner — full access, including the team</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-2xs text-muted-foreground">
+                Staff see no sales, costs, invoices or reports.
+              </p>
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

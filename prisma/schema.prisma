@@ -11,9 +11,13 @@ datasource db {
 // Enums
 // ──────────────────────────────────────────────────────────────────────────────
 
+// Ordered most to least privileged. Nothing should test `role === "OWNER"` to
+// decide what a non-owner may do — with three roles that silently grants a
+// STAFF member everything a MANAGER has. Go through src/lib/permissions.ts.
 enum Role {
   OWNER
   MANAGER
+  STAFF
 }
 
 enum LocationKind {
@@ -75,10 +79,21 @@ model Business {
   id        String   @id @default(cuid())
   name      String
   timezone  String   @default("America/New_York")
-  currency  String   @default("USD")
+  // Invoice categories this business books below the gross-profit line
+  // rather than against cost of goods. Anything not listed stays in
+  // COGS — see src/modules/reports/cost-classes.ts for why.
+  opexInvoiceCategories String[] @default(["Rent / Venue", "Marketing", "Equipment & Smallwares", "Repairs & Maintenance", "Cleaning"])
+  currency  String   @default("CAD")
   laborTargetPct Int @default(30) // labor cost target as percent
   foodTargetPct  Int @default(32)
-  recipesPinHash String?  // bcrypt hash of 4-digit PIN; null = unlocked
+  // One PIN guards every protected section; `lockedSections` says which ones
+  // are behind it. Null hash = nothing is locked, whatever the list says.
+  sectionPinHash String?  // bcrypt hash of 4-digit PIN
+  lockedSections String[] @default([])  // "RECIPES" | "REPORTS" | "EVENTS"
+  // Overview cards this business has turned off. Stored as the HIDDEN ones so
+  // a card added later shows up for everybody instead of being invisible until
+  // each business goes and enables it. See src/modules/dashboard/cards.ts.
+  hiddenOverviewCards String[] @default([])
   ebitdaMultiplier  Float @default(4.0) // applied when EBITDA > 0
   revenueMultiplier Float @default(1.5) // fallback when EBITDA <= 0
   createdAt DateTime @default(now())
@@ -115,6 +130,8 @@ model Location {
   dailySales       DailySales[]
   cashCloses       CashClose[]
   deposits         Deposit[]
+  cashPayouts      CashPayout[]
+  itemRecipeLinks  ItemRecipeLink[]
   reportSnapshots  ReportSnapshot[]
   invoices         Invoice[]
   expenses         Expense[]
@@ -135,6 +152,11 @@ model User {
   name         String
   role         Role     @default(MANAGER)
   businessId   String
+  // True while the account is still on a password somebody else chose — set
+  // when an owner creates the account or resets it, cleared the moment the
+  // person picks their own. Everything behind the app refuses to load until
+  // then, so a handed-over password can only ever be used once.
+  mustChangePassword Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -148,8 +170,26 @@ model User {
   invoices         Invoice[]
   expenses         Expense[]
   capitalAssets    CapitalAsset[]
+  resetTokens      PasswordResetToken[]
 
   @@index([businessId])
+}
+
+// A single-use, expiring password reset. Only the hash of the token is stored,
+// for the same reason passwords are hashed: read access to this table must not
+// be enough to take over an account. The raw token exists only in the link.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model UserLocation {
@@ -247,9 +287,32 @@ model Recipe {
 
   business    Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
   ingredients RecipeIngredient[]
+  itemLinks   ItemRecipeLink[]
 
   @@unique([businessId, name])
   @@index([businessId])
+}
+
+// Which recipe a sold item is made from.
+//
+// Square sends an item name and nothing else, so there is no way to cost what
+// sold without somebody saying "Masala Chai (12oz) is this recipe" once. That
+// mapping keys on the NAME rather than living on the SalesItem rows: a new
+// import writes fresh rows, and a per-row link would be lost every time the
+// operator uploaded a CSV — the mapping has to outlive the data it describes.
+model ItemRecipeLink {
+  id         String   @id @default(cuid())
+  locationId String
+  itemName   String
+  recipeId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, itemName])
+  @@index([recipeId])
 }
 
 model RecipeIngredient {
@@ -503,6 +566,38 @@ model Deposit {
   @@index([locationId, businessDate])
 }
 
+enum PayoutKind {
+  REIMBURSEMENT // someone bought something with their own money and took the cash back
+  SUPPLIER // paid a supplier in cash straight out of the till
+  OTHER
+}
+
+// Cash legitimately taken out of the drawer during the day, itemised.
+//
+// The counterpart to Deposit, and the reason CashClose.paidOutCents stops
+// being a number somebody types: a payout has to say what it was for and who
+// took it, or a drawer that is $40 light is indistinguishable from a mistake.
+//
+// Carries no User foreign key on purpose. `paidTo` is free text because the
+// person reimbursed is often not somebody with an account — and because every
+// required FK onto User is one more thing blocking that account from ever
+// being deleted.
+model CashPayout {
+  id           String     @id @default(cuid())
+  locationId   String
+  businessDate DateTime
+  amountCents  Int
+  kind         PayoutKind @default(REIMBURSEMENT)
+  reason       String // what the money was spent on
+  paidTo       String? // who took the cash
+  reference    String? // receipt or invoice number, if there is one
+  createdAt    DateTime   @default(now())
+
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId, businessDate])
+}
+
 model SalesItem {
   id            String   @id @default(cuid())
   locationId    String
@@ -580,7 +675,13 @@ model ReportSnapshot {
 model AuditLog {
   id         String   @id @default(cuid())
   businessId String
-  userId     String
+  // Nullable, unlike every other actor: this is a pure historical trail with
+  // no viewer UI reading it, so the row is worth keeping after the actor is
+  // gone, but the FK must not be what blocks deleting them. Every OTHER
+  // user-created record (invoices, expenses, purchase orders...) stays
+  // required and gets reassigned to a successor instead — those matter for
+  // real reporting and should never point at nobody.
+  userId     String?
   action     String
   entityType String
   entityId   String?
@@ -588,7 +689,7 @@ model AuditLog {
   createdAt  DateTime @default(now())
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([businessId, createdAt])
   @@index([entityType, entityId])
@@ -704,7 +805,7 @@ model Vendor {
   role            String?    // e.g. "Graphic Designer", "Accountant"
   country         String?    // free-text country for tax/jurisdiction context
   monthlyFeeCents Int        @default(0)
-  currency        String     @default("USD")
+  currency        String     @default("CAD")
   defaultCategory ExpenseCategory @default(CONTRACTOR)
   isFlatFee       Boolean    @default(true)  // true = no tax withholding
   notes           String?
@@ -753,4 +854,18 @@ model CapitalAsset {
 
   @@index([locationId])
   @@index([eventId])
+}
+
+// Login throttling. Serverless means per-instance counters are unreliable, so
+// attempts are tracked in the database. One row per key, where a key is either
+// "email:<address>" or "ip:<addr>" — email catches an attack on one account,
+// IP catches spraying across many.
+model LoginAttempt {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  failures    Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@index([updatedAt])
 }

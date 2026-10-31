@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus, FileText } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listPurchaseOrders } from "@/modules/purchasing/queries";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -16,7 +16,7 @@ const statusVariant = (s: string) =>
   s === "DRAFT" ? "muted" : s === "SENT" ? "default" : s === "RECEIVED" ? "success" : "danger";
 
 export default async function PurchasingPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("purchasing");
   const pos = await listPurchaseOrders(scope.locationId);
   return (
     <div>

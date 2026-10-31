@@ -19,3 +19,13 @@ _probe_*.mjs
 _vfy*.mjs
 _auth.mjs
 _enrich.ts
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+tests/e2e/.auth/
+
+# Built APKs. Binaries do not belong in the repo; build them with mobile/README.md.
+mobile/*.apk

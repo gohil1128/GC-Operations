@@ -1,5 +1,6 @@
 import { Download } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { requireCapability } from "@/lib/scope";
 import { EXPORTS, EXPORT_GROUPS } from "@/modules/exports/registry";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +8,12 @@ export const dynamic = "force-dynamic";
 // Central download hub: every dataset the app holds, grouped, one click each.
 // Datasets are read straight from the export registry, so a new export shows
 // up here automatically.
-export default function ExportsPage() {
+//
+// This page had no check of its own at all — it was only ever hidden from the
+// nav for non-owners, which a typed URL walked straight past to every dataset
+// in the business.
+export default async function ExportsPage() {
+  await requireCapability("settings");
   return (
     <div>
       <PageHeader

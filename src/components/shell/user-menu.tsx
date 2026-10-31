@@ -1,5 +1,10 @@
 "use client";
-import { LogOut, User as UserIcon } from "lucide-react";
+import * as React from "react";
+import Link from "next/link";
+import { KeyRound, LogOut, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import type { Role } from "@prisma/client";
+import { ROLE_LABELS } from "@/lib/permissions";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -11,7 +16,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/modules/auth/actions";
 
-export function UserMenu({ name, email, role }: { name: string; email: string; role: string }) {
+export function UserMenu({
+  name,
+  email,
+  role,
+  locationName,
+}: {
+  name: string;
+  email: string;
+  role: Role;
+  /** Shown here because the header no longer prints it when there is only one. */
+  locationName?: string;
+}) {
+  const { theme, setTheme } = useTheme();
+  // next-themes only knows the resolved theme after mount; rendering the icon
+  // before that would mismatch the server HTML.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const dark = theme === "dark";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -27,12 +50,27 @@ export function UserMenu({ name, email, role }: { name: string; email: string; r
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">{name}</span>
             <span className="text-2xs text-muted-foreground">{email}</span>
-            <span className="text-2xs uppercase text-muted-foreground mt-1">{role}</span>
+            <span className="mt-1 text-2xs uppercase text-muted-foreground">
+              {ROLE_LABELS[role]}
+              {locationName ? ` · ${locationName}` : ""}
+            </span>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <UserIcon className="h-3.5 w-3.5" /> Account
+        <DropdownMenuItem asChild>
+          <Link href="/change-password">
+            <KeyRound className="h-3.5 w-3.5" /> Change password
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            // Keep the menu open so the change can be seen as it happens.
+            e.preventDefault();
+            setTheme(dark ? "light" : "dark");
+          }}
+        >
+          {mounted && dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          {mounted && dark ? "Light mode" : "Dark mode"}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {

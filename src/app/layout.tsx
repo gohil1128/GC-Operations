@@ -5,6 +5,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { GlassDensityScript } from "@/components/glass-density";
+import { APP_NAME, APP_SHORT_NAME } from "@/lib/brand";
 
 // Self-hosted at build time and exposed as CSS variables that feed
 // --font-display / --font-sans in globals.css.
@@ -22,14 +24,14 @@ const sans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "God's Chai Operations",
+  title: APP_NAME,
   description: "Restaurant operations platform — inventory, labor, cash, reporting.",
-  applicationName: "God's Chai Operations",
+  applicationName: APP_NAME,
   // `capable: true` emits both apple-mobile-web-app-capable and the modern
   // mobile-web-app-capable, so older iOS web clips launch without Safari chrome.
   appleWebApp: {
     capable: true,
-    title: "God's Chai",
+    title: APP_SHORT_NAME,
     statusBarStyle: "default",
   },
   icons: {
@@ -54,6 +56,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${display.variable} ${sans.variable}`}>
+      <head>
+        {/* Before the first paint. As an effect it would run after the page
+            had already been painted with the full material, so anyone who
+            asked for Solid would watch the glass appear and be taken away
+            again on every navigation. */}
+        <GlassDensityScript />
+      </head>
       <body className="min-h-screen antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}

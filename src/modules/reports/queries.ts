@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { splitInvoiceCosts } from "./cost-classes";
 import { lastNDays, dayRange, fmtDate, startOfDay } from "@/lib/date";
 import { safeDivide } from "@/lib/money";
 
@@ -218,7 +219,7 @@ export async function categorySpendByEvent(locationId: string) {
 
 // P&L per event + overall. Event columns use the event tag for sales,
 // invoices (COGS) and expenses, the event's own fee, and its date window for
-// labor (shifts carry no tag). Overall covers everything all-time, including
+// labor (shifts carry no tag). Overall covers everything in scope, including
 // untagged rows, so it's the true business-wide picture.
 export type PnlColumn = {
   key: string; // event id or "overall"
@@ -227,29 +228,59 @@ export type PnlColumn = {
   txns: number;
   netSalesCents: number;
   tipsCents: number;
-  cogsCents: number; // supplier invoices
+  // Supplier invoices for goods — what was consumed making what was sold.
+  cogsCents: number;
   laborCents: number;
-  opexCents: number; // expenses
+  // Recorded expenses, plus the supplier invoices this business books below
+  // the gross-profit line: rent, marketing, equipment and the like.
+  opexCents: number;
   feeCents: number; // event fees
+  // Net sales less cost of goods — what the recipe itself earns, before any
+  // cost of being open. The figure that says whether the menu works.
+  grossProfitCents: number;
+  grossMarginPct: number;
   profitCents: number;
   marginPct: number;
 };
 
-export async function pnlByEvent(businessId: string, locationId: string): Promise<PnlColumn[]> {
-  const [events, sales, invoices, expenses, shifts] = await Promise.all([
+/**
+ * P&L per event plus an overall column.
+ *
+ * `range` narrows every input to a date window and drops event columns that
+ * don't overlap it, so the Overview's period control changes the statement
+ * rather than just its heading. Omitted, the statement is all-time — which is
+ * what the reports page and the CSV export want.
+ */
+export async function pnlByEvent(
+  businessId: string,
+  locationId: string,
+  range?: { start: Date; end: Date } | null,
+): Promise<PnlColumn[]> {
+  const within = range ? { gte: range.start, lte: range.end } : undefined;
+  const [business, allEvents, sales, invoices, expenses, shifts] = await Promise.all([
+    prisma.business.findUnique({
+      where: { id: businessId },
+      select: { opexInvoiceCategories: true },
+    }),
     prisma.event.findMany({
       where: { businessId },
       select: { id: true, name: true, color: true, startDate: true, endDate: true, feeCents: true },
       orderBy: { startDate: "asc" },
     }),
     prisma.dailySales.findMany({
-      where: { locationId },
+      where: { locationId, ...(within ? { businessDate: within } : {}) },
       select: { eventId: true, netSalesCents: true, tipsCents: true, guestCount: true },
     }),
-    prisma.invoice.findMany({ where: { locationId }, select: { eventId: true, totalCents: true, appliesToAllEvents: true } }),
-    prisma.expense.findMany({ where: { locationId }, select: { eventId: true, amountCents: true } }),
+    prisma.invoice.findMany({
+      where: { locationId, ...(within ? { invoiceDate: within } : {}) },
+      select: { eventId: true, totalCents: true, appliesToAllEvents: true, category: true },
+    }),
+    prisma.expense.findMany({
+      where: { locationId, ...(within ? { businessDate: within } : {}) },
+      select: { eventId: true, amountCents: true },
+    }),
     prisma.shift.findMany({
-      where: { locationId },
+      where: { locationId, ...(within ? { start: within } : {}) },
       select: {
         start: true,
         scheduledMinutes: true,
@@ -259,9 +290,21 @@ export async function pnlByEvent(businessId: string, locationId: string): Promis
     }),
   ]);
 
+  // An event belongs in the statement when its dates overlap the window at
+  // all — a two-week festival still counts when you're looking at one of its
+  // weeks. Its fee, though, is a one-off, so it is only charged when the
+  // event actually starts inside the window; otherwise a month-by-month read
+  // would bill the same booth fee twice.
+  const events = range
+    ? allEvents.filter((e) => e.startDate <= range.end && e.endDate >= range.start)
+    : allEvents;
+  const feeFor = (e: (typeof allEvents)[number]) =>
+    !range || (e.startDate >= range.start && e.startDate <= range.end) ? e.feeCents : 0;
+
   const shiftCost = (s: (typeof shifts)[number]) =>
     Math.round(((s.timeEntry?.actualMinutes ?? s.scheduledMinutes) / 60) * s.employee.hourlyRateCents);
 
+  const opexCategories = business?.opexInvoiceCategories ?? [];
   const shareDiv = Math.max(1, events.length);
   const build = (key: string, name: string, color: string | null, filter: {
     eventId?: string;
@@ -286,15 +329,22 @@ export async function pnlByEvent(businessId: string, locationId: string): Promis
     const netSalesCents = s.reduce((a, r) => a + r.netSalesCents, 0);
     const tipsCents = s.reduce((a, r) => a + r.tipsCents, 0);
     const txns = s.reduce((a, r) => a + r.guestCount, 0);
-    const cogsCents = inv.reduce((a, r) => a + r.totalCents, 0);
-    const opexCents = exp.reduce((a, r) => a + r.amountCents, 0);
+    // Rent, marketing and a new urn are costs of being open, not costs of the
+    // chai. Charging them against gross margin made the recipe look worse than
+    // it is — see cost-classes.ts.
+    const split = splitInvoiceCosts(inv, opexCategories);
+    const cogsCents = split.cogsCents;
+    const opexCents = exp.reduce((a, r) => a + r.amountCents, 0) + split.opexCents;
     const laborCents = lab.reduce((a, r) => a + shiftCost(r), 0);
+    const grossProfitCents = netSalesCents - cogsCents;
+    const grossMarginPct = netSalesCents > 0 ? (grossProfitCents / netSalesCents) * 100 : 0;
     const profitCents = netSalesCents - cogsCents - laborCents - opexCents - filter.feeCents;
     const marginPct = netSalesCents > 0 ? (profitCents / netSalesCents) * 100 : 0;
 
     return {
       key, name, color, txns, netSalesCents, tipsCents,
       cogsCents, laborCents, opexCents, feeCents: filter.feeCents,
+      grossProfitCents, grossMarginPct,
       profitCents, marginPct,
     };
   };
@@ -303,10 +353,10 @@ export async function pnlByEvent(businessId: string, locationId: string): Promis
     build(e.id, e.name, e.color, {
       eventId: e.id,
       window: { start: e.startDate, end: new Date(e.endDate.getTime() + 24 * 60 * 60 * 1000 - 1) },
-      feeCents: e.feeCents,
+      feeCents: feeFor(e),
     }),
   );
-  const totalFees = events.reduce((a, e) => a + e.feeCents, 0);
+  const totalFees = events.reduce((a, e) => a + feeFor(e), 0);
   columns.push(build("overall", "Overall", null, { feeCents: totalFees }));
   return columns;
 }

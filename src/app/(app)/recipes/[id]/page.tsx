@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getRecipe, listIngredientsForPicker } from "@/modules/recipes/queries";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const scope = await getScope();
+  const scope = await requireCapability("inventory");
   const [r, ings] = await Promise.all([getRecipe(scope.businessId, id), listIngredientsForPicker(scope.businessId)]);
   if (!r) notFound();
   const pct = safeDivide(r.plateCostCents, r.menuPriceCents) * 100;

@@ -5,7 +5,7 @@ export const vendorSchema = z.object({
   role: z.string().optional().nullable(),
   country: z.string().optional().nullable(),
   monthlyFeeDollars: z.coerce.number().min(0).default(0),
-  currency: z.string().default("USD"),
+  currency: z.string().default("CAD"),
   defaultCategory: z
     .enum(["RENT", "UTILITIES", "MARKETING", "CONTRACTOR", "INSURANCE", "EQUIPMENT", "REPAIRS", "ADMIN", "OTHER"])
     .default("CONTRACTOR"),

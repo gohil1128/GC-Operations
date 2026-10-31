@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>God's Chai</title>
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #f8f4ec;
+        color: #3c2216;
+        font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        text-align: center;
+      }
+      main { max-width: 22rem; }
+      h1 { font-size: 1.125rem; margin: 0 0 0.5rem; }
+      p { margin: 0; color: #6b4a3a; font-size: 0.9375rem; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #1a110c; color: #f3e9dd; }
+        p { color: #c4a893; }
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      A placeholder, and it should never be seen.
+
+      The shell points its WebView at the deployed site (see
+      capacitor.config.ts), so these files are not loaded. This page exists
+      because the Capacitor CLI requires webDir to hold something, and it says
+      something true rather than showing a blank white screen if the shell is
+      ever built with the server URL removed.
+    -->
+    <main>
+      <h1>God's Chai Operations</h1>
+      <p>This app opens the live dashboard and needs a connection. If you are seeing this page, it was built without its server address — please reinstall from the latest build.</p>
+    </main>
+  </body>
+</html>

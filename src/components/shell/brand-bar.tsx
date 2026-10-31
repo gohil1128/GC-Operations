@@ -8,7 +8,7 @@ import { UtensilsCrossed } from "lucide-react";
 export function BrandBar({ businessName }: { businessName: string }) {
   const [logoFailed, setLogoFailed] = React.useState(false);
   return (
-    <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
+    <Link href="/dashboard" className={`flex shrink-0 items-center gap-2${logoFailed ? "" : " logo-plate"}`}>
       {!logoFailed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -19,7 +19,9 @@ export function BrandBar({ businessName }: { businessName: string }) {
         />
       ) : (
         <>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-brand-foreground">
+          {/* brand-strong for the same reason as the rail avatar: white on the logo
+              rust lands at 4.47:1, and the darker step clears 5.5:1. */}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-strong text-brand-foreground">
             <UtensilsCrossed className="h-4 w-4" />
           </div>
           <span className="hidden font-display text-sm font-semibold tracking-tight sm:block">

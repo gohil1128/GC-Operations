@@ -1,4 +1,3 @@
-import { categoryStyle } from "@/modules/items/categories";
 import { formatPercent } from "@/lib/money";
 
 // Donut of item-category share, drawn as stacked SVG arcs (design 1a).

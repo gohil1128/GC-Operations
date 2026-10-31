@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus, FileBarChart, ClipboardList } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listIngredients } from "@/modules/inventory/queries";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -16,15 +16,32 @@ import { deleteIngredientAction } from "@/modules/inventory/actions";
 export const dynamic = "force-dynamic";
 
 export default async function InventoryPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("inventory");
   const items = await listIngredients(scope.businessId);
   const lowCount = items.filter((i) => i.onHand <= i.reorderPoint && i.reorderPoint > 0).length;
+  /*
+    Ingredients with no reorder point set.
+
+    A zero means "do not watch this", which is right — but it also means the
+    "N below reorder point" figure in the header is silently counting nothing.
+    Reading "0 below reorder point" when not one ingredient has a level set
+    says everything is fine, when in fact nothing is being watched at all. The
+    two are opposite conclusions from the same figure, so the header has to
+    say which one it is.
+  */
+  const unwatched = items.filter((i) => i.reorderPoint <= 0).length;
   return (
     <div>
       <PageHeader
         eyebrow="Inventory · Ingredients"
         title="Inventory"
-        description={`${items.length} ingredients · ${lowCount} below reorder point`}
+        description={
+          unwatched === items.length && items.length > 0
+            ? `${items.length} ingredients · no reorder points set, so nothing is being watched`
+            : `${items.length} ingredients · ${lowCount} below reorder point${
+                unwatched > 0 ? ` · ${unwatched} with no level set` : ""
+              }`
+        }
         actions={
           <>
             <Button asChild variant="outline" size="sm"><Link href="/inventory/counts"><ClipboardList className="h-3.5 w-3.5" /> Counts</Link></Button>

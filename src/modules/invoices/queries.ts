@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { startOfDay, endOfDay } from "@/lib/date";
+import { businessDayOrNull, endOfBusinessDayOrNull } from "@/lib/date";
 
 export type InvoiceFilters = {
   supplierId?: string;
@@ -24,8 +24,10 @@ function buildInvoiceWhere(locationId: string, filters: InvoiceFilters) {
   if (filters.status === "closed") where.closedAt = { not: null };
   if (filters.from || filters.to) {
     where.invoiceDate = {};
-    if (filters.from) where.invoiceDate.gte = startOfDay(new Date(filters.from));
-    if (filters.to) where.invoiceDate.lte = endOfDay(new Date(filters.to));
+    const from = businessDayOrNull(filters.from);
+    const to = endOfBusinessDayOrNull(filters.to);
+    if (from) where.invoiceDate.gte = from;
+    if (to) where.invoiceDate.lte = to;
   }
   return where;
 }
@@ -191,4 +193,34 @@ export async function getInvoiceTracking(locationId: string) {
       .slice(-48)
       .map((r) => (r.closedAt ? "paid" : "open")),
   };
+}
+
+/**
+ * Open bills for the Overview's "Invoices due" panel.
+ *
+ * The schema has no due-date column, so a real due date can't be shown without
+ * inventing one. Oldest-open-first is the honest ordering — the age of the
+ * bill is what actually tells an operator which one needs paying — and the
+ * caller renders "Open Nd" rather than a fabricated "Overdue Nd".
+ */
+export async function listOpenInvoicesDue(locationId: string, limit = 3) {
+  return prisma.invoice.findMany({
+    where: { locationId, closedAt: null },
+    select: {
+      id: true,
+      invoiceNumber: true,
+      invoiceDate: true,
+      totalCents: true,
+      appliesToAllEvents: true,
+      supplier: { select: { name: true } },
+      event: { select: { name: true } },
+    },
+    orderBy: { invoiceDate: "asc" },
+    take: limit,
+  });
+}
+
+/** Open-invoice count for the sidebar badge. */
+export async function countOpenInvoices(locationId: string) {
+  return prisma.invoice.count({ where: { locationId, closedAt: null } });
 }

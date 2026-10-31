@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { APP_NAME } from "@/lib/brand";
 
 // Catches errors thrown during SSR / in the root layout, where (app)/error.tsx
 // cannot reach. Without this, a 500 on a direct URL load (bookmark, refresh,
@@ -42,7 +43,7 @@ export default function GlobalError({
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="God's Chai" style={{ height: 48, width: "auto", marginBottom: 24 }} />
+          <img src="/logo.png" alt={APP_NAME} style={{ height: 48, width: "auto", marginBottom: 24 }} />
           <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Something went wrong</h1>
           <p style={{ fontSize: 14, color: "#6B5C4E", marginTop: 8, lineHeight: 1.5 }}>
             This page failed to load. Retrying often clears it.

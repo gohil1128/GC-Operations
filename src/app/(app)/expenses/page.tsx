@@ -1,4 +1,4 @@
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listExpenses, EXPENSE_CATEGORIES } from "@/modules/expenses/queries";
 import { listVendors, getMonthlyFeePaymentStatus } from "@/modules/vendors/queries";
 import { listActiveEvents, getActiveEvent } from "@/modules/events/queries";
@@ -29,7 +29,7 @@ export default async function ExpensesPage({
   searchParams: Promise<{ category?: ExpenseCategory; from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const scope = await getScope();
+  const scope = await requireCapability("expenses");
   const activeEvent = await getActiveEvent(scope.businessId);
   const [expenses, vendors, events, capitalAssets] = await Promise.all([
     listExpenses(scope.locationId, { category: sp.category, eventId: activeEvent?.id, from: safeDateParam(sp.from), to: safeDateParam(sp.to) }),

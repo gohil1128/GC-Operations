@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listRecipes } from "@/modules/recipes/queries";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -13,7 +13,7 @@ import { deleteRecipeAction } from "@/modules/recipes/actions";
 export const dynamic = "force-dynamic";
 
 export default async function RecipesPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("inventory");
   const recipes = await listRecipes(scope.businessId);
   return (
     <div>

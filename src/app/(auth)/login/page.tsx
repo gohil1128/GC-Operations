@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/modules/auth/actions";
+import { APP_NAME } from "@/lib/brand";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -41,7 +42,7 @@ export default function LoginPage() {
         {!logoFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src="/logo.png" alt="God's Chai"
+            src="/logo.png" alt={APP_NAME}
             className="h-16 w-auto self-start"
             style={{ filter: "brightness(3.4) saturate(.4)" }}
             onError={() => setLogoFailed(true)}
@@ -61,7 +62,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="relative text-2xs opacity-50">God&apos;s Chai Operations</div>
+        <div className="relative text-2xs opacity-50">{APP_NAME}</div>
       </div>
 
       {/* Form side */}
@@ -70,7 +71,10 @@ export default function LoginPage() {
           {/* Logo shows here on small screens, where the brand panel is hidden. */}
           {!logoFailed && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/logo.png" alt="God's Chai" className="mb-6 h-14 w-auto lg:hidden" />
+            <span className="logo-plate mb-6 inline-block lg:hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt={APP_NAME} className="h-14 w-auto" />
+            </span>
           )}
           <h1 className="display-num text-[30px] font-medium">Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-muted-foreground">Sign in to your back-office</p>
@@ -95,12 +99,12 @@ export default function LoginPage() {
             )}
 
             <Submit />
-
-            <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-              <input type="checkbox" name="keepSignedIn" className="h-3.5 w-3.5 accent-[hsl(var(--brand))]" />
-              Keep me signed in on this device
-            </label>
           </form>
+
+          <p className="mt-5 text-center text-xs text-muted-foreground">
+            New here?{" "}
+            <Link href="/signup" className="text-brand-ink hover:underline">Create an account</Link>
+          </p>
         </div>
       </main>
     </div>

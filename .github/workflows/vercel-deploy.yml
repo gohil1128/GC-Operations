@@ -7,14 +7,132 @@ on:
       - main
 
 jobs:
-  deploy:
+  # Nothing deploys until this passes. The repo previously shipped straight to
+  # the live domain on every push with no typecheck, no lint and no tests — so a
+  # broken build was found by looking at bolochai.com.
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Trigger Vercel deployment
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # Prisma's generated client is imported by the type checker and by the
+      # tests, and it is not in the repo.
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Lint
+        run: pnpm run lint
+      - name: Unit tests
+        run: pnpm run test
+
+  # End-to-end, against a real build and a seeded database. Runs on every push
+  # and reports, but deploy does NOT wait on it yet: it has only ever run on one
+  # machine, and a job that has not proved itself stable should not be the thing
+  # standing between a fix and production. Add it to deploy's `needs` once it has
+  # a few green runs.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: gcops
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gcops?schema=public
+      NEXTAUTH_SECRET: ci-e2e-secret
+      AUTH_SECRET: ci-e2e-secret
+      NEXTAUTH_URL: http://localhost:3111
+      AUTH_TRUST_HOST: "1"
+      BASE_URL: http://localhost:3111
+      # The signup tests create several businesses in a row. Production keeps
+      # the default of five an hour per address; this ephemeral CI database is
+      # not a target worth throttling.
+      SIGNUP_MAX_PER_IP: "100"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma migrate deploy
+      - run: pnpm exec prisma generate
+      - run: pnpm run db:seed
+      # Accounts the suite signs in with. Generated per run rather than written
+      # into the repo — they exist only on this ephemeral CI database. The first
+      # run of this job had none of this, fell back to an account that only ever
+      # existed on one laptop, and five failed sign-ins tripped the app's own
+      # login rate limiter: 6 tests passed, 23 never ran, 21 minutes burned.
+      - name: Create the e2e accounts
         run: |
-          curl -s -X POST \
+          echo "E2E_PASSWORD=$(openssl rand -hex 16)" >> "$GITHUB_ENV"
+          echo "E2E_SECTION_PIN=$(shuf -i 1000-9999 -n 1)" >> "$GITHUB_ENV"
+      - run: pnpm run db:seed:e2e
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec next build
+      - name: Start the app
+        run: |
+          pnpm exec next start -p 3111 &
+          npx wait-on http://localhost:3111/login --timeout 90000
+      - run: pnpm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    # A Next build plus `prisma migrate deploy` normally lands well inside
+    # this; the cap is here so a wedged build fails instead of hanging.
+    timeout-minutes: 20
+    steps:
+      # NOTE: the payload below asks for target "production" and this workflow
+      # runs on BOTH branches above, so a push to the feature branch is aliased
+      # onto bolochai.com — a draft PR publishes to the live domain. Left as-is
+      # because it is how the site has been reviewed all along; switch to
+      # "preview" for non-main refs if that is not wanted. (Keep notes out here:
+      # inside the run block a "#" would land in the JSON body.)
+      - name: Trigger Vercel deployment
+        id: trigger
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # --fail-with-body, not plain -s: without it curl exits 0 on a 401 or
+          # a 500, and this step used to go green while nothing deployed. The
+          # rc is caught rather than left to `set -e` so the error body Vercel
+          # sent still reaches the log — otherwise the job dies with a bare
+          # exit code and no reason.
+          set +e
+          response=$(curl -sS --fail-with-body -X POST \
             "https://api.vercel.com/v13/deployments?teamId=team_3DKVAzvgNM5RAnO8zNG6llDN" \
-            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{
               "name": "northwind-eats-ops",
@@ -26,4 +144,72 @@ jobs:
                 "ref": "${{ github.ref_name }}",
                 "sha": "${{ github.sha }}"
               }
-            }'
+            }')
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ]; then
+            echo "Vercel rejected the deployment request (curl exit $rc):"
+            jq . <<<"$response" 2>/dev/null || echo "$response"
+            exit 1
+          fi
+
+          id=$(jq -r '.id // empty' <<<"$response")
+          if [ -z "$id" ]; then
+            echo "Vercel accepted the request but returned no deployment id:"
+            jq . <<<"$response" || echo "$response"
+            exit 1
+          fi
+
+          url=$(jq -r '.url // empty' <<<"$response")
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Queued $id (https://$url)"
+
+      - name: Wait for the build to finish
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_ID: ${{ steps.trigger.outputs.id }}
+          DEPLOYMENT_URL: ${{ steps.trigger.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          # Triggering a deployment is not deploying one. This step used to be
+          # absent, so the check went green about five seconds in — a build
+          # that failed a minute later still reported success.
+          for _ in $(seq 1 108); do   # 108 * 10s = 18 min, inside the job cap
+            state=$(curl -sS --fail-with-body \
+              "https://api.vercel.com/v13/deployments/$DEPLOYMENT_ID?teamId=team_3DKVAzvgNM5RAnO8zNG6llDN" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              | jq -r '.readyState // .state // "UNKNOWN"') || state="REQUEST_FAILED"
+
+            case "$state" in
+              READY)
+                echo "READY — https://$DEPLOYMENT_URL"
+                {
+                  echo "### Deployed"
+                  echo ""
+                  echo "- <https://$DEPLOYMENT_URL>"
+                  echo "- Inspector: <https://vercel.com/god-s-chai-s-projects/northwind-eats-ops/${DEPLOYMENT_ID#dpl_}>"
+                } >> "$GITHUB_STEP_SUMMARY"
+                exit 0
+                ;;
+              ERROR|CANCELED)
+                echo "Deployment finished as $state."
+                echo "Build logs: https://vercel.com/god-s-chai-s-projects/northwind-eats-ops/${DEPLOYMENT_ID#dpl_}"
+                exit 1
+                ;;
+              # A single failed poll is a network blip, not a failed deploy —
+              # keep waiting and let the loop's own timeout be the verdict.
+              REQUEST_FAILED)
+                echo "poll failed, retrying"
+                ;;
+              *)
+                echo "$state"
+                ;;
+            esac
+            sleep 10
+          done
+
+          echo "Gave up waiting; the deployment never reported a terminal state."
+          echo "Build logs: https://vercel.com/god-s-chai-s-projects/northwind-eats-ops/${DEPLOYMENT_ID#dpl_}"
+          exit 1

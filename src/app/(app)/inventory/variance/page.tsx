@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getVarianceReport } from "@/modules/inventory/queries";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -14,7 +14,7 @@ import { Download } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function VariancePage() {
-  const scope = await getScope();
+  const scope = await requireCapability("inventory");
   const report = await getVarianceReport(scope.locationId);
   return (
     <div>

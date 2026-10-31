@@ -26,15 +26,11 @@ export function LocationSwitcher({ active, options }: { active: Loc; options: Lo
     });
   };
 
-  // Only one location — show as static label, no need for a dropdown
-  if (options.length <= 1) {
-    return (
-      <div className="inline-flex items-center gap-2 rounded-md border bg-card px-3 h-9 text-sm font-medium">
-        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-        <span>{active.name}</span>
-      </div>
-    );
-  }
+  // Only one location: render nothing at all. This used to be a static chip,
+  // which read as a control, could not be clicked, and took the widest slot in
+  // the header to tell you something you cannot change. The name still shows in
+  // the desktop scope line and in the user menu, so nothing is lost.
+  if (options.length <= 1) return null;
 
   return (
     <DropdownMenu>

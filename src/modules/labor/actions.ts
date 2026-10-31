@@ -6,8 +6,11 @@ import { getScope } from "@/lib/scope";
 import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
 import { employeeSchema, shiftSchema } from "./schemas";
+import { requireCan } from "@/lib/auth";
+import { ownedId, requiredOwnedId, assertAllOwned } from "@/lib/ownership";
 
 export async function createEmployeeAction(formData: FormData) {
+  await requireCan("labor");
   const scope = await getScope();
   const parsed = employeeSchema.parse({
     name: formData.get("name"),
@@ -31,8 +34,13 @@ export async function createEmployeeAction(formData: FormData) {
 }
 
 export async function createShiftAction(payload: unknown) {
+  await requireCan("labor");
   const scope = await getScope();
   const parsed = shiftSchema.parse(payload);
+
+  // A shift carries the employee's pay rate into the labor report, so an
+  // unowned id would price this business's labour off another one's wages.
+  const employeeId = await requiredOwnedId("employee", scope.businessId, parsed.employeeId);
   const start = new Date(parsed.start);
   const end = new Date(parsed.end);
   if (end <= start) throw new Error("End must be after start");
@@ -40,7 +48,7 @@ export async function createShiftAction(payload: unknown) {
   const s = await prisma.shift.create({
     data: {
       locationId: scope.locationId,
-      employeeId: parsed.employeeId,
+      employeeId,
       position: parsed.position,
       start, end,
       scheduledMinutes: minutes,
@@ -52,6 +60,7 @@ export async function createShiftAction(payload: unknown) {
 }
 
 export async function deleteShiftAction(id: string) {
+  await requireCan("labor");
   const scope = await getScope();
   const s = await prisma.shift.findFirst({ where: { id, locationId: scope.locationId } });
   if (!s) throw new Error("Not found");
@@ -61,6 +70,7 @@ export async function deleteShiftAction(id: string) {
 }
 
 export async function deleteEmployeeAction(id: string) {
+  await requireCan("labor");
   const scope = await getScope();
   const e = await prisma.employee.findFirst({ where: { id, businessId: scope.businessId } });
   if (!e) throw new Error("Not found");

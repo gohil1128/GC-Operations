@@ -15,7 +15,13 @@ const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-espresso/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out", className)}
+    /* The scrim behind a dialog is the one place a fade IS right: it is not
+       glass, it is an absence of the page, and absence has no material to
+       thicken. */
+    className={cn(
+      "fixed inset-0 z-50 bg-espresso/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+      className,
+    )}
     {...props}
   />
 ));
@@ -30,7 +36,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 shadow-[0_8px_28px_-8px_hsl(23_45%_11%/0.18)] ring-1 ring-espresso/5 sm:rounded-bento",
+        "lg-overlay lg-overlay-center fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border bg-card p-6 shadow-[0_8px_28px_-8px_hsl(23_45%_11%/0.18)] ring-1 ring-espresso/5 sm:rounded-bento",
         className
       )}
       {...props}

@@ -5,6 +5,7 @@ import { getScope } from "@/lib/scope";
 import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
 import { capitalAssetSchema } from "./schemas";
+import { requireCan } from "@/lib/auth";
 
 function pickEventId(raw: unknown): string | null {
   const s = String(raw ?? "").trim();
@@ -12,6 +13,7 @@ function pickEventId(raw: unknown): string | null {
 }
 
 export async function createCapitalAssetAction(formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = capitalAssetSchema.parse({
     name: formData.get("name"),
@@ -56,6 +58,7 @@ export async function createCapitalAssetAction(formData: FormData) {
 }
 
 export async function updateCapitalAssetAction(id: string, formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = capitalAssetSchema.parse({
     name: formData.get("name"),
@@ -98,6 +101,7 @@ export async function updateCapitalAssetAction(id: string, formData: FormData) {
 }
 
 export async function deleteCapitalAssetAction(id: string) {
+  await requireCan("expenses");
   const scope = await getScope();
   const a = await prisma.capitalAsset.findFirst({ where: { id, locationId: scope.locationId } });
   if (!a) throw new Error("Not found");

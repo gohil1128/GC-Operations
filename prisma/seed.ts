@@ -84,8 +84,10 @@ async function main() {
   business = await prisma.business.create({
     data: {
       name: "God's Chai Operations",
-      timezone: "America/New_York",
-      currency: "USD",
+      // Where this business actually trades. Every business day in the app is
+      // derived from it, so a wrong value files evening takings under tomorrow.
+      timezone: "America/Toronto",
+      currency: "CAD",
       foodTargetPct: 32,
       laborTargetPct: 30,
     },

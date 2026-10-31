@@ -27,7 +27,10 @@ export function StatTile({
         className,
       )}
     >
-      <div className="min-w-0 max-w-full">
+      {/* flex-1 so the figure gets the room first. Both halves used to shrink
+          equally, which let a wordy meta squeeze the value until it truncated
+          — and a dollar amount rendered as "$17,7…" is worse than useless. */}
+      <div className="min-w-0 max-w-full sm:flex-1">
         <div className={cn("text-xs", variant === "default" ? "text-muted-foreground" : "opacity-75")}>
           {label}
         </div>
@@ -42,7 +45,7 @@ export function StatTile({
       </div>
       {action ?? (
         meta && (
-          <span className={cn("min-w-0 max-w-full truncate text-xs sm:shrink", variant === "default" ? "text-muted-foreground" : "opacity-80")}>
+          <span className={cn("min-w-0 max-w-full truncate text-xs sm:shrink sm:max-w-[45%] sm:text-right", variant === "default" ? "text-muted-foreground" : "opacity-80")}>
             {meta}
           </span>
         )

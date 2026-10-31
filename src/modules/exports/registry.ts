@@ -1,13 +1,16 @@
 import type { Scope } from "@/lib/scope";
+import type { SectionKey } from "@/modules/section-lock/sections";
 import { fromCents } from "@/lib/money";
 import { dailySummary, weeklyTrend, purchaseSpendByPeriod, pnlByEvent } from "@/modules/reports/queries";
 import { getLaborReport } from "@/modules/labor/queries";
 import { getVarianceReport, listIngredients } from "@/modules/inventory/queries";
-import { listCashCloses } from "@/modules/cash/queries";
+import { listCashCloses, listPayouts } from "@/modules/cash/queries";
 import { listInvoicesForExport, type InvoiceFilters } from "@/modules/invoices/queries";
 import { listCapitalAssets, depreciationForPeriod } from "@/modules/capital/queries";
 import { listExpenses, EXPENSE_CATEGORIES } from "@/modules/expenses/queries";
 import { listVendors } from "@/modules/vendors/queries";
+import { getEventDetail } from "@/modules/events/detail";
+import { getActiveEvent } from "@/modules/events/queries";
 import {
   listDailySalesForExport,
   listSalesItemsForExport,
@@ -30,6 +33,17 @@ export type ExportDef = {
   /** One line shown under the label on the export page. */
   description: string;
   group: ExportGroup;
+  /*
+    The lockable section this download belongs to, if any.
+
+    Declared here, beside the builder, rather than in a lookup table over in the
+    route. That table listed two of the four exports that needed it, so
+    /api/exports/recipes handed over every costed recipe while /recipes itself
+    sat behind the PIN, and /api/exports/events did the same. Removing a button
+    is not protection when the URL is guessable, and a second list that has to
+    be updated by hand every time an export is added will drift again.
+  */
+  section?: SectionKey;
   build: (ctx: ExportContext) => Promise<ExportResult>;
 };
 
@@ -38,12 +52,27 @@ const money = (cents: number) => fromCents(cents).toFixed(2);
 
 const EXPENSE_LABEL = new Map(EXPENSE_CATEGORIES.map((c) => [c.value, c.label]));
 
+// Mirrors the invoice list page's own resolution: an explicit ?event= (a real
+// id, or the "all" sentinel for "ignore the header's active event") wins;
+// absent, the page defers to whatever event the header switcher's cookie has
+// active. Without this fallback the CSV silently exported more rows than the
+// screen showed whenever a cookie-scoped event was active and the list's own
+// filter bar was left untouched — the export claims to match what's on
+// screen, so it has to resolve the cookie the same way the page does.
+function resolveEventFilter(sp: URLSearchParams, activeEventId: string | null): string | null {
+  const raw = sp.get("event");
+  if (raw === "all") return null;
+  if (raw) return raw;
+  return activeEventId;
+}
+
 // Mirrors the invoice list page's query params so a filtered view downloads
 // exactly the rows on screen.
-function invoiceFiltersFrom(sp: URLSearchParams): InvoiceFilters {
+function invoiceFiltersFrom(sp: URLSearchParams, activeEventId: string | null): InvoiceFilters {
   const status = sp.get("status");
   return {
     supplierId: sp.get("supplier") ?? undefined,
+    eventId: resolveEventFilter(sp, activeEventId),
     invoiceNumber: sp.get("number") ?? undefined,
     status: status === "open" || status === "closed" ? status : "all",
     from: sp.get("from") ?? undefined,
@@ -151,6 +180,7 @@ export const EXPORTS: ExportDef[] = [
   },
   {
     key: "pnl",
+    section: "REPORTS",
     label: "Profit & loss by event",
     description: "The P&L matrix: sales, COGS, labor, expenses, fees, profit per event.",
     group: "Sales",
@@ -158,14 +188,17 @@ export const EXPORTS: ExportDef[] = [
       const cols = await pnlByEvent(scope.businessId, scope.locationId);
       return {
         columns: [
-          "column", "transactions", "netSales", "supplierInvoicesCOGS", "labor",
-          "operatingExpenses", "eventFees", "profit", "marginPct", "tips",
+          "column", "transactions", "netSales", "costOfGoods", "grossProfit",
+          "grossMarginPct", "labor", "operatingExpenses", "eventFees", "profit",
+          "marginPct", "tips",
         ],
         rows: cols.map((c) => ({
           column: c.key === "overall" ? "Overall" : c.name,
           transactions: c.txns,
           netSales: money(c.netSalesCents),
-          supplierInvoicesCOGS: money(c.cogsCents),
+          costOfGoods: money(c.cogsCents),
+          grossProfit: money(c.grossProfitCents),
+          grossMarginPct: c.netSalesCents > 0 ? c.grossMarginPct.toFixed(2) : "",
           labor: money(c.laborCents),
           operatingExpenses: money(c.opexCents),
           eventFees: money(c.feeCents),
@@ -184,8 +217,9 @@ export const EXPORTS: ExportDef[] = [
     description: "One row per supplier bill, with the full tax and adjustment breakdown.",
     group: "Purchasing",
     build: async ({ scope, sp }) => {
+      const activeEvent = await getActiveEvent(scope.businessId);
       const data = applyUntagged(
-        await listInvoicesForExport(scope.locationId, invoiceFiltersFrom(sp)),
+        await listInvoicesForExport(scope.locationId, invoiceFiltersFrom(sp, activeEvent?.id ?? null)),
         sp,
       );
       return {
@@ -222,8 +256,9 @@ export const EXPORTS: ExportDef[] = [
     description: "One row per invoice item, carrying its invoice's columns for pivoting.",
     group: "Purchasing",
     build: async ({ scope, sp }) => {
+      const activeEvent = await getActiveEvent(scope.businessId);
       const data = applyUntagged(
-        await listInvoicesForExport(scope.locationId, invoiceFiltersFrom(sp)),
+        await listInvoicesForExport(scope.locationId, invoiceFiltersFrom(sp, activeEvent?.id ?? null)),
         sp,
       );
       return {
@@ -372,15 +407,37 @@ export const EXPORTS: ExportDef[] = [
     build: async ({ scope }) => {
       const data = await listCashCloses(scope.locationId, 365);
       return {
-        columns: ["date", "opening", "closing", "deposit", "expected", "overShort", "closedBy"],
+        columns: ["date", "opening", "closing", "deposit", "paidIn", "paidOut", "expected", "overShort", "closedBy"],
         rows: data.map((c) => ({
           date: iso(c.businessDate),
           opening: money(c.openingCents),
           closing: money(c.closingCents),
           deposit: money(c.depositCents),
+          paidIn: money(c.paidInCents),
+          paidOut: money(c.paidOutCents),
           expected: money(c.expectedCents),
           overShort: money(c.overShortCents),
           closedBy: c.closedBy.name,
+        })),
+      };
+    },
+  },
+  {
+    key: "payouts",
+    label: "Cash payouts",
+    description: "Cash taken out of the drawer — what for, who took it, and the receipt.",
+    group: "Money",
+    build: async ({ scope }) => {
+      const data = await listPayouts(scope.locationId, 365);
+      return {
+        columns: ["date", "amount", "type", "reason", "paidTo", "reference"],
+        rows: data.map((p) => ({
+          date: iso(p.businessDate),
+          amount: money(p.amountCents),
+          type: p.kind,
+          reason: p.reason,
+          paidTo: p.paidTo ?? "",
+          reference: p.reference ?? "",
         })),
       };
     },
@@ -491,6 +548,7 @@ export const EXPORTS: ExportDef[] = [
   },
   {
     key: "recipes",
+    section: "RECIPES",
     label: "Recipes",
     description: "One row per recipe ingredient, with menu price and line cost.",
     group: "Inventory",
@@ -567,9 +625,105 @@ export const EXPORTS: ExportDef[] = [
     },
   },
 
+  {
+    key: "event-summary",
+    section: "EVENTS",
+    label: "One event, end to end",
+    description:
+      "Everything tagged to a single event as one ledger — sales, items, invoices, expenses, labor, cash and equipment. Needs ?event=<id>.",
+    group: "Sales",
+    build: async ({ scope, sp }) => {
+      const columns = ["section", "date", "description", "reference", "quantity", "amount"];
+      const eventId = sp.get("event");
+      if (!eventId) return { columns, rows: [] };
+      const d = await getEventDetail(scope.businessId, scope.locationId, eventId);
+      if (!d) return { columns, rows: [] };
+
+      // One flat ledger rather than seven files: a single CSV pivots.
+      const row = (
+        section: string,
+        date: Date | null,
+        description: string,
+        reference = "",
+        quantity: number | string = "",
+        amountCents: number | null = null,
+      ) => ({
+        section,
+        date: iso(date),
+        description,
+        reference,
+        quantity,
+        amount: amountCents === null ? "" : money(amountCents),
+      });
+
+      return {
+        columns,
+        rows: [
+          row("Event", d.event.startDate, d.event.name, d.event.feeNote ?? "", "", d.event.feeCents),
+          ...d.sales.map((s2) =>
+            row("Daily sales", s2.businessDate, "Net sales", s2.source, s2.guestCount, s2.netSalesCents),
+          ),
+          ...d.sales
+            .filter((s2) => s2.tipsCents !== 0)
+            .map((s2) => row("Tips", s2.businessDate, "Tips", s2.source, "", s2.tipsCents)),
+          ...d.items.map((i) =>
+            row("Items sold", null, i.itemName, i.category ?? "", i.qty, i.netSalesCents),
+          ),
+          ...d.invoices.map((inv) =>
+            row(
+              "Invoices",
+              inv.invoiceDate,
+              inv.supplier.name,
+              inv.invoiceNumber ?? "",
+              inv._count.items,
+              inv.totalCents,
+            ),
+          ),
+          ...d.shared.invoices.map((inv) =>
+            row(
+              "Shared invoices (this event's share)",
+              inv.invoiceDate,
+              inv.supplier.name,
+              `${inv.invoiceNumber ?? ""} · 1/${d.shared.shareDiv}`,
+              "",
+              Math.round(inv.totalCents / d.shared.shareDiv),
+            ),
+          ),
+          ...d.expenses.map((e) =>
+            row(
+              "Operating expenses",
+              e.businessDate,
+              EXPENSE_LABEL.get(e.category) ?? e.category,
+              e.vendor?.name ?? "",
+              "",
+              e.amountCents,
+            ),
+          ),
+          ...d.labor.map((l) =>
+            row(
+              "Labor (worked inside the event's dates)",
+              l.start,
+              l.employee,
+              l.actual ? "clocked" : "scheduled",
+              (l.minutes / 60).toFixed(2),
+              l.costCents,
+            ),
+          ),
+          ...d.cashCloses.map((c) =>
+            row("Cash closes", c.businessDate, "Over / short", "", "", c.overShortCents),
+          ),
+          ...d.assets.map((a) =>
+            row("Equipment (capital, not in P&L)", a.purchaseDate, a.name, a.vendor ?? "", "", a.purchasePriceCents),
+          ),
+        ],
+      };
+    },
+  },
+
   // ───────────────────────── Reference ─────────────────────────
   {
     key: "events",
+    section: "EVENTS",
     label: "Events",
     description: "Every event with its date range and booth fee.",
     group: "Reference",

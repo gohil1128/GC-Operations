@@ -1,4 +1,4 @@
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getLaborReport } from "@/modules/labor/queries";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -13,7 +13,7 @@ import { Download } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function LaborReportPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("labor");
   const r = await getLaborReport(scope.locationId, 14);
   const laborTarget = 30;
   const tone = r.laborPct > laborTarget ? "bad" : r.laborPct > laborTarget - 2 ? "warn" : "good";

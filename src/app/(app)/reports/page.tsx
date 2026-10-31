@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { dailySummary, weeklyTrend, purchaseSpendByPeriod, supplierSpendByEvent, categorySpendByEvent, pnlByEvent } from "@/modules/reports/queries";
 import { getLaborReport } from "@/modules/labor/queries";
 import { getVarianceReport } from "@/modules/inventory/queries";
@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { formatMoney, formatPercent } from "@/lib/money";
 import { DeleteReportDayButton } from "./_components/delete-report-day-button";
+import { PrintButton } from "@/components/print-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("financials");
   const isOwner = scope.role === "OWNER";
   const [daily, weekly, labor, spend, variance, supplierMatrix, categoryMatrix, pnl] = await Promise.all([
     dailySummary(scope.locationId, 14),
@@ -35,6 +36,7 @@ export default async function ReportsPage() {
         description="Daily, weekly, labor, variance, and purchase spend"
         actions={
           <>
+            <PrintButton />
             <Button asChild variant="outline" size="sm">
               <Link href="/settings/exports"><Download className="h-3.5 w-3.5" />Download CSV</Link>
             </Button>
@@ -91,10 +93,22 @@ export default async function ReportsPage() {
                     ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="text-muted-foreground">Supplier invoices (COGS)</TableCell>
+                    <TableCell className="text-muted-foreground">Cost of goods</TableCell>
                     {pnl.map((c) => (
                       <TableCell key={c.key} className="text-right num text-muted-foreground">
                         {c.cogsCents ? <>−{formatMoney(c.cogsCents)}</> : "—"}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {/* Everything above this line was consumed making what was
+                      sold; everything below it is the cost of being open. */}
+                  <TableRow>
+                    <TableCell className="font-medium">Gross profit</TableCell>
+                    {pnl.map((c) => (
+                      <TableCell key={c.key} className="text-right num font-medium">
+                        {c.netSalesCents
+                          ? `${formatMoney(c.grossProfitCents)} (${formatPercent(c.grossMarginPct)})`
+                          : "—"}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -269,7 +283,7 @@ export default async function ReportsPage() {
                     {supplierMatrix.hasUntagged && (
                       <TableCell className="text-right num font-semibold">{formatMoney(supplierMatrix.grandUntagged)}</TableCell>
                     )}
-                    <TableCell className="text-right num font-semibold text-brand">{formatMoney(supplierMatrix.grandTotal)}</TableCell>
+                    <TableCell className="text-right num font-semibold text-brand-ink">{formatMoney(supplierMatrix.grandTotal)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -342,7 +356,7 @@ export default async function ReportsPage() {
                     {categoryMatrix.hasUntagged && (
                       <TableCell className="text-right num font-semibold">{formatMoney(categoryMatrix.grandUntagged)}</TableCell>
                     )}
-                    <TableCell className="text-right num font-semibold text-brand">{formatMoney(categoryMatrix.grandTotal)}</TableCell>
+                    <TableCell className="text-right num font-semibold text-brand-ink">{formatMoney(categoryMatrix.grandTotal)}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

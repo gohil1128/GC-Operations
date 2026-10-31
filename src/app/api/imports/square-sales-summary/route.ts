@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import Papa from "papaparse";
-import { getScope } from "@/lib/scope";
+import { scopeFor } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
-import { startOfDay } from "@/lib/date";
+import { businessDayFromIso } from "@/lib/date";
 import { toCents } from "@/lib/money";
 import { writeAudit } from "@/lib/audit";
+import { overShortCentsFor } from "@/modules/cash/reconcile";
 
 // Importer for Square's "Sales Summary" page export
 // (Reports → Sales summary → Export → "Summary").
@@ -66,7 +67,8 @@ function get(lookup: Map<string, string>, candidates: string[]): string | undefi
 }
 
 export async function POST(req: Request) {
-  const scope = await getScope();
+  const scope = await scopeFor("settings");
+  if (!scope) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
   if (!isoDate) {
     return NextResponse.json({ error: `Bad date "${dateRaw}". Use YYYY-MM-DD.` }, { status: 400 });
   }
-  const businessDate = startOfDay(new Date(`${isoDate[1]}-${isoDate[2]}-${isoDate[3]}`));
+  const businessDate = businessDayFromIso(`${isoDate[1]}-${isoDate[2]}-${isoDate[3]}`);
 
   const eventIdRaw = String(form.get("eventId") ?? "");
   const eventId = eventIdRaw && eventIdRaw !== "none" ? eventIdRaw : null;
@@ -148,22 +150,58 @@ export async function POST(req: Request) {
     dayCreated = 1;
   }
 
-  // Pre-fill cash close split if one exists for the day.
+  /*
+    Fill in the parts of the day's close that Square actually knows.
+
+    It used to write Square's cash SALES into CashClose.cashCents, which
+    every other screen reads as the money physically counted in the till at
+    the end of the day. The two are not the same number and are not even the
+    same kind of number: the count includes the opening float and is missing
+    whatever was paid out of the drawer during the day. Overwriting one with
+    the other silently replaced a count somebody had made by hand, and the
+    day stopped reconciling with no sign of why.
+
+    It also worked out its own over/short — closing + deposit − opening −
+    expected — which had drifted from the one the rest of the app uses and
+    left out both paid-out and paid-in entirely, so every payout came back
+    as a shortage.
+
+    Now it writes only what Square is the authority on. Card takings are not
+    counted by hand at all, so they come from the report. Expected takings is
+    the day's net sales, which is exactly what the entry form suggests, so
+    the two agree. The cash count is left alone: nobody but the person who
+    counted the drawer knows that figure. Over/short is then re-derived with
+    overShortCentsFor, the same function the form and the actions use.
+  */
   let cashCloseTouched = false;
-  if (cashCents > 0 || cardCents > 0) {
-    const close = await prisma.cashClose.findFirst({
-      where: { locationId: scope.locationId, businessDate },
+  const close = await prisma.cashClose.findFirst({
+    where: { locationId: scope.locationId, businessDate },
+  });
+  if (close) {
+    // Derived from the rows, the way the cash actions do it, rather than
+    // trusting the totals cached on the close.
+    const [deposits, payouts] = await Promise.all([
+      prisma.deposit.findMany({ where: { locationId: scope.locationId, businessDate } }),
+      prisma.cashPayout.findMany({ where: { locationId: scope.locationId, businessDate } }),
+    ]);
+    const depositCents = deposits.reduce((a, d) => a + d.amountCents, 0);
+    const paidOutCents = payouts.reduce((a, p) => a + p.amountCents, 0);
+    const expectedCents = netCents;
+    const creditCents = cardCents > 0 ? cardCents : close.creditCents;
+    const overShortCents = overShortCentsFor({
+      cashCents: close.cashCents,
+      creditCents,
+      depositCents,
+      paidOutCents,
+      paidInCents: close.paidInCents,
+      openingCents: close.openingCents,
+      expectedCents,
     });
-    if (close) {
-      const expectedCents = close.openingCents + cashCents + cardCents;
-      const overShortCents =
-        cashCents + cardCents + close.depositCents - close.openingCents - expectedCents;
-      await prisma.cashClose.update({
-        where: { id: close.id },
-        data: { cashCents, creditCents: cardCents, expectedCents, overShortCents },
-      });
-      cashCloseTouched = true;
-    }
+    await prisma.cashClose.update({
+      where: { id: close.id },
+      data: { creditCents, depositCents, paidOutCents, expectedCents, overShortCents },
+    });
+    cashCloseTouched = true;
   }
 
   await writeAudit({

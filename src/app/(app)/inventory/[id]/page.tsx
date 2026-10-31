@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getIngredient } from "@/modules/inventory/queries";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 export default async function IngredientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const scope = await getScope();
+  const scope = await requireCapability("inventory");
   const ing = await getIngredient(scope.businessId, id);
   if (!ing) notFound();
   const low = ing.onHand <= ing.reorderPoint && ing.reorderPoint > 0;
