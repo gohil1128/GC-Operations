@@ -4,6 +4,18 @@ import animate from "tailwindcss-animate";
 const config: Config = {
   darkMode: ["class"],
   content: ["./src/**/*.{ts,tsx}"],
+  /*
+    hover: compiles to @media (hover: hover) instead of a bare :hover.
+
+    On a touchscreen :hover LATCHES. The browser applies it on tap and leaves
+    it applied until something else is touched, so on the tablet this runs on
+    at the stall, tapping "View all" left it underlined and tapping a ledger
+    row left hover:bg-accent stuck on it — the app looked like it had lost
+    track of what was selected. There are 87 hover: utilities across 36 files
+    and this gates every one of them behind a pointer that can actually hover.
+    It costs nothing on desktop, where the query is simply true.
+  */
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     container: { center: true, padding: "1rem", screens: { "2xl": "1400px" } },
     extend: {

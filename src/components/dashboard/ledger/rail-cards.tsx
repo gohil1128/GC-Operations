@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatMoney, APP_LOCALE } from "@/lib/money";
 import { fmtDate } from "@/lib/date";
@@ -88,10 +87,9 @@ export function InvoicesDueCard({ invoices, now }: { invoices: DueInvoice[]; now
         <h2 className="text-sm font-semibold">Invoices due</h2>
         <Link
           href="/purchasing/invoices?status=open"
-          className="inline-flex items-center gap-1 text-2xs font-medium text-brand-ink hover:underline"
+          className="relative inline-flex items-center text-2xs font-medium text-muted-foreground after:absolute after:-inset-x-3 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline"
         >
           View all
-          <ArrowRight className="h-3 w-3" aria-hidden />
         </Link>
       </header>
       {invoices.length === 0 ? (
@@ -159,10 +157,9 @@ export function UpcomingEventsCard({ events }: { events: UpcomingEvent[] }) {
         <h2 className="text-sm font-semibold">Upcoming events</h2>
         <Link
           href="/settings"
-          className="inline-flex items-center gap-1 text-2xs font-medium text-brand-ink hover:underline"
+          className="relative inline-flex items-center text-2xs font-medium text-muted-foreground after:absolute after:-inset-x-3 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline"
         >
           Manage
-          <ArrowRight className="h-3 w-3" aria-hidden />
         </Link>
       </header>
       {events.length === 0 ? (

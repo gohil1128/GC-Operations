@@ -155,7 +155,7 @@ export function PnlStatement({ columns }: { columns: PnlColumn[] }) {
             <div
               role="row"
               {...rowProps("head")}
-              className="ledger-row border-b border-espresso pb-2 pt-2 text-[11px] text-muted-foreground"
+              className="ledger-row border-b border-espresso pb-2 pt-2 text-xs text-muted-foreground"
             >
               <span role="columnheader" {...cellProps("line")}>
                 Line

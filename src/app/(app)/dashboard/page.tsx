@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Download, Lock } from "lucide-react";
+import { ArrowUpRight, Download, Lock } from "lucide-react";
 import { requireCapability } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
 import { getDashboard, getPriorNetSales } from "@/modules/dashboard/queries";
@@ -229,19 +229,18 @@ export default async function DashboardPage({
             {/* Not rendered rather than CSS-hidden: a locked page should not
                 carry a live link to its own export, even an invisible one. */}
             {!pnlLocked && (
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex shrink-0 items-center gap-5">
               {/* The statement's column headings already open an event, but
                   that isn't discoverable — this names the destination. */}
               <Link
                 href="/events"
-                className="inline-flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
+                className="relative inline-flex items-center gap-1 text-xs font-medium text-muted-foreground after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline"
               >
                 Browse events
-                <ArrowRight className="h-3 w-3" aria-hidden />
               </Link>
               <a
                 href="/api/exports/pnl"
-                className="inline-flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
+                className="relative inline-flex items-center gap-1 text-xs font-medium text-muted-foreground after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline"
               >
                 Export CSV
                 <Download className="h-3 w-3" aria-hidden />

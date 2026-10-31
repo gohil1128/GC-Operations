@@ -7,13 +7,28 @@
   directly — but linear() takes an arbitrary list of sampled points, so a
   spring can be solved numerically and emitted as the curve it actually is.
 
-  The springs below are SwiftUI's own. Apple publishes them as duration and
-  BOUNCE, where damping fraction is simply 1 - bounce:
+  The springs below take their DAMPING from SwiftUI's own. Apple publishes
+  those as duration and BOUNCE, where damping fraction is simply 1 - bounce:
 
     .smooth            duration 0.5   bounce 0.00   -> zeta 1.00
     .snappy            duration 0.5   bounce 0.15   -> zeta 0.85
     .bouncy            duration 0.5   bounce 0.30   -> zeta 0.70
     .interactiveSpring response 0.15  damping 0.86  -> the press/release spring
+
+  THE RESPONSE IS NOT APPLE'S, AND THAT IS DELIBERATE. Apple's 0.5s response
+  settles in roughly 540-590ms, which is right for what it is tuned for: a
+  full-screen view transition on iOS, where the motion is carrying a whole
+  hierarchy and the duration is doing the explaining. Nothing here is that.
+  These drive a nav indicator sliding between tabs, a dropdown opening, a
+  hover tint — small, frequent interactions on a tool somebody uses forty
+  times in a shift, where past about 300ms a transition stops reading as
+  responsiveness and starts reading as a wait.
+
+  So the response is shortened and the damping is kept. That split matters:
+  overshoot is a function of damping ALONE, independent of response, so these
+  springs keep Apple's exact signature — snappy peaks at +0.6%, bouncy at
+  +4.6%, smooth and micro not at all — they simply get there sooner. The feel
+  is Apple's; the pace is a 10-inch tablet propped on a market stall.
 
   Note how little Apple's springs overshoot: snappy peaks around +0.6% and
   bouncy around +4.6%. Web recreations routinely ship 10-20%, or reach for
@@ -35,10 +50,10 @@
 type Spring = { name: string; response: number; damping: number; comment: string };
 
 const SPRINGS: Spring[] = [
-  { name: "micro", response: 0.28, damping: 1.0, comment: "short and dead-flat — hover tints and other changes that must not wobble" },
-  { name: "smooth", response: 0.5, damping: 1.0, comment: "SwiftUI .smooth — no overshoot, for layout that should settle calmly" },
-  { name: "snappy", response: 0.5, damping: 0.85, comment: "SwiftUI .snappy — the default: controls, sheets, the selection indicator" },
-  { name: "bouncy", response: 0.5, damping: 0.7, comment: "SwiftUI .bouncy — only where a bounce means something" },
+  { name: "micro", response: 0.12, damping: 1.0, comment: "dead-flat and quick — hover tints and other colour changes that must not wobble" },
+  { name: "smooth", response: 0.25, damping: 1.0, comment: ".smooth damping — no overshoot, for layout that should settle calmly" },
+  { name: "snappy", response: 0.22, damping: 0.85, comment: ".snappy damping — the default: controls, overlays, the selection indicator" },
+  { name: "bouncy", response: 0.22, damping: 0.7, comment: ".bouncy damping — only where a bounce means something" },
   { name: "press", response: 0.15, damping: 0.86, comment: "SwiftUI .interactiveSpring — the release after a press" },
 ];
 
@@ -121,6 +136,17 @@ console.log(lines.join("\n"));
 // A quick self-check, printed to stderr so it never lands in the CSS: every
 // curve must start at 0, end within a thousandth of 1, and a bouncy spring
 // must actually overshoot while a smooth one must not.
+/*
+  The 300ms ceiling is asserted here rather than left in a comment, because a
+  comment does not survive somebody nudging a response value to see what it
+  looks like. Every token in this file ends up on a hover, a tab change or a
+  menu opening, and all of those are frequent enough that the duration is felt
+  as latency rather than seen as motion. If a spring here ever needs to run
+  longer than this, it is not one of these springs — give it its own token and
+  its own reason.
+*/
+const UI_CEILING_MS = 300;
+
 for (const s of SPRINGS) {
   const d = settleTime(s);
   const xs = Array.from({ length: 200 }, (_, i) => position(s, (i / 199) * d));
@@ -128,6 +154,12 @@ for (const s of SPRINGS) {
   const stops = toLinear(s, d).split(", ");
   if (stops[stops.length - 1] !== "1") throw new Error(`${s.name} does not end at 1`);
   if (peak > 1.06) throw new Error(`${s.name} overshoots ${((peak - 1) * 100).toFixed(1)}% — too cartoonish`);
+  if (Math.round(d * 1000) > UI_CEILING_MS) {
+    throw new Error(
+      `${s.name} settles in ${Math.round(d * 1000)}ms, over the ${UI_CEILING_MS}ms UI ceiling — ` +
+        `lower its response (overshoot is set by damping, so the feel is preserved)`,
+    );
+  }
   process.stderr.write(
     `${s.name.padEnd(7)} settle ${String(Math.round(d * 1000)).padStart(4)}ms  ` +
       `start ${xs[0].toFixed(3)}  end 1  peak ${peak.toFixed(4)}` +
