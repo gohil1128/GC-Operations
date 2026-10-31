@@ -3,8 +3,9 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, BarChart3, Wallet, FileText, Menu,
+  LayoutDashboard, TrendingUp, Wallet, FileText, Menu,
   Boxes, Users, Receipt, Settings as SettingsIcon, ChefHat, X, CalendarDays, ShoppingBag,
+  ClipboardCheck, Scale, Clock, Truck, CirclePlus, Plug, Download, Contact, CalendarClock,
 } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -18,32 +19,41 @@ import { can, type Capability } from "@/lib/permissions";
   a staff member gets their two screens in the bar instead of an empty bar
   with everything hidden in a sheet.
 */
+/*
+  EVERY DESTINATION HAS ITS OWN GLYPH. It did not: four of these were a sheet
+  of paper (Invoices, Purchase orders, New purchase order, Data export), three
+  were a bar chart (Reports, Variance, Labor report), three were a pair of
+  people (Schedule, Employees, Team), and two were a stack of boxes (Counts,
+  Ingredients). In the More sheet those sit in one scrolling list, so a dozen
+  rows carried four pictures between them and the icon column told you
+  nothing — you were reading the labels and the glyphs were decoration.
+*/
 const DESTINATIONS: { href: string; label: string; icon: typeof Wallet; cap: Capability }[] = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard, cap: "overview" },
   // Events sits in the bar rather than behind "More": it is the thing this
   // business is organised around, and every other screen is scoped by it.
   { href: "/events", label: "Events", icon: CalendarDays, cap: "events" },
-  { href: "/reports", label: "Reports", icon: BarChart3, cap: "financials" },
+  { href: "/reports", label: "Reports", icon: TrendingUp, cap: "financials" },
   { href: "/purchasing/invoices", label: "Invoices", icon: FileText, cap: "purchasing" },
   // Below the four bar slots on purpose: Sales is a read-it-later screen, and
   // promoting it would push Invoices — which carries the open-bill badge —
   // into the More sheet.
   { href: "/sales", label: "Sales", icon: ShoppingBag, cap: "financials" },
   { href: "/cash", label: "Cash closes", icon: Wallet, cap: "cash" },
-  { href: "/inventory/counts", label: "Counts", icon: Boxes, cap: "inventoryCount" },
+  { href: "/inventory/counts", label: "Counts", icon: ClipboardCheck, cap: "inventoryCount" },
   { href: "/inventory", label: "Ingredients", icon: Boxes, cap: "inventory" },
-  { href: "/inventory/variance", label: "Variance", icon: BarChart3, cap: "inventory" },
+  { href: "/inventory/variance", label: "Variance", icon: Scale, cap: "inventory" },
   { href: "/recipes", label: "Recipes", icon: ChefHat, cap: "inventory" },
-  { href: "/labor", label: "Schedule", icon: Users, cap: "labor" },
-  { href: "/labor/report", label: "Labor report", icon: BarChart3, cap: "labor" },
-  { href: "/labor/employees", label: "Employees", icon: Users, cap: "labor" },
+  { href: "/labor", label: "Schedule", icon: CalendarClock, cap: "labor" },
+  { href: "/labor/report", label: "Labor report", icon: Clock, cap: "labor" },
+  { href: "/labor/employees", label: "Employees", icon: Contact, cap: "labor" },
   { href: "/expenses", label: "Expenses", icon: Receipt, cap: "expenses" },
-  { href: "/purchasing", label: "Purchase orders", icon: FileText, cap: "purchasing" },
-  { href: "/purchasing/new", label: "New purchase order", icon: FileText, cap: "purchasing" },
+  { href: "/purchasing", label: "Purchase orders", icon: Truck, cap: "purchasing" },
+  { href: "/purchasing/new", label: "New purchase order", icon: CirclePlus, cap: "purchasing" },
   { href: "/settings", label: "Business & events", icon: SettingsIcon, cap: "settings" },
   { href: "/settings/users", label: "Team", icon: Users, cap: "settings" },
-  { href: "/settings/integrations", label: "Integrations", icon: SettingsIcon, cap: "settings" },
-  { href: "/settings/exports", label: "Data export", icon: FileText, cap: "settings" },
+  { href: "/settings/integrations", label: "Integrations", icon: Plug, cap: "settings" },
+  { href: "/settings/exports", label: "Data export", icon: Download, cap: "settings" },
 ];
 
 export function MobileTabBar({ role }: { role: Role }) {

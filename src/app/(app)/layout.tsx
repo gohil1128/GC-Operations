@@ -56,8 +56,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Soft glass: a floating frosted rail at lg+, MobileTabBar below it. */}
       <IconRail role={scope.role} userName={session.user.name ?? "User"} />
 
-      {/* lg:pl-24 is the 96px inset the floating rail needs. */}
-      <div className="relative flex min-w-0 flex-1 flex-col lg:pl-24">
+      {/* 18px gutter + the 88px rail + 14px = the inset the floating rail needs.
+          It grew with the rail when the destinations gained visible names. */}
+      <div className="relative flex min-w-0 flex-1 flex-col lg:pl-[120px]">
         {/* Content top strip: scope on the left, switchers on the right.
             Transparent now — it floats over the photograph, and the pieces
             inside it carry their own frosted pills. */}
@@ -68,15 +69,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <div className="lg:hidden">
                 <BrandBar businessName={business?.name ?? "Operations"} />
               </div>
-              {/* Scope line. The location is only worth naming when there is
-                  more than one to be in: for a business that travels to its
-                  events, the event is the venue and a fixed "location" is just
-                  a container the data model needs. It stays in the user menu
-                  either way. */}
+              {/*
+                The business name, and nothing else.
+
+                This pill used to read "God's Chai Operations · Downtown Cafe ·
+                All events", and the location switcher and the event switcher
+                sit 200px to the right of it saying "Downtown Cafe" and "All
+                events". So two thirds of the line was repeating, in text you
+                cannot act on, what the controls next to it already show and
+                can change. On the Overview the same event name then appeared
+                twice more — in the masthead title and on its own period
+                control — four times on one screen.
+
+                What is left is the one thing the switchers never show, which
+                is also the only orientation this strip owes anybody on
+                desktop, where the rail's logo is a mark with no words.
+              */}
               <span className="glass-pill hidden truncate rounded-full px-3.5 py-1.5 text-[13px] text-secondary-foreground lg:inline">
                 {business?.name ?? "Operations"}
-                {scope.availableLocations.length > 1 ? ` · ${activeLocation.name}` : ""}
-                {activeEvent ? ` · ${activeEvent.name}` : " · All events"}
               </span>
             </div>
             <div className="glass-pill flex shrink-0 items-center gap-1 rounded-full p-1 sm:gap-1.5">

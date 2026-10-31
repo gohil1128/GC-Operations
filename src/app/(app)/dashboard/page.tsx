@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Download, Lock } from "lucide-react";
+import { Download, Lock } from "lucide-react";
 import { requireCapability } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
 import { getDashboard, getPriorNetSales } from "@/modules/dashboard/queries";
@@ -189,14 +189,29 @@ export default async function DashboardPage({
         The Overview has no PageHeader of its own, so it carries the same
         photograph masthead explicitly — marked the same way, so the contrast
         sweep knows the type over it is meant to be light.
+
+        IT NOW CARRIES THE SAME TYPE SCALE TOO. Every other page in the app
+        gets an eyebrow over a 40px display title here; the Overview — the
+        page people actually land on — had a single line of 13px grey, which
+        made the home screen's own title the smallest text on it and smaller
+        than the card headings underneath. The shape below is PageHeader's,
+        class for class, so the two cannot drift apart.
+
+        PageHeader is not used directly because it wraps its actions in a
+        glass pill, and EventControl is already one. Glass inside glass has
+        nothing left to refract — the same rule that took the frost off the
+        content cards.
       */}
       <div className="relative" data-on-photo>
         <div className="app-photo" aria-hidden />
-        <div className="relative mx-auto flex max-w-[1400px] flex-col gap-3 px-4 pb-5 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <h1 className="text-[13px] font-normal tracking-normal text-white/80">
-            <span className="sr-only">Overview — </span>
-            <span className="font-semibold text-white">{range.label}</span> · {range.subLabel}
-          </h1>
+        <div className="relative mx-auto flex max-w-[1400px] flex-col gap-3 px-4 pb-5 pt-5 sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:px-6 sm:pt-6 lg:px-8">
+          <div>
+            <div className="text-xs text-white/80">Overview</div>
+            <h1 className="display-num mt-1 text-[26px] font-medium text-white sm:text-[40px] sm:font-normal sm:tracking-[-0.025em]">
+              {range.label}
+            </h1>
+            <p className="mt-1.5 text-sm text-white/85">{range.subLabel}</p>
+          </div>
           <EventControl
             events={eventOptions}
             activeKey={range.key}
@@ -221,7 +236,7 @@ export default async function DashboardPage({
       {/* Statement + rail. The grid collapses to one column when a business has
           turned off everything on one side, so a hidden card leaves no gap. */}
       {(show("pnl") || railCards > 0) && (
-      <div className={cn("mt-7 grid gap-6", show("pnl") && railCards > 0 && "lg:grid-cols-[minmax(0,1fr)_300px]")}>
+      <div className={cn("mt-7 grid gap-5", show("pnl") && railCards > 0 && "lg:grid-cols-[minmax(0,1fr)_300px]")}>
         {show("pnl") && (
         <section className="min-w-0">
           <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -288,7 +303,7 @@ export default async function DashboardPage({
 
       {/* Per-event and category views, below the statement. */}
       {(show("revenueByEvent") || show("itemMix")) && (
-      <div className={cn("mt-7 grid gap-[18px] [&>*]:min-w-0", show("revenueByEvent") && show("itemMix") && "lg:grid-cols-[minmax(0,1fr)_300px]")}>
+      <div className={cn("mt-5 grid gap-5 [&>*]:min-w-0", show("revenueByEvent") && show("itemMix") && "lg:grid-cols-[minmax(0,1fr)_300px]")}>
         {show("revenueByEvent") && (
         <div className="bento min-w-0 p-4 sm:p-[22px]">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -299,12 +314,10 @@ export default async function DashboardPage({
                 <span className="text-brand-ink">● What it cost</span>
               </span>
             </div>
-            <Link
-              href="/reports"
-              className="grid h-7 w-7 place-items-center rounded-full border border-border transition-colors hover:bg-accent"
-              aria-label="Reports"
-            >
-              <ArrowUpRight className="h-3.5 w-3.5" />
+            {/* Was a 28px circle holding an arrow: under the 44px minimum, and
+                an arrow in a ring names no destination. */}
+            <Link href="/reports" className="relative inline-flex items-center text-xs font-medium text-muted-foreground after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline">
+              Full report
             </Link>
           </div>
           <EventRevenueChart bars={eventBars} />
@@ -315,12 +328,12 @@ export default async function DashboardPage({
         <div className="bento min-w-0 p-4 sm:p-[22px]">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold">Item mix</h2>
-            <Link
-              href="/reports"
-              className="grid h-7 w-7 place-items-center rounded-full border border-border transition-colors hover:bg-accent"
-              aria-label="Item sales"
-            >
-              <ArrowUpRight className="h-3.5 w-3.5" />
+            {/* Points at /sales, which is the item-level page. Its label already
+                said "Item sales" while the href went to /reports — the label
+                named one destination and the link went to another. Same
+                `financials` capability, so nobody gains or loses access. */}
+            <Link href="/sales" className="relative inline-flex items-center text-xs font-medium text-muted-foreground after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline">
+              All items
             </Link>
           </div>
           {topItems.byCategory.length > 0 ? (

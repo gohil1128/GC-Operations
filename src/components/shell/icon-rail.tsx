@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutGrid, TrendingUp, FileText, ShoppingBag, Wallet, Boxes, Users,
-  CalendarDays, Settings as SettingsIcon,
+  CalendarDays, ClipboardCheck, Settings as SettingsIcon,
 } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -13,26 +13,44 @@ import { APP_NAME } from "@/lib/brand";
 import { LiquidIndicator } from "@/components/liquid-indicator";
 
 /*
-  The soft-glass icon rail: a floating frosted column of circular buttons.
+  The soft-glass rail: a floating frosted column of destinations.
 
-  Icon-only is the design, but an icon alone is not a label — each button keeps
-  a visually-hidden name and a title, so the rail is navigable by screen reader
-  and hoverable for anyone who does not recognise a glyph. The same capability
-  filter the old sidebar used decides what appears, so nothing became reachable
-  or unreachable by restyling the nav.
+  THE LABELS ARE VISIBLE, and that is the point of this file.
+
+  It used to be icon-only, with the name in a title attribute and a screen
+  reader label. Both of those are invisible to the person this app is actually
+  used by: a title tooltip needs a pointer to hover, and the tablet at the
+  stall has no pointer, so on the one device that matters every destination
+  was an unlabelled glyph. Two of them were the SAME glyph — Inventory and
+  Counts were both a stack of boxes — so even someone who had learned the
+  icons could not tell those two apart.
+
+  So each item now carries its name at 12px under the icon, and Counts has a
+  clipboard of its own. Short names where the full one will not fit: the
+  visible word is the one that fits the column, the full name stays in the
+  screen-reader label and the tooltip, and both still say "Profit & loss".
+
+  The rail is 88px rather than 64px to pay for it, which is 24px of content
+  width on large screens. The same capability filter the old sidebar used
+  decides what appears, so nothing became reachable or unreachable here.
 */
 
-type Item = { href: string; label: string; icon: typeof LayoutGrid; cap: Capability };
+/* `label` is the full name, for the screen reader and the tooltip. `short` is
+   what the 88px column can actually show; it is only set where the full name
+   does not fit. */
+type Item = { href: string; label: string; short?: string; icon: typeof LayoutGrid; cap: Capability };
 
 const ITEMS: Item[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutGrid, cap: "overview" },
   { href: "/events", label: "Events", icon: CalendarDays, cap: "events" },
-  { href: "/reports", label: "Profit & loss", icon: TrendingUp, cap: "financials" },
+  { href: "/reports", label: "Profit & loss", short: "P&L", icon: TrendingUp, cap: "financials" },
   { href: "/sales", label: "Sales", icon: ShoppingBag, cap: "financials" },
   { href: "/purchasing/invoices", label: "Invoices", icon: FileText, cap: "purchasing" },
-  { href: "/cash", label: "Cash closes", icon: Wallet, cap: "cash" },
+  { href: "/cash", label: "Cash closes", short: "Cash", icon: Wallet, cap: "cash" },
   { href: "/inventory", label: "Inventory", icon: Boxes, cap: "inventory" },
-  { href: "/inventory/counts", label: "Counts", icon: Boxes, cap: "inventoryCount" },
+  // Its own glyph, not the Inventory boxes. These two sit next to each other
+  // and were indistinguishable.
+  { href: "/inventory/counts", label: "Counts", icon: ClipboardCheck, cap: "inventoryCount" },
   { href: "/labor", label: "Labor", icon: Users, cap: "labor" },
 ];
 
@@ -66,7 +84,7 @@ export function IconRail({ role, userName }: { role: Role; userName: string }) {
   return (
     <nav
       aria-label="Sections"
-      className="glass-pill lg-thin fixed left-[18px] top-[18px] z-40 hidden h-[calc(100dvh-36px)] w-16 flex-col items-center gap-2 rounded-[32px] px-3 py-4 lg:flex"
+      className="glass-pill lg-thin fixed left-[18px] top-[18px] z-40 hidden h-[calc(100dvh-36px)] w-[88px] flex-col items-center gap-1 rounded-[32px] px-2 py-4 lg:flex"
     >
       {/* One object that travels between items, rather than a background
           switched on and off per item. See LiquidIndicator for why that
@@ -129,13 +147,18 @@ function RailButton({ item, current }: { item: Item; current: boolean }) {
           The current item's fill is the travelling indicator, which sits
           behind this. relative + z-10 keeps the glyph above it.
         */
-        "lg-press relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full",
+        "lg-press relative z-10 flex w-full shrink-0 flex-col items-center gap-1 rounded-[18px] px-1 py-2",
         current
           ? "text-espresso-foreground"
           : "text-secondary-foreground hover:bg-foreground/[0.06]",
       )}
     >
       <Icon className="h-[17px] w-[17px]" aria-hidden />
+      {/* aria-hidden because the full name is already on the link below. Left
+          readable, the screen reader would say "P&L Profit & loss". */}
+      <span aria-hidden className="text-xs leading-none tracking-tight">
+        {item.short ?? item.label}
+      </span>
       <span className="sr-only">{item.label}</span>
     </Link>
   );
