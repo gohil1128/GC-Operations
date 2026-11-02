@@ -10,6 +10,7 @@ import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { can, ROLE_LABELS, type Capability } from "@/lib/permissions";
 import { UserMenu } from "@/components/shell/user-menu";
+import { BrandLogo } from "@/components/brand-logo";
 import { APP_NAME } from "@/lib/brand";
 
 /*
@@ -114,11 +115,8 @@ export function Sidebar({
       aria-label="Sections"
       className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-muted px-4 pb-[18px] pt-[22px] lg:flex dark:bg-background"
     >
-      {/* logo-plate: in dark the mark sits on a cream plate. Bare, it was a
-          brown logo on a near-black column and effectively invisible. */}
-      <Link href="/dashboard" className="logo-plate mb-[18px] flex w-fit items-center gap-2.5 px-2" aria-label={`${APP_NAME} — Overview`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt={APP_NAME} className="h-[34px] w-auto" />
+      <Link href="/dashboard" className="mb-[18px] flex w-fit items-center gap-2.5 px-2" aria-label={`${APP_NAME} — Overview`}>
+        <BrandLogo alt={APP_NAME} className="h-[34px] w-auto" />
       </Link>
 
       <SectionLabel>Operate</SectionLabel>

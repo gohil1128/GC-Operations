@@ -223,7 +223,7 @@ export function MobileTabBar({ role }: { role: Role }) {
       */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-full bg-dock px-2 py-1.5 shadow-[0_18px_40px_-18px_hsl(96_25%_4%/0.7)] lg:hidden"
+        className="dock-glass fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-full px-2 py-1.5 lg:hidden"
       >
         <div className="flex items-stretch justify-between">
           {tabs.map((t) => {
@@ -239,7 +239,7 @@ export function MobileTabBar({ role }: { role: Role }) {
                 <span
                   className={cn(
                     "grid h-11 w-11 place-items-center rounded-full transition-colors",
-                    active ? "bg-dock-active text-dock-active-ink" : "text-dock-muted",
+                    active ? "bg-dock-active text-dock-active-ink shadow-[0_0_18px_-2px_hsl(var(--dock-active)/0.55)]" : "text-dock-muted",
                   )}
                 >
                   <Icon className="h-[19px] w-[19px]" aria-hidden />
@@ -262,7 +262,7 @@ export function MobileTabBar({ role }: { role: Role }) {
               <span
                 className={cn(
                   "grid h-11 w-11 place-items-center rounded-full transition-colors",
-                  moreActive || moreOpen ? "bg-dock-active text-dock-active-ink" : "text-dock-muted",
+                  moreActive || moreOpen ? "bg-dock-active text-dock-active-ink shadow-[0_0_18px_-2px_hsl(var(--dock-active)/0.55)]" : "text-dock-muted",
                 )}
               >
                 <Menu className="h-[19px] w-[19px]" aria-hidden />

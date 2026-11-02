@@ -2,21 +2,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { UtensilsCrossed } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 // Logo lockup at the left of the single-row header. Falls back to a mark +
 // wordmark if the logo asset is missing.
 export function BrandBar({ businessName }: { businessName: string }) {
   const [logoFailed, setLogoFailed] = React.useState(false);
   return (
-    <Link href="/dashboard" className={`flex shrink-0 items-center gap-2${logoFailed ? "" : " logo-plate"}`}>
+    <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
       {!logoFailed ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src="/logo.png"
-          alt={businessName}
-          className="h-10 w-auto sm:h-11"
-          onError={() => setLogoFailed(true)}
-        />
+        <BrandLogo alt={businessName} className="h-10 w-auto sm:h-11" onError={() => setLogoFailed(true)} />
       ) : (
         <>
           {/* brand-strong for the same reason as the rail avatar: white on the logo

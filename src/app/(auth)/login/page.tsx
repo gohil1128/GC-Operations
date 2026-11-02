@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/modules/auth/actions";
 import { APP_NAME } from "@/lib/brand";
+import { BrandLogo } from "@/components/brand-logo";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -70,10 +71,8 @@ export default function LoginPage() {
         <div className="w-full max-w-[380px]">
           {/* Logo shows here on small screens, where the brand panel is hidden. */}
           {!logoFailed && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <span className="logo-plate mb-6 inline-block lg:hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt={APP_NAME} className="h-14 w-auto" />
+            <span className="mb-6 inline-block lg:hidden">
+              <BrandLogo alt={APP_NAME} className="h-14 w-auto" />
             </span>
           )}
           <h1 className="display-num text-[30px] font-medium">Welcome back</h1>

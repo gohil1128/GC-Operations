@@ -163,14 +163,17 @@
        component from passing in dark and failing when someone switches. */
     --highlight: 71 100% 47%;
     --highlight-foreground: 96 16% 13%;
-    /* The dock: the floating tab bar. An INVERSE surface — dark on the light
-       theme, cream on the dark one — because the reference's whole bottom-of-
-       screen identity is one bright pill against a dark page. In light the
-       active circle is highlight; in dark it is espresso on cream, which is the
-       reference's own arrangement. */
-    --dock: 96 16% 13%;
-    --dock-ink: 60 14% 98%;
-    --dock-muted: 85 6% 68%;
+    /* The dock: the floating tab bar, frosted glass over whatever scrolls
+       beneath it, in the same two colours as the rest of the dashboard. The
+       glass is the page's own tint (white here, olive in dark) rather than an
+       inverse pill, so it belongs to the page instead of sitting on it. The
+       current item is the lime highlight in both themes, with the olive ink the
+       highlight fill always carries. */
+    --dock: 0 0% 100%;
+    --dock-a: 0.72;
+    --dock-rim: 0 0% 100%;
+    --dock-ink: 96 16% 13%;
+    --dock-muted: 90 5% 32%;
     --dock-active: 71 100% 47%;
     --dock-active-ink: 96 16% 13%;
     /* The page's colour at the very top of the screen. In light the page is
@@ -289,11 +292,13 @@
     --border: 90 12% 24%;
     --border-soft: 90 14% 20%;
     --input: 90 10% 28%;
-    --dock: 60 5% 95%;
-    --dock-ink: 96 16% 13%;
-    --dock-muted: 90 4% 39%;
-    --dock-active: 96 16% 13%;
-    --dock-active-ink: 60 14% 98%;
+    --dock: 96 14% 24%;
+    --dock-a: 0.68;
+    --dock-rim: 80 30% 92%;
+    --dock-ink: 60 14% 98%;
+    --dock-muted: 85 8% 76%;
+    --dock-active: 71 100% 47%;
+    --dock-active-ink: 96 16% 13%;
     /* The banner and chip families had light values only, so in dark they
        inherited them: dark-brown banner text on a dark-amber ground. Each is
        inverted here — a deep tint for the ground, a light ink on it. */
@@ -574,19 +579,8 @@
     background-position: center, center 42%;
     background-repeat: no-repeat, no-repeat;
   }
-  /* The logo is a two-colour mark and 64% of it is the roast brown, which
-     falls to 1.26:1 on the dark canvas — the CHAI wordmark simply vanishes,
-     leaving only the rust half legible. Filtering the image would distort the
-     very colours this palette is derived from, so dark mode gives the mark the
-     cream paper it was drawn for instead. No-op in light mode.
-     (The login page's brand panel is dark in both themes and keeps its own
-     treatment.) */
-  .dark .logo-plate {
-    background-color: hsl(var(--espresso-foreground));
-    border-radius: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    box-shadow: var(--shadow-sm);
-  }
+  /* The logo no longer needs a plate in dark: it has its own light-on-dark
+     artwork (public/logo-dark.png, see components/brand-logo.tsx). */
 
   /* Panel — the ledger layout's smaller card. Content layer, so opaque, and
      on the same radius scale as everything else so a panel nested in a bento
@@ -699,6 +693,53 @@
   */
   .glass {
     background-color: hsl(var(--card));
+  }
+
+  /*
+    The dock's glass.
+
+    One backdrop pass on one element: the earlier glass was dropped because six
+    stacked blur layers were painted on every mobile frame, and this is a single
+    layer the size of the bar. The blur is strong enough (22px) that text passing
+    underneath is a smear of tone, not something to read, so the labels on top
+    keep their contrast whatever scrolls behind; the tint (see --dock-a) is the
+    floor under that.
+
+    What makes it read as glass rather than as a faded pill:
+    - saturate lifts the colour of what is behind it, so a lime card passing
+      under the bar glows through it instead of greying out;
+    - a lit rim along the top edge and a dark one along the bottom, as thickness;
+    - a soft specular sheen across the top third.
+
+    Engines without backdrop-filter get a near-opaque pill, the same shape.
+  */
+  /* No `position` here: the dock is `fixed`, which already anchors ::before, and
+     a position set in this class would beat it (same layer, later in the file). */
+  .dock-glass {
+    isolation: isolate;
+    background-color: hsl(var(--dock) / 0.94);
+    border: 1px solid hsl(var(--dock-rim) / 0.16);
+    box-shadow:
+      inset 0 1px 0 0 hsl(var(--dock-rim) / 0.38),
+      inset 0 -1px 0 0 hsl(96 25% 4% / 0.18),
+      0 18px 40px -16px hsl(96 25% 4% / 0.62),
+      0 2px 8px -3px hsl(96 25% 4% / 0.30);
+  }
+  @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+    .dock-glass {
+      background-color: hsl(var(--dock) / var(--dock-a));
+      -webkit-backdrop-filter: blur(22px) saturate(1.7);
+      backdrop-filter: blur(22px) saturate(1.7);
+    }
+  }
+  .dock-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, hsl(var(--dock-rim) / 0.20) 0%, hsl(var(--dock-rim) / 0.04) 38%, transparent 62%);
   }
 
   /*
