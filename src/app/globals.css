@@ -737,6 +737,73 @@
     .arrive > *, .bar-grow { animation: none; }
   }
 
+  /*
+    The attach fan: one button that opens into a small arc of choices.
+
+    All of it is transform and opacity on a TRANSITION, not a keyframe
+    animation, so it can be interrupted — tap again halfway through opening
+    and it reverses from where it is instead of snapping to the end and then
+    playing backwards.
+
+    The two directions are timed differently on purpose, which is why the
+    closed rule below is the "closing" rule: a transition takes its timing from
+    the state it is heading INTO. Opening is the spring with a little
+    overshoot, so the choices land with some life, and staggers by index so
+    they unfurl rather than appear. Closing is a quick ease-out, and
+    staggers the other way, because a menu you have just dismissed is a
+    thing you want gone, not a thing you want to watch leave.
+
+    Every duration is under the 300ms the rest of the motion system holds
+    to. `scale` is its own property here, not part of `transform`, so the
+    pressed state does not fight the travel.
+  */
+  .fan-item {
+    transform: translate3d(0, 0, 0);
+    scale: 0.4;
+    opacity: 0;
+    transition:
+      transform 150ms ease-out calc(var(--out, 0) * 20ms),
+      scale 150ms ease-out calc(var(--out, 0) * 20ms),
+      opacity 110ms ease-out calc(var(--out, 0) * 20ms);
+  }
+  .fan[data-open="true"] .fan-item {
+    transform: translate3d(var(--tx), var(--ty), 0);
+    scale: 1;
+    opacity: 1;
+    transition:
+      transform var(--lg-dur-bouncy) var(--lg-ease-bouncy) calc(var(--i, 0) * 32ms),
+      scale var(--lg-dur-bouncy) var(--lg-ease-bouncy) calc(var(--i, 0) * 32ms),
+      opacity 120ms ease-out calc(var(--i, 0) * 32ms);
+  }
+  .fan[data-open="true"] .fan-item:active { scale: 0.92; transition-delay: 0s; transition-duration: 90ms; }
+
+  /*
+    The dim behind the fan. The choices land on top of whatever the form has
+    around the button — a label above, a hint below — and without this they
+    read as circles dropped onto text. A light veil pushes that text back so
+    the choices are what you see, and it is a large target for dismissing.
+
+    It only takes taps while open; closed, it must be invisible to the pointer
+    or it would sit invisibly over the page and eat every tap.
+  */
+  .fan-scrim { opacity: 0; pointer-events: none; transition: opacity 120ms ease-out; }
+  .fan[data-open="true"] .fan-scrim { opacity: 1; pointer-events: auto; transition-duration: 180ms; }
+
+  /* The trigger's two glyphs trade places instead of one being swapped for the other. */
+  .fan-glyph { transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 140ms ease-out; }
+  .fan-glyph-open  { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+  .fan-glyph-shut  { opacity: 1; transform: none; }
+  .fan[data-open="true"] .fan-glyph-open { opacity: 1; transform: none; }
+  .fan[data-open="true"] .fan-glyph-shut { opacity: 0; transform: rotate(90deg) scale(0.5); }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* No travel: the choices simply fade in where they will rest. */
+    .fan-item, .fan[data-open="true"] .fan-item { transition: opacity 120ms linear; transition-delay: 0s; scale: 1; }
+    .fan-item { transform: translate3d(var(--tx), var(--ty), 0); }
+    .fan-glyph, .fan-scrim { transition: opacity 120ms linear; }
+    .fan-glyph-open, .fan[data-open="true"] .fan-glyph-shut { transform: none; }
+  }
+
   .cascade > * {
     opacity: 0;
     animation: fade-in-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
