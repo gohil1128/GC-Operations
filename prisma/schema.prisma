@@ -76,28 +76,28 @@ enum ExpenseCategory {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model Business {
-  id        String   @id @default(cuid())
-  name      String
-  timezone  String   @default("America/New_York")
+  id                    String   @id @default(cuid())
+  name                  String
+  timezone              String   @default("America/New_York")
   // Invoice categories this business books below the gross-profit line
   // rather than against cost of goods. Anything not listed stays in
   // COGS — see src/modules/reports/cost-classes.ts for why.
   opexInvoiceCategories String[] @default(["Rent / Venue", "Marketing", "Equipment & Smallwares", "Repairs & Maintenance", "Cleaning"])
-  currency  String   @default("CAD")
-  laborTargetPct Int @default(30) // labor cost target as percent
-  foodTargetPct  Int @default(32)
+  currency              String   @default("CAD")
+  laborTargetPct        Int      @default(30) // labor cost target as percent
+  foodTargetPct         Int      @default(32)
   // One PIN guards every protected section; `lockedSections` says which ones
   // are behind it. Null hash = nothing is locked, whatever the list says.
-  sectionPinHash String?  // bcrypt hash of 4-digit PIN
-  lockedSections String[] @default([])  // "RECIPES" | "REPORTS" | "EVENTS"
+  sectionPinHash        String? // bcrypt hash of 4-digit PIN
+  lockedSections        String[] @default([]) // "RECIPES" | "REPORTS" | "EVENTS"
   // Overview cards this business has turned off. Stored as the HIDDEN ones so
   // a card added later shows up for everybody instead of being invisible until
   // each business goes and enables it. See src/modules/dashboard/cards.ts.
-  hiddenOverviewCards String[] @default([])
-  ebitdaMultiplier  Float @default(4.0) // applied when EBITDA > 0
-  revenueMultiplier Float @default(1.5) // fallback when EBITDA <= 0
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  hiddenOverviewCards   String[] @default([])
+  ebitdaMultiplier      Float    @default(4.0) // applied when EBITDA > 0
+  revenueMultiplier     Float    @default(1.5) // fallback when EBITDA <= 0
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   locations       Location[]
   users           User[]
@@ -110,6 +110,7 @@ model Business {
   events          Event[]
   expenses        Expense[]
   vendors         Vendor[]
+  mailConnection  MailConnection?
 }
 
 model Location {
@@ -121,22 +122,23 @@ model Location {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-  business         Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users            UserLocation[]
-  inventoryCounts  InventoryCount[]
-  movements        InventoryMovement[]
-  purchaseOrders   PurchaseOrder[]
-  shifts           Shift[]
-  dailySales       DailySales[]
-  cashCloses       CashClose[]
-  deposits         Deposit[]
-  cashPayouts      CashPayout[]
-  itemRecipeLinks  ItemRecipeLink[]
-  reportSnapshots  ReportSnapshot[]
-  invoices         Invoice[]
-  expenses         Expense[]
-  salesItems       SalesItem[]
-  capitalAssets    CapitalAsset[]
+  business        Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users           UserLocation[]
+  inventoryCounts InventoryCount[]
+  movements       InventoryMovement[]
+  purchaseOrders  PurchaseOrder[]
+  shifts          Shift[]
+  dailySales      DailySales[]
+  cashCloses      CashClose[]
+  deposits        Deposit[]
+  cashPayouts     CashPayout[]
+  itemRecipeLinks ItemRecipeLink[]
+  reportSnapshots ReportSnapshot[]
+  invoices        Invoice[]
+  expenses        Expense[]
+  salesItems      SalesItem[]
+  capitalAssets   CapitalAsset[]
+  mailConnections MailConnection[]
 
   @@index([businessId])
 }
@@ -146,31 +148,33 @@ model Location {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role     @default(MANAGER)
-  businessId   String
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  passwordHash       String
+  name               String
+  role               Role     @default(MANAGER)
+  businessId         String
   // True while the account is still on a password somebody else chose — set
   // when an owner creates the account or resets it, cleared the moment the
   // person picks their own. Everything behind the app refuses to load until
   // then, so a handed-over password can only ever be used once.
-  mustChangePassword Boolean @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  locations        UserLocation[]
-  inventoryCounts  InventoryCount[]
-  purchaseOrders   PurchaseOrder[]
-  cashCloses       CashClose[]
-  verifiedCloses   CashClose[]      @relation("CashCloseVerifier")
-  auditLogs        AuditLog[]
-  invoices         Invoice[]
-  expenses         Expense[]
-  capitalAssets    CapitalAsset[]
-  resetTokens      PasswordResetToken[]
+  business        Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  locations       UserLocation[]
+  inventoryCounts InventoryCount[]
+  purchaseOrders  PurchaseOrder[]
+  cashCloses      CashClose[]
+  verifiedCloses  CashClose[]          @relation("CashCloseVerifier")
+  auditLogs       AuditLog[]
+  invoices        Invoice[]
+  expenses        Expense[]
+  capitalAssets   CapitalAsset[]
+  resetTokens     PasswordResetToken[]
+  mailConnections MailConnection[]
+  reviewedMail    MailMessage[]
 
   @@index([businessId])
 }
@@ -218,39 +222,40 @@ model Supplier {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business       Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
   ingredients    Ingredient[]
   purchaseOrders PurchaseOrder[]
   invoices       Invoice[]
+  mailSenders    SupplierMailSender[]
 
   @@index([businessId])
 }
 
 model Ingredient {
-  id             String   @id @default(cuid())
-  businessId     String
-  name           String
-  sku            String?
-  category       String?
-  unit           String   // primary inventory unit (e.g. "lb", "ea", "oz", "gal")
-  parLevel       Float    @default(0)
-  reorderPoint   Float    @default(0)
-  reorderQty     Float    @default(0)
-  onHand         Float    @default(0)
-  lastCostCents  Int      @default(0)
-  avgCostCents   Int      @default(0)
-  supplierId     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  businessId    String
+  name          String
+  sku           String?
+  category      String?
+  unit          String // primary inventory unit (e.g. "lb", "ea", "oz", "gal")
+  parLevel      Float    @default(0)
+  reorderPoint  Float    @default(0)
+  reorderQty    Float    @default(0)
+  onHand        Float    @default(0)
+  lastCostCents Int      @default(0)
+  avgCostCents  Int      @default(0)
+  supplierId    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  supplier         Supplier?           @relation(fields: [supplierId], references: [id])
-  conversions      UnitConversion[]
+  business          Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  supplier          Supplier?            @relation(fields: [supplierId], references: [id])
+  conversions       UnitConversion[]
   recipeIngredients RecipeIngredient[]
-  movements        InventoryMovement[]
-  countLines       InventoryCountLine[]
-  poItems          PurchaseOrderItem[]
-  invoiceItems     InvoiceItem[]
+  movements         InventoryMovement[]
+  countLines        InventoryCountLine[]
+  poItems           PurchaseOrderItem[]
+  invoiceItems      InvoiceItem[]
 
   @@unique([businessId, name])
   @@index([businessId])
@@ -334,31 +339,31 @@ model RecipeIngredient {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model InventoryCount {
-  id            String    @id @default(cuid())
-  locationId    String
-  type          CountType @default(WEEKLY)
-  countedAt     DateTime  @default(now())
-  countedById   String
-  notes         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  locationId  String
+  type        CountType @default(WEEKLY)
+  countedAt   DateTime  @default(now())
+  countedById String
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  location  Location              @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  countedBy User                  @relation(fields: [countedById], references: [id])
+  location  Location             @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  countedBy User                 @relation(fields: [countedById], references: [id])
   lines     InventoryCountLine[]
 
   @@index([locationId, countedAt])
 }
 
 model InventoryCountLine {
-  id                 String @id @default(cuid())
-  countId            String
-  ingredientId       String
-  qtyCounted         Float
-  unit               String
-  theoreticalQty     Float
-  varianceQty        Float
-  varianceCostCents  Int
+  id                String @id @default(cuid())
+  countId           String
+  ingredientId      String
+  qtyCounted        Float
+  unit              String
+  theoreticalQty    Float
+  varianceQty       Float
+  varianceCostCents Int
 
   count      InventoryCount @relation(fields: [countId], references: [id], onDelete: Cascade)
   ingredient Ingredient     @relation(fields: [ingredientId], references: [id])
@@ -372,11 +377,11 @@ model InventoryMovement {
   locationId    String
   ingredientId  String
   type          MovementType
-  qty           Float        // positive: in; negative: out
+  qty           Float // positive: in; negative: out
   unit          String
   unitCostCents Int          @default(0)
   occurredAt    DateTime     @default(now())
-  sourceType    String?      // 'PO' | 'SALE' | 'WASTE' | 'ADJUST' | 'COUNT'
+  sourceType    String? // 'PO' | 'SALE' | 'WASTE' | 'ADJUST' | 'COUNT'
   sourceId      String?
   note          String?
   createdAt     DateTime     @default(now())
@@ -468,8 +473,8 @@ model Shift {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
-  location  Location    @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  employee  Employee    @relation(fields: [employeeId], references: [id])
+  location  Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  employee  Employee   @relation(fields: [employeeId], references: [id])
   timeEntry TimeEntry?
 
   @@index([locationId, start])
@@ -477,14 +482,14 @@ model Shift {
 }
 
 model TimeEntry {
-  id             String   @id @default(cuid())
-  shiftId        String   @unique
-  clockIn        DateTime
-  clockOut       DateTime
-  actualMinutes  Int
-  breakMinutes   Int      @default(0)
-  notes          String?
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  shiftId       String   @unique
+  clockIn       DateTime
+  clockOut      DateTime
+  actualMinutes Int
+  breakMinutes  Int      @default(0)
+  notes         String?
+  createdAt     DateTime @default(now())
 
   shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
 }
@@ -496,7 +501,7 @@ model TimeEntry {
 model DailySales {
   id            String      @id @default(cuid())
   locationId    String
-  businessDate  DateTime    // date only, midnight in business tz
+  businessDate  DateTime // date only, midnight in business tz
   netSalesCents Int
   taxCents      Int         @default(0)
   tipsCents     Int         @default(0)
@@ -515,34 +520,34 @@ model DailySales {
 }
 
 model CashClose {
-  id              String   @id @default(cuid())
-  locationId      String
-  businessDate    DateTime
-  openingCents    Int
-  closingCents    Int
-  cashCents       Int      @default(0)   // cash portion of closing
-  creditCents     Int      @default(0)   // credit/debit card portion
-  safeCountCents  Int      @default(0)
-  depositCents    Int      @default(0)
-  paidInCents     Int      @default(0)
-  paidOutCents    Int      @default(0)
-  expectedCents   Int      // expected closing based on sales + opening
-  overShortCents  Int      // closing + deposit - opening - expected
-  weather         String?
-  specialEvents   String?
-  verifiedById    String?
-  verifiedAt      DateTime?
-  eventId         String?
-  checklistJson   Json?
-  notes           String?
-  closedById      String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid())
+  locationId     String
+  businessDate   DateTime
+  openingCents   Int
+  closingCents   Int
+  cashCents      Int       @default(0) // cash portion of closing
+  creditCents    Int       @default(0) // credit/debit card portion
+  safeCountCents Int       @default(0)
+  depositCents   Int       @default(0)
+  paidInCents    Int       @default(0)
+  paidOutCents   Int       @default(0)
+  expectedCents  Int // expected closing based on sales + opening
+  overShortCents Int // closing + deposit - opening - expected
+  weather        String?
+  specialEvents  String?
+  verifiedById   String?
+  verifiedAt     DateTime?
+  eventId        String?
+  checklistJson  Json?
+  notes          String?
+  closedById     String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  location   Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  closedBy   User      @relation(fields: [closedById], references: [id])
-  verifiedBy User?     @relation("CashCloseVerifier", fields: [verifiedById], references: [id])
-  event      Event?    @relation(fields: [eventId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  closedBy   User     @relation(fields: [closedById], references: [id])
+  verifiedBy User?    @relation("CashCloseVerifier", fields: [verifiedById], references: [id])
+  event      Event?   @relation(fields: [eventId], references: [id])
 
   @@unique([locationId, businessDate])
   @@index([locationId, businessDate])
@@ -626,27 +631,27 @@ model SalesItem {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model Event {
-  id           String   @id @default(cuid())
-  businessId   String
-  name         String
-  startDate    DateTime
-  endDate      DateTime
-  color        String?  // hex like #f97316
-  notes        String?
-  isActive     Boolean  @default(true)
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  startDate  DateTime
+  endDate    DateTime
+  color      String? // hex like #f97316
+  notes      String?
+  isActive   Boolean  @default(true)
   // Booth / vendor / entry fee paid to participate. Counts as an event-scoped
   // operating expense in finance.
-  feeCents     Int      @default(0)
-  feeNote      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  feeCents   Int      @default(0)
+  feeNote    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  dailySales  DailySales[]
-  cashCloses  CashClose[]
-  expenses    Expense[]
-  salesItems  SalesItem[]
-  invoices    Invoice[]
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  dailySales    DailySales[]
+  cashCloses    CashClose[]
+  expenses      Expense[]
+  salesItems    SalesItem[]
+  invoices      Invoice[]
   capitalAssets CapitalAsset[]
 
   @@index([businessId, startDate])
@@ -700,43 +705,46 @@ model AuditLog {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model Invoice {
-  id            String    @id @default(cuid())
-  locationId    String
-  supplierId    String
-  poId          String?
-  eventId       String?
+  id                 String    @id @default(cuid())
+  locationId         String
+  supplierId         String
+  poId               String?
+  eventId            String?
   // Shared cost covering every event (bulk cups, tent, etc.). Mutually
   // exclusive with eventId. Split evenly across events in per-event P&L;
   // counted once in overall totals.
-  appliesToAllEvents Boolean @default(false)
+  appliesToAllEvents Boolean   @default(false)
   // What the bill was for (Ingredients & Supplies, Packaging, Equipment...).
   // Free-text so custom values already saved never get clobbered by preset
   // changes — see src/lib/gc-categories.ts INVOICE_CATEGORIES.
-  category      String?
-  invoiceNumber String
-  invoiceDate   DateTime
-  dateReceived  DateTime
-  subtotalCents Int       @default(0)
-  gstCents      Int       @default(0)
-  pstCents      Int       @default(0)
-  shippingCents Int       @default(0)
-  rebateCents   Int       @default(0)
-  totalCents    Int       @default(0)
-  internalMemo  String?
+  category           String?
+  invoiceNumber      String
+  invoiceDate        DateTime
+  dateReceived       DateTime
+  subtotalCents      Int       @default(0)
+  gstCents           Int       @default(0)
+  pstCents           Int       @default(0)
+  shippingCents      Int       @default(0)
+  rebateCents        Int       @default(0)
+  totalCents         Int       @default(0)
+  internalMemo       String?
   // Photo of the paper invoice, stored as a compressed JPEG data URL
   // (client-side downscaled; ~200-500 KB). Null when no photo attached.
-  imageDataUrl  String?
-  closedAt      DateTime?
-  createdById   String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  imageDataUrl       String?
+  closedAt           DateTime?
+  createdById        String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  location  Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  supplier  Supplier       @relation(fields: [supplierId], references: [id])
-  po        PurchaseOrder? @relation(fields: [poId], references: [id])
-  event     Event?         @relation(fields: [eventId], references: [id])
-  createdBy User           @relation(fields: [createdById], references: [id])
-  items     InvoiceItem[]
+  location    Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  supplier    Supplier       @relation(fields: [supplierId], references: [id])
+  po          PurchaseOrder? @relation(fields: [poId], references: [id])
+  event       Event?         @relation(fields: [eventId], references: [id])
+  createdBy   User           @relation(fields: [createdById], references: [id])
+  items       InvoiceItem[]
+  // Set when the invoice was logged from an email. A back-relation only: the
+  // foreign key lives on MailMessage, so this adds no column to Invoice.
+  mailMessage MailMessage?
 
   @@unique([supplierId, invoiceNumber])
   @@index([locationId, invoiceDate])
@@ -799,19 +807,19 @@ model Expense {
 // ──────────────────────────────────────────────────────────────────────────────
 
 model Vendor {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   businessId      String
   name            String
-  role            String?    // e.g. "Graphic Designer", "Accountant"
-  country         String?    // free-text country for tax/jurisdiction context
-  monthlyFeeCents Int        @default(0)
-  currency        String     @default("CAD")
+  role            String? // e.g. "Graphic Designer", "Accountant"
+  country         String? // free-text country for tax/jurisdiction context
+  monthlyFeeCents Int             @default(0)
+  currency        String          @default("CAD")
   defaultCategory ExpenseCategory @default(CONTRACTOR)
-  isFlatFee       Boolean    @default(true)  // true = no tax withholding
+  isFlatFee       Boolean         @default(true) // true = no tax withholding
   notes           String?
-  isActive        Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   expenses Expense[]
@@ -830,23 +838,23 @@ enum CapitalStatus {
 }
 
 model CapitalAsset {
-  id                String        @id @default(cuid())
-  locationId        String
-  name              String
-  category          String?       // e.g. "Beverage equipment", "Refrigeration"
-  vendor            String?
-  purchaseDate      DateTime
+  id                 String        @id @default(cuid())
+  locationId         String
+  name               String
+  category           String? // e.g. "Beverage equipment", "Refrigeration"
+  vendor             String?
+  purchaseDate       DateTime
   purchasePriceCents Int
   // Months of useful life for straight-line depreciation. Null = treat as
   // non-depreciating (the operator just tracks total invested).
-  usefulLifeMonths  Int?
-  salvageValueCents Int           @default(0)
-  status            CapitalStatus @default(IN_SERVICE)
-  notes             String?
-  eventId           String?
-  createdById       String
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  usefulLifeMonths   Int?
+  salvageValueCents  Int           @default(0)
+  status             CapitalStatus @default(IN_SERVICE)
+  notes              String?
+  eventId            String?
+  createdById        String
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   location  Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   event     Event?   @relation(fields: [eventId], references: [id])
@@ -868,4 +876,132 @@ model LoginAttempt {
   updatedAt   DateTime  @updatedAt
 
   @@index([updatedAt])
+}
+
+// Invoices found in the mailbox.
+//
+// Three tables, because they answer three different questions: what is the
+// app allowed to read (MailConnection), what has it already seen and what
+// became of it (MailMessage), and how did each scan go (MailScanRun).
+
+enum MailMessageStatus {
+  // Became an invoice, on its own.
+  LOGGED
+  // Looks like an invoice, but something stopped it posting itself — an unknown
+  // sender, figures that do not add up, a low-confidence read. Waits for a person.
+  NEEDS_REVIEW
+  // A person looked and said it is not one (or not one to log).
+  DISMISSED
+  // The first pass said it is not an invoice. Kept as a bare id so the same
+  // email is never sent to the model twice; no sender or subject is retained.
+  SKIPPED
+  // Something broke while processing it. Retried on later scans, a few times.
+  FAILED
+}
+
+model MailConnection {
+  id              String    @id @default(cuid())
+  // One mailbox per business.
+  businessId      String    @unique
+  // Where auto-logged invoices land.
+  locationId      String
+  // Invoices need an author; this is whoever connected the mailbox.
+  connectedById   String
+  provider        String    @default("gmail")
+  accountEmail    String
+  // AES-256-GCM, never stored in the clear. See src/modules/mail/crypto.ts.
+  refreshTokenEnc String
+  scope           String
+  // ACTIVE | NEEDS_RECONNECT (Google revoked or expired the grant).
+  status          String    @default("ACTIVE")
+  statusNote      String?
+  // Everything received before this has been through a COMPLETE scan. It only
+  // moves forward when a scan finishes the whole window, so a run that runs
+  // out of time picks up where it stopped rather than skipping the rest.
+  scannedThrough  DateTime
+  lastScanAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  location    Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  connectedBy User          @relation(fields: [connectedById], references: [id])
+  messages    MailMessage[]
+  runs        MailScanRun[]
+}
+
+model MailMessage {
+  id             String            @id @default(cuid())
+  connectionId   String
+  // Gmail's own message id: the dedup key.
+  gmailId        String
+  fromAddress    String            @default("")
+  subject        String            @default("")
+  receivedAt     DateTime
+  status         MailMessageStatus
+  // Plain-language reason for NEEDS_REVIEW / DISMISSED / FAILED.
+  reason         String?
+  confidence     Float?
+  // What the model read, AFTER validation. Never the email body.
+  extracted      Json?
+  // Re-fetched from Gmail when somebody approves, so no attachment is stored here.
+  attachmentName String?
+  // SetNull: deleting an auto-logged invoice keeps this row, so the same email
+  // is not logged again on the next scan.
+  invoiceId      String?           @unique
+  attempts       Int               @default(0)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  connection MailConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  invoice    Invoice?       @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  reviewedBy User?          @relation(fields: [reviewedById], references: [id])
+
+  @@unique([connectionId, gmailId])
+  @@index([connectionId, status, receivedAt])
+}
+
+model MailScanRun {
+  id           String    @id @default(cuid())
+  connectionId String
+  // "cron" | "manual"
+  trigger      String
+  startedAt    DateTime  @default(now())
+  // Null while running. A run that never finishes stops blocking others after
+  // 15 minutes — see the lock in pipeline.ts.
+  finishedAt   DateTime?
+  listed       Int       @default(0)
+  triaged      Int       @default(0)
+  logged       Int       @default(0)
+  queued       Int       @default(0)
+  skipped      Int       @default(0)
+  failed       Int       @default(0)
+  // True when the run stopped on its time budget with mail left to do.
+  partial      Boolean   @default(false)
+  error        String?
+
+  connection MailConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId, startedAt])
+}
+
+// An address (or, for a company's own domain, "@domain") this supplier is
+// known to email from. The mail scanner only logs an invoice by itself when
+// the sender is on this list or is the supplier's saved email — what a PDF says
+// about who sent it proves nothing, because anyone can type any company name
+// into one. A person approving a held invoice can add the sender here so the
+// next one from them goes straight through.
+model SupplierMailSender {
+  id         String   @id @default(cuid())
+  supplierId String
+  // Lower-case. "billing@acme.ca", or "@acme.ca" to trust the whole domain.
+  address    String
+  createdAt  DateTime @default(now())
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, address])
+  @@index([address])
 }

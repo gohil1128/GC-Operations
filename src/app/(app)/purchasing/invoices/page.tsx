@@ -252,6 +252,11 @@ export default async function InvoicesPage({
                     <Link href={`/purchasing/invoices/${i.id}`} className="hover:underline">
                       {i.supplier.name}
                     </Link>
+                    {i.mailMessage && (
+                        <Badge variant="muted" className="ml-2 align-middle" title="Logged from an email — check it against the attached document">
+                          Email
+                        </Badge>
+                      )}
                   </TableCell>
                   <TableCell>
                     {i.appliesToAllEvents ? (
@@ -341,9 +346,16 @@ export default async function InvoicesPage({
             <MobileRow
               key={i.id}
               title={
-                <Link href={`/purchasing/invoices/${i.id}`} className="hover:underline">
-                  {i.supplier.name}
-                </Link>
+                <>
+                  <Link href={`/purchasing/invoices/${i.id}`} className="hover:underline">
+                    {i.supplier.name}
+                  </Link>
+                  {i.mailMessage && (
+                      <Badge variant="muted" className="ml-2 align-middle" title="Logged from an email — check it against the attached document">
+                        Email
+                      </Badge>
+                    )}
+                </>
               }
               subtitle={fmtDate(i.invoiceDate)}
               meta={formatMoney(i.totalCents)}

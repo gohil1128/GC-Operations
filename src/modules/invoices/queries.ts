@@ -54,6 +54,8 @@ export async function listInvoices(locationId: string, filters: InvoiceFilters =
         createdBy: { select: { name: true } },
         event: { select: { id: true, name: true, color: true } },
         _count: { select: { items: true } },
+        // Set when the bill was logged from an email by the mail scanner.
+        mailMessage: { select: { id: true } },
       },
       orderBy: { invoiceDate: "desc" },
     }),

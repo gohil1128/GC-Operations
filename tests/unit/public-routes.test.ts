@@ -30,6 +30,15 @@ describe("routes reachable without a session", () => {
     });
   }
 
+  it("opens exactly one route to the scheduler, and nothing around it", () => {
+    // The mail scanner is called by a scheduler with no login; it guards itself
+    // with a bearer secret. Anything NEXT to it must stay behind the session.
+    expect(publicExact.has("/api/cron/scan-invoices")).toBe(true);
+    for (const path of ["/api/cron", "/api/cron/", "/api/cron/anything-else", "/api/mail/google/connect", "/api/mail/google/callback"]) {
+      expect(publicExact.has(path), `${path} must NOT be public`).toBe(false);
+    }
+  });
+
   it("keeps the app itself private", () => {
     for (const path of ["/dashboard", "/cash", "/settings", "/reports", "/events", "/sales"]) {
       expect(publicExact.has(path), `${path} must NOT be public`).toBe(false);

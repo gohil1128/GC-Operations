@@ -14,11 +14,18 @@ import { SquareSalesSummaryImporter } from "./_components/square-sales-summary-i
 import { SquareItemSummaryImporter } from "./_components/square-item-summary-importer";
 import { ImportedDataManager } from "./_components/imported-data-manager";
 import { ItemsManager } from "./_components/items-manager";
+import { EmailInvoicesCard } from "./_components/email-invoices-card";
+import { can } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
-export default async function IntegrationsPage() {
-  const scope = await requireCapability("settings");
+export default async function IntegrationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [params, scope] = await Promise.all([searchParams, requireCapability("settings")]);
+  const mailFlash = typeof params.mail === "string" ? params.mail : undefined;
   const events = await listActiveEvents(scope.businessId);
   const eventProps = events.map((e) => ({ id: e.id, name: e.name, color: e.color }));
   const broadway = events.find((e) => /broadway/i.test(e.name));
@@ -71,6 +78,8 @@ export default async function IntegrationsPage() {
     <div>
       <PageHeader eyebrow="Settings · Integrations" title="Integrations" description="Upload Square's Sales Summary and Item Sales Summary CSVs · external APIs are wired as placeholders" />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <EmailInvoicesCard businessId={scope.businessId} flash={mailFlash} canReview={can(scope.role, "purchasing")} />
 
         <Card className="border-brand/50">
           <CardHeader>
