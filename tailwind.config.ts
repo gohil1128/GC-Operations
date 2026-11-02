@@ -91,7 +91,7 @@ const config: Config = {
           muted: "hsl(var(--brand-muted))",
         },
         "chart-ink": "hsl(var(--chart-ink))",
-        /* Orders board — dark in both themes, with its own status ramp. */
+        /* Events board — follows the theme, with its own status ramp. */
         board: {
           ground: "hsl(var(--board-ground))",
           ink: "hsl(var(--board-ink))",

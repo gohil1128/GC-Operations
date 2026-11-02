@@ -13,9 +13,23 @@ import { STATUS_LABELS, type EventStatus } from "@/modules/events/status";
   through the same shape: booked, stocked up, traded. So the columns are the
   event statuses the app already computes, and a ticket is one event.
 
-  Dark ground, because the board is meant to be read across a stall at night
-  and that is the one screen in the system that is dark end to end.
+  Its ground follows the theme (globals.css, --board-*), so in light mode it
+  is a white card on the canvas and in dark mode an olive one.
 */
+
+/*
+  The event's colour as a small round dot. Very dark colours — the old
+  espresso default most events still carry — vanish on the dark board and
+  read as a hole on the light one, so those fall back to the brand lime.
+*/
+function markerColor(color: string | null): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(color ?? "");
+  if (!m) return "hsl(var(--brand))";
+  const n = parseInt(m[1], 16);
+  const lin = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const lum = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  return lum < 0.06 ? "hsl(var(--brand))" : `#${m[1]}`;
+}
 
 export type BoardEvent = {
   id: string;
@@ -69,7 +83,7 @@ export function OrderBoard({ events }: { events: BoardEvent[] }) {
                 <Ticket key={e.id} event={e} />
               ))}
               {rows.length === 0 && (
-                <p className="rounded-[22px] border border-dashed border-white/15 px-4 py-6 text-center text-xs text-board-dim">
+                <p className="rounded-[22px] border border-dashed border-board-ink/15 px-4 py-6 text-center text-xs text-board-dim">
                   Nothing here.
                 </p>
               )}
@@ -106,15 +120,15 @@ function Ticket({ event }: { event: BoardEvent }) {
         status === "stocked" && "border-board-amber/40 bg-board-amber/10 hover:bg-board-amber/15",
         status === "profit" && "border-board-green/40 bg-board-green/10 hover:bg-board-green/15",
         (status === "upcoming" || status === "none") &&
-          "border-white/15 bg-white/5 hover:bg-white/10",
+          "border-board-ink/15 bg-board-ink/5 hover:bg-board-ink/10",
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2">
           <span
             aria-hidden
-            className="h-2.5 w-2.5 shrink-0 rounded-[3px] ring-1 ring-inset ring-foreground/25"
-            style={{ background: event.color ?? "rgba(255,255,255,.4)" }}
+            className="h-2 w-2 shrink-0 rounded-full ring-2 ring-board-ink/10"
+            style={{ background: markerColor(event.color) }}
           />
           <span className="display-num truncate text-[17px] font-medium text-board-ink" title={event.name}>
             {event.name}
@@ -128,7 +142,7 @@ function Ticket({ event }: { event: BoardEvent }) {
             status === "loss" && "bg-board-red/15 text-board-red",
             status === "stocked" && "bg-board-amber/15 text-board-amber",
             status === "profit" && "bg-board-green/15 text-board-green",
-            (status === "upcoming" || status === "none") && "bg-white/10 text-board-dim",
+            (status === "upcoming" || status === "none") && "bg-board-ink/10 text-board-dim",
           )}
         >
           {STATUS_LABELS[status]}
@@ -145,7 +159,7 @@ function Ticket({ event }: { event: BoardEvent }) {
 
       {/* The ticket's lines. An event that has not traded shows what has gone
           out on it instead of a profit that is really a cost allocation. */}
-      <dl className="mt-3 space-y-1 border-t border-white/10 pt-3 text-[13px]">
+      <dl className="mt-3 space-y-1 border-t border-board-ink/10 pt-3 text-[13px]">
         {traded ? (
           <>
             <Line label="Net sales" value={formatMoney(column?.netSalesCents ?? 0)} />

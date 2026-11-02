@@ -210,46 +210,30 @@ export function MobileTabBar({ role }: { role: Role }) {
           on every mobile frame to soften an edge nobody could see. */}
 
       {/*
-        The dock: the reference's floating pill, inset from the screen edges.
+        The dock. A quiet bar in the theme's own card colour with a hairline
+        edge, so it sits with the page instead of on top of it.
 
-        Each destination is a 44px circle with its name under it. The
-        reference draws the circles alone, but a touch screen has no hover to
-        reveal a tooltip, so an unlabelled glyph is a guess every time — the
-        labels are the one place this deliberately departs from the image.
-
-        The current item's circle belongs to the item. There is no travelling
-        indicator any more: it measured the DOM on every route change to slide
-        a pill that the reference does not have.
+        Every slot is the same shape — a 20px icon over a short label, on one
+        baseline — so the row reads as one even strip. The current place is a
+        soft tinted capsule behind its icon and a heavier label, not a bright
+        circle: it should be findable, not the loudest thing on screen.
+        Labels stay: a phone has no hover to explain an unlabelled glyph.
       */}
       <nav
         aria-label="Primary"
-        className="dock-glass fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-full px-2 py-1.5 lg:hidden"
+        className="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-[26px] border border-border-soft bg-card px-1.5 py-1.5 shadow-[0_10px_30px_-18px_hsl(var(--shadow-color)/0.55)] lg:hidden"
       >
-        <div className="flex items-stretch justify-between">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const active = isActive(t.href);
-            return (
-              <Link
-                key={t.href}
-                href={t.href}
-                aria-current={isCurrent(t.href) ? "page" : undefined}
-                className="lg-press flex min-w-0 flex-1 flex-col items-center gap-0.5 py-0.5"
-              >
-                <span
-                  className={cn(
-                    "grid h-11 w-11 place-items-center rounded-full transition-colors",
-                    active ? "bg-dock-active text-dock-active-ink shadow-[0_0_18px_-2px_hsl(var(--dock-active)/0.55)]" : "text-dock-muted",
-                  )}
-                >
-                  <Icon className="h-[19px] w-[19px]" aria-hidden />
-                </span>
-                <span className={cn("truncate text-[10px] font-medium", active ? "text-dock-ink" : "text-dock-muted")}>
-                  {t.label}
-                </span>
-              </Link>
-            );
-          })}
+        <div className="grid auto-cols-fr grid-flow-col">
+          {tabs.map((t) => (
+            <DockItem
+              key={t.href}
+              href={t.href}
+              label={t.label}
+              Icon={t.icon}
+              active={isActive(t.href)}
+              current={isCurrent(t.href)}
+            />
+          ))}
           {/* A staff member's whole app fits in the dock, so there is nothing
               left to put behind "More" — an empty sheet would be a dead end. */}
           {moreItems.length > 0 && (
@@ -257,23 +241,54 @@ export function MobileTabBar({ role }: { role: Role }) {
               ref={triggerRef}
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
-              className="lg-press flex min-w-0 flex-1 flex-col items-center gap-0.5 py-0.5"
+              className={dockSlot}
             >
-              <span
-                className={cn(
-                  "grid h-11 w-11 place-items-center rounded-full transition-colors",
-                  moreActive || moreOpen ? "bg-dock-active text-dock-active-ink shadow-[0_0_18px_-2px_hsl(var(--dock-active)/0.55)]" : "text-dock-muted",
-                )}
-              >
-                <Menu className="h-[19px] w-[19px]" aria-hidden />
-              </span>
-              <span className={cn("text-[10px] font-medium", moreActive || moreOpen ? "text-dock-ink" : "text-dock-muted")}>
-                More
-              </span>
+              <DockGlyph Icon={Menu} active={moreActive || moreOpen} />
+              <DockLabel active={moreActive || moreOpen}>More</DockLabel>
             </button>
           )}
         </div>
       </nav>
     </>
+  );
+}
+
+const dockSlot = "lg-press flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] px-1";
+
+function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>; active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "grid h-7 w-12 place-items-center rounded-full transition-colors duration-200",
+        active ? "bg-brand-muted text-brand-ink" : "text-muted-foreground",
+      )}
+    >
+      <Icon className="h-5 w-5" aria-hidden />
+    </span>
+  );
+}
+
+function DockLabel({ active, children }: { active: boolean; children: React.ReactNode }) {
+  return (
+    <span className={cn("max-w-full truncate text-[10.5px] leading-none", active ? "font-semibold text-foreground" : "font-medium text-muted-foreground")}>
+      {children}
+    </span>
+  );
+}
+
+function DockItem({
+  href, label, Icon, active, current,
+}: {
+  href: string;
+  label: string;
+  Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  active: boolean;
+  current: boolean;
+}) {
+  return (
+    <Link href={href} aria-current={current ? "page" : undefined} className={dockSlot}>
+      <DockGlyph Icon={Icon} active={active} />
+      <DockLabel active={active}>{label}</DockLabel>
+    </Link>
   );
 }

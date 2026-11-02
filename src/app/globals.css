@@ -87,17 +87,16 @@
        there is no height to set here. */
     --app-photo-src: url("/hero-chai.jpg");
 
-    /* Orders board. The handoff gives the dark screen its own status colours
-       rather than reusing the light ones: #2F8F5B and #C63F3F are tuned to sit
-       on cream and go muddy on espresso, so the board lifts them to
-       #8FD9AE / #FFC9C9 / #FFD9A0. These are theme-independent — the board is
-       dark in both themes, the way a stall-side screen has to be. */
-    --board-ground: 96 22% 11%;
-    --board-ink: 60 14% 98%;
-    --board-dim: 85 8% 70%;
-    --board-green: 74 85% 62%;
-    --board-amber: 44 95% 72%;
-    --board-red: 0 100% 89%;           /* #FFC9C9 */
+    /* Events board. It follows the theme: a white card on the light canvas,
+       an olive card on the dark one, so it reads as part of the app rather
+       than a black panel dropped into it. Status colours are the app's own
+       semantic ramp, deepened in light so each keeps 4.5:1 on its tint. */
+    --board-ground: 0 0% 100%;
+    --board-ink: var(--ink-950);
+    --board-dim: var(--ink-500);
+    --board-green: 84 70% 22%;
+    --board-amber: 36 85% 28%;
+    --board-red: 0 60% 40%;
     --foreground: var(--ink-950);      /* 17.4:1 on card */
     --card: 0 0% 100%;
     --card-foreground: var(--ink-950);
@@ -238,6 +237,12 @@
     --scrim: 19 50% 4%;
 
     --foreground: 60 14% 98%;
+    --board-ground: 90 21% 17%;
+    --board-ink: 60 14% 98%;
+    --board-dim: 85 8% 70%;
+    --board-green: 74 85% 62%;
+    --board-amber: 44 95% 72%;
+    --board-red: 0 100% 89%;
     --card: 90 21% 17%;
     --card-foreground: 60 14% 98%;
     --popover: 86 15% 21%;
@@ -693,53 +698,6 @@
   */
   .glass {
     background-color: hsl(var(--card));
-  }
-
-  /*
-    The dock's glass.
-
-    One backdrop pass on one element: the earlier glass was dropped because six
-    stacked blur layers were painted on every mobile frame, and this is a single
-    layer the size of the bar. The blur is strong enough (22px) that text passing
-    underneath is a smear of tone, not something to read, so the labels on top
-    keep their contrast whatever scrolls behind; the tint (see --dock-a) is the
-    floor under that.
-
-    What makes it read as glass rather than as a faded pill:
-    - saturate lifts the colour of what is behind it, so a lime card passing
-      under the bar glows through it instead of greying out;
-    - a lit rim along the top edge and a dark one along the bottom, as thickness;
-    - a soft specular sheen across the top third.
-
-    Engines without backdrop-filter get a near-opaque pill, the same shape.
-  */
-  /* No `position` here: the dock is `fixed`, which already anchors ::before, and
-     a position set in this class would beat it (same layer, later in the file). */
-  .dock-glass {
-    isolation: isolate;
-    background-color: hsl(var(--dock) / 0.94);
-    border: 1px solid hsl(var(--dock-rim) / 0.16);
-    box-shadow:
-      inset 0 1px 0 0 hsl(var(--dock-rim) / 0.38),
-      inset 0 -1px 0 0 hsl(96 25% 4% / 0.18),
-      0 18px 40px -16px hsl(96 25% 4% / 0.62),
-      0 2px 8px -3px hsl(96 25% 4% / 0.30);
-  }
-  @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
-    .dock-glass {
-      background-color: hsl(var(--dock) / var(--dock-a));
-      -webkit-backdrop-filter: blur(22px) saturate(1.7);
-      backdrop-filter: blur(22px) saturate(1.7);
-    }
-  }
-  .dock-glass::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(180deg, hsl(var(--dock-rim) / 0.20) 0%, hsl(var(--dock-rim) / 0.04) 38%, transparent 62%);
   }
 
   /*

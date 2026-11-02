@@ -84,7 +84,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               {/* The business name is the sidebar's logo at lg+, and the
                   BrandBar's below it, so this strip no longer names it. */}
             </div>
-            <div className="glass-pill flex shrink-0 items-center gap-1 rounded-full p-1 sm:gap-1.5">
+            {/* No tray around these: with one location the tray held only the avatar
+                and read as an empty box. Each control carries its own edge. */}
+            <div className="flex shrink-0 items-center gap-1.5">
               <LocationSwitcher active={activeLocation} options={scope.availableLocations} />
               <EventSwitcher events={events} activeEventId={activeEvent?.id ?? null} />
               {/* lg:hidden — at desktop widths the sidebar's user card is

@@ -90,7 +90,7 @@ export default async function EventsPage({
             The orders board. Kept inside the page's existing data and filter
             bar — the board is the layout, not a different screen.
           */
-          <div className="rounded-[28px] bg-board-ground p-4 shadow-[0_18px_40px_-26px_hsl(var(--ink-950)/0.7)] sm:p-5">
+          <div className="rounded-[28px] border border-border-soft bg-board-ground p-4 sm:p-5 dark:border-transparent">
             <OrderBoard
               events={rows.map(({ event, column, status, ownSpendCents }) => ({
                 id: event.id,
