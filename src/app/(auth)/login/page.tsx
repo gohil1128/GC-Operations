@@ -28,7 +28,7 @@ export default function LoginPage() {
           Deliberately carries no live figures: this page is unauthenticated,
           so real season numbers here would be public. */}
       <div className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col lg:justify-between"
-        style={{ background: "radial-gradient(120% 120% at 0% 100%, #5A3620 0%, #3A2415 50%, #2A1A10 100%)" }}
+        style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
       >
         {!logoFailed && (
           // eslint-disable-next-line @next/next/no-img-element

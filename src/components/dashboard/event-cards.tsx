@@ -10,7 +10,7 @@ import { formatMoneyHeadline, formatPercent } from "@/lib/money";
   question both ask is the same: which ones are carrying the rest. So each
   card is one event's net sales with its margin in a chip, and one card is
   picked out — the event the page is scoped to, or the top earner when it is
-  not scoped — in saffron, as the reference picks out one holding in lime.
+  not scoped — in highlight, as the reference picks out one holding in lime.
 
   Margins come from the P&L columns the statement below is built from, so a
   card and the statement can never disagree, and they are absent (not
@@ -63,7 +63,7 @@ export function EventCards({ events, highlightId }: { events: EventCard[]; highl
                   href={`/events/${e.id}`}
                   className={cn(
                     "lg-press flex h-full flex-col rounded-3xl p-4",
-                    lit ? "bg-saffron text-saffron-foreground" : "bg-card",
+                    lit ? "bg-highlight text-highlight-foreground" : "bg-card",
                   )}
                 >
                   <div className="flex items-center gap-2.5">
@@ -71,7 +71,7 @@ export function EventCards({ events, highlightId }: { events: EventCard[]; highl
                       aria-hidden
                       className={cn(
                         "grid h-9 w-9 shrink-0 place-items-center rounded-full text-[13px] font-bold",
-                        lit ? "bg-saffron-foreground text-saffron" : "bg-muted text-foreground",
+                        lit ? "bg-highlight-foreground text-highlight" : "bg-muted text-foreground",
                       )}
                     >
                       {/* The event's own colour, as a ring, where it has one —
@@ -91,7 +91,7 @@ export function EventCards({ events, highlightId }: { events: EventCard[]; highl
                   <div className="display-num mt-4 text-[22px] font-medium tabular-nums tracking-[-0.02em]">
                     {formatMoneyHeadline(e.netSalesCents)}
                   </div>
-                  <div className={cn("mt-1 text-xs", lit ? "text-saffron-foreground/80" : "text-muted-foreground")}>
+                  <div className={cn("mt-1 text-xs", lit ? "text-highlight-foreground/80" : "text-muted-foreground")}>
                     {e.marginPct === null ? "Net sales" : `${formatPercent(e.marginPct)} margin`}
                   </div>
                 </Link>

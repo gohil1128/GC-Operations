@@ -29,9 +29,9 @@ const config: Config = {
           active: "hsl(var(--dock-active))",
           "active-ink": "hsl(var(--dock-active-ink))",
         },
-        saffron: {
-          DEFAULT: "hsl(var(--saffron))",
-          foreground: "hsl(var(--saffron-foreground))",
+        highlight: {
+          DEFAULT: "hsl(var(--highlight))",
+          foreground: "hsl(var(--highlight-foreground))",
         },
         alert: {
           DEFAULT: "hsl(var(--alert))",

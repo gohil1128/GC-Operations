@@ -16,7 +16,7 @@ import { formatMoney } from "@/lib/money";
   The bars are one series, not the reference's pairs. Its second bar is a
   comparison the daily data cannot honestly supply here — invoices are not
   dated to the night they were spent against — so rather than draw a cost bar
-  from a guess, the most recent night is picked out in saffron instead, which
+  from a guess, the most recent night is picked out in highlight instead, which
   is the question the chart is actually asked: "how did last night go".
 */
 
@@ -43,7 +43,7 @@ export function HeroCard({
   return (
     <section className="rounded-[28px] bg-card p-5 sm:p-6" aria-label="Sales at a glance">
       <div className="flex items-start gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-saffron text-saffron-foreground">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-highlight text-highlight-foreground">
           <Wallet className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
@@ -83,7 +83,7 @@ export function HeroCard({
                 <div
                   className={cn(
                     "bar-grow w-full max-w-[28px] rounded-full",
-                    i === last ? "bg-saffron" : "bg-foreground/85",
+                    i === last ? "bg-highlight" : "bg-foreground/85",
                   )}
                   // Never fully flat: a night that took money should not draw
                   // as the same nothing as a night that did not happen.
@@ -126,7 +126,7 @@ export function HeroCard({
             <Link
               href="/cash/new"
               className={cn(
-                "lg-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-saffron px-4 text-[15px] font-semibold text-saffron-foreground",
+                "lg-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-highlight px-4 text-[15px] font-semibold text-highlight-foreground",
                 !canLogInvoice && "col-span-2",
               )}
             >

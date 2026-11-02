@@ -48,7 +48,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-[0_8px_28px_-8px_hsl(23_45%_11%/0.18)] ring-1 ring-espresso/5",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-[0_8px_28px_-8px_hsl(96_20%_8%/0.18)] ring-1 ring-espresso/5",
         "lg-overlay",
         position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className

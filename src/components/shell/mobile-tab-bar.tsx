@@ -223,7 +223,7 @@ export function MobileTabBar({ role }: { role: Role }) {
       */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-full bg-dock px-2 py-1.5 shadow-[0_18px_40px_-18px_hsl(22_45%_5%/0.7)] lg:hidden"
+        className="fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-full bg-dock px-2 py-1.5 shadow-[0_18px_40px_-18px_hsl(96_25%_4%/0.7)] lg:hidden"
       >
         <div className="flex items-stretch justify-between">
           {tabs.map((t) => {
