@@ -3,6 +3,7 @@ import { requireCapability } from "@/lib/scope";
 import { isSectionLocked, isSectionUnlockedByPin } from "@/modules/section-lock/actions";
 import { SectionPinGate } from "@/components/section-pin-gate";
 import { SectionLockButton } from "@/components/section-lock-button";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function RecipesLayout({ children }: { children: React.Reac
   const canRelock = await isSectionUnlockedByPin(scope.businessId, "RECIPES");
   return (
     <>
+      <SectionTabs hub="stock" role={scope.role} />
       {canRelock && (
         <div className="mx-auto flex max-w-[1400px] justify-end px-4 pt-3 sm:px-6 lg:px-8">
           <SectionLockButton />

@@ -2,65 +2,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard, TrendingUp, Wallet, FileText, Menu,
-  Boxes, Users, Receipt, Settings as SettingsIcon, ChefHat, X, CalendarDays, ShoppingBag,
-  ClipboardCheck, Scale, Clock, Plug, Download, Contact, CalendarClock,
-} from "lucide-react";
+import { Menu, X } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { can, type Capability } from "@/lib/permissions";
+import { bestPage, hubsFor } from "./nav";
 
-/*
-  One ordered list of every destination, most important first. The bottom bar
-  takes the first four the role can actually reach and the rest go behind
-  "More" — so an owner and a manager get exactly the bar they had before, and
-  a staff member gets their two screens in the bar instead of an empty bar
-  with everything hidden in a sheet.
-*/
-/*
-  EVERY DESTINATION HAS ITS OWN GLYPH. It did not: four of these were a sheet
-  of paper (Invoices, Purchase orders, New purchase order, Data export), three
-  were a bar chart (Reports, Variance, Labor report), three were a pair of
-  people (Schedule, Employees, Team), and two were a stack of boxes (Counts,
-  Ingredients). In the More sheet those sit in one scrolling list, so a dozen
-  rows carried four pictures between them and the icon column told you
-  nothing — you were reading the labels and the glyphs were decoration.
-*/
-const DESTINATIONS: { href: string; label: string; icon: typeof Wallet; cap: Capability }[] = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard, cap: "overview" },
-  // Events sits in the bar rather than behind "More": it is the thing this
-  // business is organised around, and every other screen is scoped by it.
-  { href: "/events", label: "Events", icon: CalendarDays, cap: "events" },
-  { href: "/reports", label: "Reports", icon: TrendingUp, cap: "financials" },
-  { href: "/purchasing/invoices", label: "Invoices", icon: FileText, cap: "purchasing" },
-  // Below the four bar slots on purpose: Sales is a read-it-later screen, and
-  // promoting it would push Invoices — which carries the open-bill badge —
-  // into the More sheet.
-  { href: "/sales", label: "Sales", icon: ShoppingBag, cap: "financials" },
-  { href: "/cash", label: "Cash closes", icon: Wallet, cap: "cash" },
-  { href: "/inventory/counts", label: "Counts", icon: ClipboardCheck, cap: "inventoryCount" },
-  { href: "/inventory", label: "Ingredients", icon: Boxes, cap: "inventory" },
-  { href: "/inventory/variance", label: "Variance", icon: Scale, cap: "inventory" },
-  { href: "/recipes", label: "Recipes", icon: ChefHat, cap: "inventory" },
-  { href: "/labor", label: "Schedule", icon: CalendarClock, cap: "labor" },
-  { href: "/labor/report", label: "Labor report", icon: Clock, cap: "labor" },
-  { href: "/labor/employees", label: "Employees", icon: Contact, cap: "labor" },
-  { href: "/expenses", label: "Expenses", icon: Receipt, cap: "expenses" },
-  /*
-    Purchase orders are hidden, not deleted. A pop-up buys its supplies and
-    logs the invoice, which Invoices already covers; the raise-a-PO-then-
-    receive-it workflow is for a kitchen with standing suppliers. The routes,
-    the code and every existing PO are untouched — putting these two lines
-    back restores the section exactly as it was.
-      { href: "/purchasing", label: "Purchase orders", icon: Truck, cap: "purchasing" },
-      { href: "/purchasing/new", label: "New purchase order", icon: CirclePlus, cap: "purchasing" },
-  */
-  { href: "/settings", label: "Business & events", icon: SettingsIcon, cap: "settings" },
-  { href: "/settings/users", label: "Team", icon: Users, cap: "settings" },
-  { href: "/settings/integrations", label: "Integrations", icon: Plug, cap: "settings" },
-  { href: "/settings/exports", label: "Data export", icon: Download, cap: "settings" },
-];
+/* The destinations live in ./nav.ts as hubs; this file only lays them out. */
 
 export function MobileTabBar({ role }: { role: Role }) {
   const pathname = usePathname();
@@ -132,70 +79,79 @@ export function MobileTabBar({ role }: { role: Role }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [moreOpen]);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
-  const visible = DESTINATIONS.filter((d) => can(role, d.cap));
-  const tabs = visible.slice(0, 4);
-  const moreItems = visible.slice(4);
-  // Pick a single winner: the longest matching href. Otherwise /inventory and
-  // /inventory/counts both render as the current page.
-  const bestMatch = visible
-    .map((x) => x.href)
-    .filter((h) => isActive(h))
-    .sort((a, b) => b.length - a.length)[0];
-  const isCurrent = (href: string) => href === bestMatch;
-  const moreActive = moreItems.some((m) => isActive(m.href)) && !tabs.some((t) => isActive(t.href));
+  const hubs = hubsFor(role);
+  const tabs = hubs.slice(0, 4);
+  const moreItems = hubs.slice(4);
+  // One winner across every page of every hub, so /inventory/counts lights
+  // Stock and nothing else.
+  const allPages = hubs.flatMap((h) => h.pages.map((p) => ({ ...p, hub: h.key })));
+  const current = bestPage(pathname, allPages) as ((typeof allPages)[number] | undefined);
+  const isActive = (key: string) => current?.hub === key;
+  const isCurrent = (href: string) => current?.href === href;
+  const moreActive = moreItems.some((m) => isActive(m.key));
 
   return (
     <>
       {moreOpen && (
         <div
-          className="fixed inset-0 z-50 overscroll-contain bg-espresso/40 backdrop-blur-sm lg:hidden"
+          className="more-scrim fixed inset-0 z-50 overscroll-contain bg-background/60 backdrop-blur-sm lg:hidden"
           onClick={() => setMoreOpen(false)}
           aria-hidden
         />
       )}
 
-      {/* "More" sheet */}
+      {/*
+        "More": six tiles, not fourteen rows. Each is a hub (see nav.ts); the
+        pages inside it are a tab strip once you are there.
+
+        Motion: the sheet rises on a soft spring (more-sheet in globals.css)
+        and the tiles settle in one after another, 30ms apart, so the eye
+        reads them in order. All transform and opacity; off for reduced motion.
+      */}
       <div
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 max-h-[80dvh] overflow-y-auto overscroll-contain rounded-t-bento-lg border-t border-border bg-card px-4 pt-5 transition-[transform,visibility] duration-200 lg:hidden",
-          "pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]",
-          // invisible removes the 12 links from the tab order while still
+          "more-sheet fixed inset-x-0 bottom-0 z-50 max-h-[80dvh] overflow-y-auto overscroll-contain rounded-t-[28px] border-t border-border-soft bg-card px-5 pt-2.5 lg:hidden",
+          "pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]",
+          // invisible removes the links from the tab order while still
           // allowing the slide transition; aria-hidden alone left them focusable.
           moreOpen ? "visible translate-y-0" : "invisible pointer-events-none translate-y-full",
         )}
+        data-open={moreOpen}
         ref={sheetRef}
         role="dialog"
         aria-modal={moreOpen}
         aria-hidden={!moreOpen}
         aria-label="More sections"
       >
+        <div aria-hidden className="mx-auto mb-3 h-1 w-9 rounded-full bg-border" />
         <div className="mb-4 flex items-center justify-between">
-          <span className="font-display text-lg font-semibold">More</span>
+          <span className="font-display text-base font-semibold">More</span>
           <button
             onClick={() => setMoreOpen(false)}
-            className="grid h-9 w-9 place-items-center rounded-full border border-border"
+            className="lg-press grid h-9 w-9 place-items-center rounded-full bg-muted text-muted-foreground"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          {moreItems.map((m) => {
+        <div className="grid grid-cols-3 gap-2">
+          {moreItems.map((m, i) => {
             const Icon = m.icon;
+            const on = isActive(m.key);
             return (
               <Link
-                key={m.href}
+                key={m.key}
                 href={m.href}
-                aria-current={isCurrent(m.href) ? "page" : undefined}
+                aria-current={on ? "page" : undefined}
+                style={{ "--i": i } as React.CSSProperties}
                 className={cn(
-                  "touch-target flex items-center gap-2.5 rounded-2xl border px-3.5 py-3 text-[13px] font-medium",
-                  isCurrent(m.href)
-                    ? "border-highlight bg-highlight text-highlight-foreground"
-                    : "border-border bg-card",
+                  "more-tile lg-press flex flex-col items-center gap-2 rounded-[22px] px-2 py-4 text-[12.5px] font-medium",
+                  on ? "bg-brand-muted text-brand-ink" : "text-foreground hover:bg-muted",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0 opacity-70" />
+                <span className={cn("grid h-11 w-11 place-items-center rounded-full", on ? "bg-card/60" : "bg-muted")}>
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
                 <span className="truncate">{m.label}</span>
               </Link>
             );
@@ -226,11 +182,11 @@ export function MobileTabBar({ role }: { role: Role }) {
         <div className="grid auto-cols-fr grid-flow-col">
           {tabs.map((t) => (
             <DockItem
-              key={t.href}
+              key={t.key}
               href={t.href}
               label={t.label}
               Icon={t.icon}
-              active={isActive(t.href)}
+              active={isActive(t.key)}
               current={isCurrent(t.href)}
             />
           ))}
@@ -260,7 +216,7 @@ function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: s
     <span
       className={cn(
         "grid h-7 w-12 place-items-center rounded-full transition-colors duration-200",
-        active ? "bg-brand-muted text-brand-ink" : "text-muted-foreground",
+        active ? "dock-pop bg-brand-muted text-brand-ink" : "text-muted-foreground",
       )}
     >
       <Icon className="h-5 w-5" aria-hidden />

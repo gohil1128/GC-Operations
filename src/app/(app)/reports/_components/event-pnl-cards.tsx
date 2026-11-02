@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { formatMoney, formatPercent } from "@/lib/money";
 import type { PnlColumn } from "@/modules/reports/queries";
 import { BreakdownToggle } from "./breakdown-toggle";
+import { CountUp } from "@/components/count-up";
 
 /*
   Profit and loss, one card per event.
@@ -114,7 +115,7 @@ function PnlCard({ column: c, hero = false }: { column: PnlColumn; hero?: boolea
           !hero && (loss ? "text-destructive" : "text-success"),
         )}
       >
-        {formatMoney(c.profitCents, { signed: true })}
+        <CountUp value={formatMoney(c.profitCents, { signed: true })} />
       </p>
 
       {hasSales && (

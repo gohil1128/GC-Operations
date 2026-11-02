@@ -714,6 +714,74 @@
     chart that rises as a chart being measured, which is most of the sense of
     "this is live" the reference gives off.
   */
+  /*
+    Small motion, everywhere it helps you follow what changed.
+
+    Every one is transform/opacity only (composited, no relayout), short —
+    nothing past ~450ms — and switched off for reduced motion below.
+      .more-sheet  the More sheet rises on a soft spring, not a linear slide.
+      .more-tile   its tiles settle in one after another, 30ms apart.
+      .section-pill the tab-strip highlight slides to the tab you picked.
+      .dock-pop    the bottom bar's capsule pops in under the new tab.
+      .reveal      an expanded breakdown fades down into place.
+      page cascade the cards on every screen arrive in order on navigation.
+  */
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  .more-sheet {
+    transition: transform 440ms cubic-bezier(0.32, 0.72, 0, 1), visibility 440ms;
+  }
+  .more-scrim { animation: fade-in 220ms ease-out; }
+  @keyframes tile-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.94); }
+    to   { opacity: 1; transform: none; }
+  }
+  .more-sheet[data-open="true"] .more-tile {
+    animation: tile-in 360ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+    animation-delay: calc(80ms + var(--i, 0) * 30ms);
+  }
+
+  .section-pill {
+    transition: transform 340ms cubic-bezier(0.34, 1.25, 0.64, 1), width 340ms cubic-bezier(0.34, 1.25, 0.64, 1);
+  }
+
+  @keyframes dock-pop {
+    0%   { transform: scale(0.6); opacity: 0.4; }
+    60%  { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .dock-pop { animation: dock-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1); }
+
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .reveal:not([hidden]) { animation: reveal 220ms ease-out; }
+
+  /* Page cascade: a screen is a header, then a column or grid of cards. Those
+     cards rise in, 45ms apart, capped at the eighth so a long list never
+     waits on itself. */
+  /* `backwards`, not `both`: it holds the start pose during the delay, then
+     lets go, so a card's own transform is never overridden afterwards. */
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > * {
+    animation: arrive 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(2) { animation-delay: 45ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(3) { animation-delay: 90ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(4) { animation-delay: 135ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(5) { animation-delay: 180ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(6) { animation-delay: 225ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(7) { animation-delay: 270ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(n+8) { animation-delay: 315ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .more-sheet { transition: visibility 0ms; }
+    .more-scrim, .more-sheet[data-open="true"] .more-tile, .dock-pop, .reveal:not([hidden]),
+    .animate-page > div > :is(.grid, [class*="space-y-"]) > * { animation: none; }
+    .section-pill { transition: none; }
+  }
+
   @keyframes arrive {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: none; }
@@ -1861,7 +1929,8 @@
   /* Printed from a running app, so nothing should still be mid-animation. */
   .animate-page,
   .animate-fade,
-  .cascade > * {
+  .cascade > *,
+  .animate-page > div > * > * {
     animation: none !important;
     opacity: 1 !important;
   }

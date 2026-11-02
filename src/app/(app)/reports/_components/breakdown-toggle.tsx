@@ -37,7 +37,7 @@ export function BreakdownToggle({
         {label}
         <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", open && "rotate-180")} aria-hidden />
       </button>
-      <div id={id} hidden={!open} className="print-show">
+      <div id={id} hidden={!open} className="print-show reveal">
         {children}
       </div>
     </div>

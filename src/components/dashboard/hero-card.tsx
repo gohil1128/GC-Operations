@@ -3,6 +3,7 @@ import { ArrowUpRight, Wallet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
+import { CountUp } from "@/components/count-up";
 
 /*
   The Overview's hero: the reference's top slab, carrying this business's
@@ -49,7 +50,7 @@ export function HeroCard({
         <div className="min-w-0 flex-1">
           <div className="text-[12.5px] text-muted-foreground">{figureLabel}</div>
           <div className="display-num mt-0.5 truncate text-[34px] font-medium leading-tight tracking-[-0.025em] tabular-nums sm:text-[40px]">
-            {figure}
+            <CountUp value={figure} />
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             {delta ? (
