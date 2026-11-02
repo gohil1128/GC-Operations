@@ -21,16 +21,20 @@ type Ev = {
 // Shared formatter so thousands separators match the rest of the app.
 const money = (cents: number) => formatMoney(cents);
 
-// Warm palette drawn from the design system — an event's colour shows up all
-// over the app, so these have to sit inside the cream/espresso world rather
-// than the generic Tailwind wheel.
+// Presets for a new event's colour. The colour shows up all over the app — the
+// chart legend, the P&L column, the invoice dot — so the first one is the
+// default for every event anybody creates, and it has to be seen on both
+// themes. The old default was espresso #3A2415, which is a brown-black dot on
+// a near-black page: almost every event had a colour nobody could see. The
+// lime leads now; every swatch is also drawn with a hairline ring, so even a
+// colour that happens to match the surface it sits on still reads.
 const PALETTE = [
-  "#3A2415", // espresso
-  "#C4623A", // chai rust
+  "#9CC005", // lime — the brand's own
+  "#2F8F5B", // green
   "#E8A33D", // amber
-  "#B8A896", // taupe
-  "#2F8F5B", // deep green
-  "#9A6A12", // ochre
+  "#C4623A", // rust
+  "#3F8FB8", // blue
+  "#8D9191", // grey
 ];
 
 export function EventsManager({ events }: { events: Ev[] }) {
@@ -41,7 +45,7 @@ export function EventsManager({ events }: { events: Ev[] }) {
           <div key={e.id} className="flex items-center justify-between rounded-md border p-2 gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span
-                className="h-3 w-3 rounded-full shrink-0"
+                className="h-3 w-3 rounded-full shrink-0 ring-1 ring-inset ring-foreground/25"
                 style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }}
               />
               <div className="min-w-0">
@@ -124,7 +128,7 @@ function NewEventButton() {
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`h-7 w-7 rounded-full border-2 ${color === c ? "border-foreground" : "border-transparent"}`}
+                  className={`h-7 w-7 rounded-full border-2 ${color === c ? "border-foreground" : "border-foreground/25"}`}
                   style={{ backgroundColor: c }}
                   aria-label={`Pick ${c}`}
                 />
@@ -298,7 +302,7 @@ function EditEventButton({ event }: { event: Ev }) {
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`h-7 w-7 rounded-full border-2 ${color === c ? "border-foreground" : "border-transparent"}`}
+                  className={`h-7 w-7 rounded-full border-2 ${color === c ? "border-foreground" : "border-foreground/25"}`}
                   style={{ backgroundColor: c }}
                 />
               ))}

@@ -55,7 +55,7 @@ export default async function EventsPage({
                   className={cn(
                     "touch-target inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
                     active
-                      ? "border-espresso bg-espresso font-semibold text-espresso-foreground"
+                      ? "border-highlight bg-highlight font-semibold text-highlight-foreground"
                       : "border-input bg-card text-secondary-foreground hover:bg-accent",
                     // A segment that would show nothing still renders, so the
                     // set of filters doesn't shift around as data changes —
@@ -79,7 +79,7 @@ export default async function EventsPage({
             action={
               <Link
                 href="/settings"
-                className="rounded-full bg-espresso px-4 py-2 text-sm text-espresso-foreground"
+                className="rounded-full bg-highlight px-4 py-2 text-sm text-highlight-foreground"
               >
                 Go to Settings
               </Link>

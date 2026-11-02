@@ -15,6 +15,7 @@ import { PageTransition } from "@/components/shell/page-transition";
 import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
 import { Sidebar } from "@/components/shell/sidebar";
 import { HeaderHeightVar } from "@/components/shell/header-height";
+import { StickyHeader } from "@/components/shell/sticky-header";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -52,7 +53,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           once, here, because all three are page-wide. */}
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-espresso focus:px-4 focus:py-2 focus:text-sm focus:text-espresso-foreground"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-highlight focus:px-4 focus:py-2 focus:text-sm focus:text-highlight-foreground"
       >
         Skip to main content
       </a>
@@ -71,10 +72,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       />
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        {/* Content top strip: scope on the left, switchers on the right.
-            Transparent now — it floats over the photograph, and the pieces
-            inside it carry their own frosted pills. */}
-        <header className="relative z-30 sticky top-0 pt-safe">
+        {/* Content top strip: brand on the left (phone), switchers on the
+            right. Clear at rest, solid once content scrolls under it. */}
+        <StickyHeader>
           <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8">
             {/* The logo lives in the sidebar on web, so show it here only on mobile. */}
             <div className="flex min-w-0 items-center gap-3">
@@ -100,7 +100,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </span>
             </div>
           </div>
-        </header>
+        </StickyHeader>
 
         <main id="main" tabIndex={-1} className="relative z-10 flex-1 pb-tabbar outline-none lg:pb-0">
           <PageTransition>{children}</PageTransition>

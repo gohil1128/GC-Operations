@@ -159,7 +159,7 @@ export default async function CashPage() {
                     <TableCell>
                       {c.event ? (
                         <span className="inline-flex items-center gap-1.5 text-xs">
-                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.event.color ?? "hsl(var(--muted-foreground))" }} />
+                          <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: c.event.color ?? "hsl(var(--muted-foreground))" }} />
                           {c.event.name}
                         </span>
                       ) : <span className="text-muted-foreground text-xs">—</span>}
@@ -227,7 +227,7 @@ export default async function CashPage() {
                   value={
                     c.event ? (
                       <span className="inline-flex items-center gap-1.5">
-                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: c.event.color ?? "hsl(var(--muted-foreground))" }} />
+                        <span className="h-2 w-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: c.event.color ?? "hsl(var(--muted-foreground))" }} />
                         {c.event.name}
                       </span>
                     ) : "—"

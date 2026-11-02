@@ -25,9 +25,10 @@ export function TopItemsCard({
 }) {
   const top = items.slice(0, 5);
   const max = top[0]?.netSalesCents ?? 0;
-  // Three tones cycling down the list: the flat brown reads as "most", and the
-  // warmer steps keep the smaller bars from looking like errors.
-  const tone = ["bg-espresso", "bg-espresso", "bg-amber", "bg-brand", "bg-amber"];
+  // Lime for the leaders, then neutral steps that fade with rank. The old ramp
+  // dropped into amber below the top two, but amber is this app's CAUTION
+  // colour, and a bar that merely sold less should not look like a warning.
+  const tone = ["bg-highlight", "bg-highlight", "bg-foreground/60", "bg-foreground/45", "bg-foreground/30"];
 
   return (
     <section className="panel p-[18px]">
@@ -174,14 +175,14 @@ export function UpcomingEventsCard({ events }: { events: UpcomingEvent[] }) {
                 href={`/events/${e.id}`}
                 className={cn(
                   "block rounded-lg px-3 py-2.5 transition-opacity hover:opacity-90",
-                  i === 0 ? "bg-espresso text-espresso-foreground" : "bg-beige",
+                  i === 0 ? "bg-highlight text-highlight-foreground" : "bg-beige",
                 )}
               >
               <div className="flex items-center gap-2 text-xs font-semibold">
                 {i !== 0 && (
                   <span
                     aria-hidden
-                    className="h-2 w-2 shrink-0 rounded-[2px]"
+                    className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
                     style={{ background: e.color ?? "hsl(var(--ink-400))" }}
                   />
                 )}

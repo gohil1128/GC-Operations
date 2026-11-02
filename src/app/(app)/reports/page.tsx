@@ -71,7 +71,7 @@ export default async function ReportsPage() {
                           "Overall"
                         ) : (
                           <span className="inline-flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "hsl(var(--muted-foreground))" }} />
+                            <span className="h-2 w-2 rounded-full shrink-0 ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: c.color ?? "hsl(var(--muted-foreground))" }} />
                             {c.name}
                           </span>
                         )}
@@ -238,7 +238,7 @@ export default async function ReportsPage() {
                     {supplierMatrix.events.map((e) => (
                       <TableHead key={e.id} className="text-right whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                          <span className="h-2 w-2 rounded-full shrink-0 ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
                           {e.name}
                         </span>
                       </TableHead>
@@ -311,7 +311,7 @@ export default async function ReportsPage() {
                     {categoryMatrix.events.map((e) => (
                       <TableHead key={e.id} className="text-right whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                          <span className="h-2 w-2 rounded-full shrink-0 ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
                           {e.name}
                         </span>
                       </TableHead>

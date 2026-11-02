@@ -25,8 +25,8 @@ export default function GlobalError({
           minHeight: "100vh",
           display: "grid",
           placeItems: "center",
-          background: "linear-gradient(135deg,#F8F4EC 0%,#F2ECE2 55%,#F7EADA 100%)",
-          color: "#2A1A10",
+          background: "linear-gradient(180deg,#283018 0%,#161B12 60%)",
+          color: "#FCFCFB",
           fontFamily: "ui-sans-serif, system-ui, sans-serif",
           padding: "24px",
         }}
@@ -36,26 +36,30 @@ export default function GlobalError({
             maxWidth: 420,
             width: "100%",
             textAlign: "center",
-            background: "#FCFAF6",
-            border: "1px solid #EADFD2",
+            background: "#2B3422",
+            border: "1px solid #3A4430",
             borderRadius: 24,
             padding: 40,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt={APP_NAME} style={{ height: 48, width: "auto", marginBottom: 24 }} />
+          {/* On a cream plate, as in the app: the logo is brown, and brown on this
+              olive would disappear. */}
+          <span style={{ display: "inline-block", background: "#F7F9F8", borderRadius: 12, padding: "4px 10px", marginBottom: 24 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt={APP_NAME} style={{ height: 44, width: "auto", display: "block" }} />
+          </span>
           <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Something went wrong</h1>
-          <p style={{ fontSize: 14, color: "#6B5C4E", marginTop: 8, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: "#A9ACA2", marginTop: 8, lineHeight: 1.5 }}>
             This page failed to load. Retrying often clears it.
           </p>
           {error.digest && (
-            <p style={{ fontSize: 11, color: "#6B5C4E", marginTop: 12 }}>Reference {error.digest}</p>
+            <p style={{ fontSize: 11, color: "#A9ACA2", marginTop: 12 }}>Reference {error.digest}</p>
           )}
           <div style={{ marginTop: 24, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
             <button
               onClick={reset}
               style={{
-                background: "#3A2415", color: "#F8F1E6", border: 0, borderRadius: 999,
+                background: "#C2EF00", color: "#1F251B", border: 0, borderRadius: 999,
                 padding: "10px 18px", fontSize: 14, fontWeight: 500, cursor: "pointer",
               }}
             >
@@ -64,7 +68,7 @@ export default function GlobalError({
             <a
               href="/dashboard"
               style={{
-                border: "1px solid #EADFD2", color: "#2A1A10", borderRadius: 999,
+                border: "1px solid #3A4430", color: "#FCFCFB", borderRadius: 999,
                 padding: "10px 18px", fontSize: 14, fontWeight: 500, textDecoration: "none",
               }}
             >

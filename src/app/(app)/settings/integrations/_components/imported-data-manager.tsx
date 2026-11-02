@@ -80,7 +80,7 @@ export function ImportedDataManager({
               disabled={busy !== null}
               className="group inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs transition-colors hover:border-destructive/50 hover:bg-destructive/5"
             >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.color ?? "hsl(var(--muted-foreground))" }} />
+              <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: g.color ?? "hsl(var(--muted-foreground))" }} />
               <span className="font-medium">{g.name}</span>
               <span className="text-muted-foreground">{g.days}d · {money(g.netDollars)}</span>
               <Trash2 className="h-3 w-3 text-muted-foreground group-hover:text-destructive" />
@@ -130,7 +130,7 @@ export function ImportedDataManager({
                     <TableCell>
                       {d.event ? (
                         <span className="inline-flex items-center gap-1.5 text-xs">
-                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: d.event.color ?? "hsl(var(--muted-foreground))" }} />
+                          <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: d.event.color ?? "hsl(var(--muted-foreground))" }} />
                           {d.event.name}
                         </span>
                       ) : (

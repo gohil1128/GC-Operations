@@ -21,7 +21,7 @@ export function StatTile({
     <div
       className={cn(
         "flex flex-col items-start gap-1 rounded-bento border px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:py-4",
-        variant === "dark" && "border-espresso bg-espresso text-espresso-foreground",
+        variant === "dark" && "border-highlight bg-highlight text-highlight-foreground",
         variant === "amber" && "border-warning/25 bg-warning-muted text-warning",
         variant === "default" && "border-border bg-card",
         className,

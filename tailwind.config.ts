@@ -22,6 +22,7 @@ const config: Config = {
       colors: {
         border: "hsl(var(--border))",
         "border-soft": "hsl(var(--border-soft))",
+        "page-top": "hsl(var(--page-top))",
         dock: {
           DEFAULT: "hsl(var(--dock))",
           ink: "hsl(var(--dock-ink))",

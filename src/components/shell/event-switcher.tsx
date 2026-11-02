@@ -52,7 +52,7 @@ export function EventSwitcher({ events, activeEventId }: { events: Ev[]; activeE
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" disabled={pending} className="gap-2 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent">
           {active ? (
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: active.color ?? "hsl(var(--muted-foreground))" }} />
+            <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: active.color ?? "hsl(var(--muted-foreground))" }} />
           ) : (
             <Calendar className="h-3.5 w-3.5" />
           )}
@@ -73,7 +73,7 @@ export function EventSwitcher({ events, activeEventId }: { events: Ev[]; activeE
           return (
             <DropdownMenuItem key={e.id} onClick={() => change(e.id)} className="justify-between">
               <span className="flex items-center gap-2 min-w-0">
-                <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                <span className="h-2.5 w-2.5 rounded-full shrink-0 ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
                 <span className="truncate">{e.name}</span>
               </span>
               <span className="flex items-center gap-1.5">

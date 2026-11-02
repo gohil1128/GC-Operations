@@ -33,7 +33,7 @@ export default async function ResetPasswordPage({
       >
         <Link
           href="/forgot-password"
-          className="flex h-12 w-full items-center justify-center rounded-2xl bg-espresso text-sm font-medium text-espresso-foreground"
+          className="flex h-12 w-full items-center justify-center rounded-2xl bg-highlight text-sm font-medium text-highlight-foreground"
         >
           Send me a new link
         </Link>

@@ -16,7 +16,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-espresso text-espresso-foreground hover:bg-espresso/90",
+        // Lime with olive ink: the reference's primary action. It was bg-espresso,
+        // which stopped meaning "primary" when the palette went olive — it
+        // computes to a flat grey-green in dark, a fill with no accent at all,
+        // on every Save, Create and Sign in button in the app.
+        default: "bg-highlight text-highlight-foreground hover:bg-highlight/90",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-border bg-card hover:bg-accent hover:text-accent-foreground hover:border-foreground/15",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",

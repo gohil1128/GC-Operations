@@ -92,11 +92,11 @@
        on cream and go muddy on espresso, so the board lifts them to
        #8FD9AE / #FFC9C9 / #FFD9A0. These are theme-independent — the board is
        dark in both themes, the way a stall-side screen has to be. */
-    --board-ground: 24 51% 6%;
-    --board-ink: 37 56% 94%;           /* #F8F1E6 */
-    --board-dim: 33 22% 70%;
-    --board-green: 148 52% 71%;        /* #8FD9AE */
-    --board-amber: 36 100% 81%;        /* #FFD9A0 */
+    --board-ground: 96 22% 11%;
+    --board-ink: 60 14% 98%;
+    --board-dim: 85 8% 70%;
+    --board-green: 74 85% 62%;
+    --board-amber: 44 95% 72%;
     --board-red: 0 100% 89%;           /* #FFC9C9 */
     --foreground: var(--ink-950);      /* 17.4:1 on card */
     --card: 0 0% 100%;
@@ -129,14 +129,15 @@
     --success-muted: 142 39% 90%;      /* #DDF0E4 ← v3 */
     --warning: 32 81% 33%;             /* #9A5A10 ← v3 pill text */
     --warning-foreground: 0 0% 100%;
-    --warning-muted: 32 87% 94%;       /* #FDF1E3 ← v3 banner / pill ground */
-    --warning-border: 35 70% 83%;      /* #F2D9B6 ← v3 banner edge */
-    --warning-ink: 33 67% 21%;         /* #5A3A12 ← v3 banner body text */
-    /* Alert: rust-tinted rather than amber. v3 uses it where something is
-       piling up rather than going wrong — the Invoices count badge, the
-       "9 open" chip — so it must not read as an error. */
-    --alert: 17 69% 36%;               /* #9A3F1C */
-    --alert-muted: 19 67% 88%;         /* #F5D9CC */
+    --warning-muted: 48 90% 93%;
+    --warning-border: 46 70% 79%;
+    --warning-ink: 40 70% 18%;
+    /* Alert: the brand's own lime family rather than amber or red. It marks
+       where something is piling up rather than going wrong — the Invoices
+       count badge, "Close drawer", the "9 open" chip — so it must not read as
+       an error, and it is the one status colour that is the brand's own. */
+    --alert: 76 85% 22%;
+    --alert-muted: 72 65% 88%;
 
     /* Single accent + data highlight */
     --brand: var(--rust-500);          /* logo rust — fills, dots, borders */
@@ -172,6 +173,12 @@
     --dock-muted: 85 6% 68%;
     --dock-active: 71 100% 47%;
     --dock-active-ink: 96 16% 13%;
+    /* The page's colour at the very top of the screen. In light the page is
+       flat, so it is the background; in dark it is the lit end of the
+       gradient. Defined once because two things must agree on it: the
+       gradient itself, and the header once it turns solid — a header filled
+       with --background would show as a darker bar cut across the light. */
+    --page-top: 75 15% 95%;
     --border-soft: 80 14% 90%;
     --input: 80 12% 85%;
     --ring: var(--rust-500);
@@ -251,7 +258,7 @@
     --success-muted: 148 30% 17%;
     --warning: 39 82% 62%;
     --warning-foreground: 96 16% 13%;
-    --warning-muted: 40 30% 14%;
+    --warning-muted: 52 32% 13%;
     --brand: 71 100% 47%;
     --brand-foreground: 96 16% 13%;
     --brand-ink: 71 100% 50%;
@@ -290,11 +297,12 @@
     /* The banner and chip families had light values only, so in dark they
        inherited them: dark-brown banner text on a dark-amber ground. Each is
        inverted here — a deep tint for the ground, a light ink on it. */
-    --warning-muted: 40 30% 14%;
-    --warning-border: 40 40% 26%;
-    --warning-ink: 38 70% 86%;
-    --alert: 30 85% 72%;
-    --alert-muted: 30 35% 16%;
+    --warning-muted: 52 32% 13%;
+    --warning-border: 50 38% 25%;
+    --warning-ink: 50 75% 86%;
+    --alert: 74 85% 62%;
+    --alert-muted: 78 32% 15%;
+    --page-top: 80 33% 14%;
   }
 }
 
@@ -358,7 +366,7 @@
     read through it: every figure sits on an opaque card.
   */
   .dark body::before {
-    background: linear-gradient(180deg, hsl(80 33% 14%) 0%, hsl(var(--background)) 55%);
+    background: linear-gradient(180deg, hsl(var(--page-top)) 0%, hsl(var(--background)) 55%);
   }
 
   /* One strong, consistent keyboard focus indicator. The rust --ring alone is

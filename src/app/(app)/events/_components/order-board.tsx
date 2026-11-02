@@ -113,7 +113,7 @@ function Ticket({ event }: { event: BoardEvent }) {
         <span className="flex min-w-0 items-center gap-2">
           <span
             aria-hidden
-            className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+            className="h-2.5 w-2.5 shrink-0 rounded-[3px] ring-1 ring-inset ring-foreground/25"
             style={{ background: event.color ?? "rgba(255,255,255,.4)" }}
           />
           <span className="display-num truncate text-[17px] font-medium text-board-ink" title={event.name}>

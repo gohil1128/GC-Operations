@@ -78,7 +78,7 @@ export function TimezoneNotice({ businessTimezone }: { businessTimezone: string 
   return (
     <div className="rounded-[18px] border border-warning-border bg-warning-muted px-3.5 py-2 text-[12.5px] text-warning-ink">
       <div className="flex items-center gap-3">
-        <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-amber text-espresso">
+        <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-amber text-amber-foreground">
           <AlertTriangle className="h-3 w-3" aria-hidden />
         </span>
         <p className="min-w-0 flex-1">

@@ -250,7 +250,7 @@ export default async function DashboardPage({
       */}
       {uncounted.count > 0 && can(scope.role, "cash") && (
         <div className="mt-4 flex items-center gap-3 rounded-[14px] border border-warning-border bg-warning-muted px-3.5 py-[11px] text-[12.5px] text-warning-ink">
-          <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-amber text-espresso">
+          <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-amber text-amber-foreground">
             <AlertTriangle className="h-3 w-3" aria-hidden />
           </span>
           <span className="min-w-0">
@@ -342,7 +342,7 @@ export default async function DashboardPage({
                 </p>
                 <Link
                   href="/reports"
-                  className="rounded-full bg-espresso px-4 py-2 text-[13px] font-medium text-espresso-foreground"
+                  className="rounded-full bg-highlight px-4 py-2 text-[13px] font-medium text-highlight-foreground"
                 >
                   Unlock
                 </Link>

@@ -141,7 +141,7 @@ export function SquareSalesSummaryImporter({
               {events.map((e) => (
                 <SelectItem key={e.id} value={e.id}>
                   <span className="inline-flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                    <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
                     {e.name}
                   </span>
                 </SelectItem>

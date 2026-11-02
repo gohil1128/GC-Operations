@@ -191,7 +191,7 @@ export function MobileTabBar({ role }: { role: Role }) {
                 className={cn(
                   "touch-target flex items-center gap-2.5 rounded-2xl border px-3.5 py-3 text-[13px] font-medium",
                   isCurrent(m.href)
-                    ? "border-espresso bg-espresso text-espresso-foreground"
+                    ? "border-highlight bg-highlight text-highlight-foreground"
                     : "border-border bg-card",
                 )}
               >

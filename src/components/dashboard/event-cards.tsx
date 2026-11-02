@@ -70,19 +70,25 @@ export function EventCards({ events, highlightId }: { events: EventCard[]; highl
                     <span
                       aria-hidden
                       className={cn(
-                        "grid h-9 w-9 shrink-0 place-items-center rounded-full text-[13px] font-bold",
+                        "relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-[13px] font-bold",
                         lit ? "bg-highlight-foreground text-highlight" : "bg-muted text-foreground",
                       )}
                     >
-                      {/* The event's own colour, as a ring, where it has one —
-                          the same colour it wears in the statement and the
-                          chart, so a card is recognisable across the page. */}
-                      <span
-                        className="grid h-full w-full place-items-center rounded-full"
-                        style={e.color && !lit ? { boxShadow: `inset 0 0 0 2px ${e.color}` } : undefined}
-                      >
-                        {e.name.trim().charAt(0).toUpperCase()}
-                      </span>
+                      {e.name.trim().charAt(0).toUpperCase()}
+                      {/* The event's own colour, as a dot on the corner — the same
+                          colour it wears in the statement and the legend, so a card
+                          is recognisable across the page. It was an inset ring
+                          round the initial, which for the default dark colour
+                          was a dark line on a dark card: nothing to see. A dot
+                          with its own hairline, sitting inside a card-coloured
+                          halo, reads whatever the colour is. Skipped on the lit
+                          card, where lime is already the identity. */}
+                      {e.color && !lit && (
+                        <span
+                          className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-card"
+                          style={{ backgroundColor: e.color, boxShadow: "inset 0 0 0 1px hsl(var(--foreground) / 0.3)" }}
+                        />
+                      )}
                     </span>
                     <span className="min-w-0 truncate text-[13.5px] font-semibold" title={e.name}>
                       {e.name}

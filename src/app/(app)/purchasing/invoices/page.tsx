@@ -258,7 +258,7 @@ export default async function InvoicesPage({
                       <Badge variant="brand">All events</Badge>
                     ) : i.event ? (
                       <span className="inline-flex items-center gap-1.5 text-xs">
-                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: i.event.color ?? "hsl(var(--muted-foreground))" }} />
+                        <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: i.event.color ?? "hsl(var(--muted-foreground))" }} />
                         {i.event.name}
                       </span>
                     ) : (
@@ -354,7 +354,7 @@ export default async function InvoicesPage({
                     <Badge variant="brand">All events</Badge>
                   ) : i.event ? (
                     <Badge variant="muted">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: i.event.color ?? "hsl(var(--muted-foreground))" }} />
+                      <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: i.event.color ?? "hsl(var(--muted-foreground))" }} />
                       {i.event.name}
                     </Badge>
                   ) : (

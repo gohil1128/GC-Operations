@@ -112,7 +112,7 @@ function Row({
         {color !== undefined ? (
           <span
             aria-hidden
-            className="h-2 w-2 shrink-0 rounded-[2px]"
+            className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
             style={{ background: color ?? "hsl(var(--ink-400))" }}
           />
         ) : (

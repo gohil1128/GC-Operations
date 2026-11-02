@@ -170,7 +170,7 @@ export function PnlStatement({ columns }: { columns: PnlColumn[] }) {
                   >
                     <span
                       aria-hidden
-                      className="h-2 w-2 shrink-0 rounded-[2px]"
+                      className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
                       style={{ background: swatch(c, i) }}
                     />
                     <span className="truncate">{c.name}</span>
@@ -313,7 +313,7 @@ export function PnlStatement({ columns }: { columns: PnlColumn[] }) {
                 <Link href={`/events/${encodeURIComponent(c.key)}`} className="flex min-w-0 items-center gap-2">
                   <span
                     aria-hidden
-                    className="h-2 w-2 shrink-0 rounded-[2px]"
+                    className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
                     style={{ background: swatch(c, i) }}
                   />
                   <span className="truncate text-sm font-semibold" title={c.name}>

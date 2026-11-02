@@ -32,7 +32,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </p>
         <Link
           href="/login"
-          className="flex h-12 w-full items-center justify-center rounded-2xl bg-espresso text-sm font-medium text-espresso-foreground"
+          className="flex h-12 w-full items-center justify-center rounded-2xl bg-highlight text-sm font-medium text-highlight-foreground"
         >
           Go to sign in
         </Link>

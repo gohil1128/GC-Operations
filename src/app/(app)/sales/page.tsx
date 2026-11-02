@@ -275,7 +275,7 @@ export default async function SalesPage({
                   aria-current={sort === s.key ? "true" : undefined}
                   className={cn(
                     "rounded-md px-2 py-1 transition-colors",
-                    sort === s.key ? "bg-espresso font-semibold text-espresso-foreground" : "hover:bg-accent",
+                    sort === s.key ? "bg-highlight font-semibold text-highlight-foreground" : "hover:bg-accent",
                   )}
                 >
                   {s.label}
