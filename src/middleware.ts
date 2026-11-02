@@ -24,6 +24,7 @@ const PUBLIC_EXACT = new Set([
   // Called by the scheduler, which has no login. It authenticates itself with
   // a bearer secret (CRON_SECRET) and fails closed without one — see the route.
   "/api/cron/scan-invoices",
+  "/api/cron/sync-square",
 ]);
 // Only NextAuth's own handler legitimately needs a subtree.
 const PUBLIC_PREFIXES = ["/api/auth/"];

@@ -1,6 +1,7 @@
-name: Scan email for invoices
+name: Scan email for invoices and sync Square sales
 
-# Every three hours, ask the app to read the mailbox and log any invoices.
+# Every three hours, ask the app to read the mailbox and log any invoices,
+# and to bring in Square's completed sales.
 #
 # This is a GitHub schedule and not a Vercel cron on purpose. Vercel's free
 # plan only allows a cron that runs once a day, and a vercel.json asking for
@@ -61,4 +62,33 @@ jobs:
             503) echo "::warning::The app says email scanning is not configured yet (HTTP 503)."; exit 0 ;;
             401) echo "::error::CRON_SECRET here does not match the one in Vercel."; exit 1 ;;
             *)   echo "::error::Scan failed (HTTP $code)."; exit 1 ;;
+          esac
+
+      - name: Ask the app to sync Square sales
+        # Runs even if the invoice scan failed: the two are independent.
+        if: always()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          set -uo pipefail
+          url="${APP_URL:-https://www.bolochai.com}/api/cron/sync-square"
+
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::warning::CRON_SECRET is not set as a repository secret, so Square was not synced. See docs/SQUARE-SYNC.md."
+            exit 0
+          fi
+
+          code=$(curl -sS --max-time 90 -o resp.json -w '%{http_code}' \
+            -X POST -H "Authorization: Bearer ${CRON_SECRET}" "$url") || {
+            echo "::error::Could not reach $url"; exit 1; }
+
+          # Counts only — the endpoint never returns a sale.
+          cat resp.json; echo
+
+          case "$code" in
+            200) ;;
+            503) echo "::warning::The app says Square sync is not configured yet (HTTP 503)."; exit 0 ;;
+            401) echo "::error::CRON_SECRET here does not match the one in Vercel."; exit 1 ;;
+            *)   echo "::error::Square sync failed (HTTP $code)."; exit 1 ;;
           esac

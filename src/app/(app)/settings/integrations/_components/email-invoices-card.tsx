@@ -82,11 +82,11 @@ export async function EmailInvoicesCard({
           <div className="flex flex-col gap-3">
             <ul className="space-y-1.5 text-sm text-muted-foreground">
               <li className="flex gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden />
-                A bill only logs itself when it came <strong className="text-foreground">from an address you&apos;ve saved for a supplier</strong> and Gmail confirms the sender is genuine. Anything else waits for you, so a stranger can&apos;t put an expense in your books.</li>
+                <span>A bill only logs itself when it came <strong className="text-foreground">from an address you&apos;ve saved for a supplier</strong> and Gmail confirms the sender is genuine. Anything else waits for you, so a stranger can&apos;t put an expense in your books.</span></li>
               <li className="flex gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden />
-                Emails are read by an AI to find the invoice figures. Promotions, social and spam are never sent.</li>
+                <span>Emails are read by an AI to find the invoice figures. Promotions, social and spam are never sent.</span></li>
               <li className="flex gap-2"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden />
-                Invoices are logged as totals only (no line items), so your stock counts are never touched.</li>
+                <span>Invoices are logged as totals only (no line items), so your stock counts are never touched.</span></li>
             </ul>
             <div>
               {/* A real navigation, not a client-side link: it leaves for Google. */}

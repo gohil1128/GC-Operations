@@ -30,11 +30,18 @@ describe("routes reachable without a session", () => {
     });
   }
 
-  it("opens exactly one route to the scheduler, and nothing around it", () => {
-    // The mail scanner is called by a scheduler with no login; it guards itself
-    // with a bearer secret. Anything NEXT to it must stay behind the session.
+  it("opens exactly the two scheduler routes, and nothing around them", () => {
+    // The mail scanner and the Square sync are called by a scheduler with no
+    // login; each guards itself with a bearer secret. Anything NEXT to them
+    // must stay behind the session — the OAuth routes above all.
     expect(publicExact.has("/api/cron/scan-invoices")).toBe(true);
-    for (const path of ["/api/cron", "/api/cron/", "/api/cron/anything-else", "/api/mail/google/connect", "/api/mail/google/callback"]) {
+    expect(publicExact.has("/api/cron/sync-square")).toBe(true);
+    expect([...publicExact].filter((p) => p.startsWith("/api/cron"))).toHaveLength(2);
+    for (const path of [
+      "/api/cron", "/api/cron/", "/api/cron/anything-else",
+      "/api/mail/google/connect", "/api/mail/google/callback",
+      "/api/square/connect", "/api/square/callback",
+    ]) {
       expect(publicExact.has(path), `${path} must NOT be public`).toBe(false);
     }
   });

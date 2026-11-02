@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { businessDayFromIso } from "@/lib/date";
 import { toCents } from "@/lib/money";
 import { writeAudit } from "@/lib/audit";
-import { overShortCentsFor } from "@/modules/cash/reconcile";
+import { applySquareToClose } from "@/modules/cash/square-close";
 
 // Importer for Square's "Sales Summary" page export
 // (Reports → Sales summary → Export → "Summary").
@@ -150,59 +150,11 @@ export async function POST(req: Request) {
     dayCreated = 1;
   }
 
-  /*
-    Fill in the parts of the day's close that Square actually knows.
-
-    It used to write Square's cash SALES into CashClose.cashCents, which
-    every other screen reads as the money physically counted in the till at
-    the end of the day. The two are not the same number and are not even the
-    same kind of number: the count includes the opening float and is missing
-    whatever was paid out of the drawer during the day. Overwriting one with
-    the other silently replaced a count somebody had made by hand, and the
-    day stopped reconciling with no sign of why.
-
-    It also worked out its own over/short — closing + deposit − opening −
-    expected — which had drifted from the one the rest of the app uses and
-    left out both paid-out and paid-in entirely, so every payout came back
-    as a shortage.
-
-    Now it writes only what Square is the authority on. Card takings are not
-    counted by hand at all, so they come from the report. Expected takings is
-    the day's net sales, which is exactly what the entry form suggests, so
-    the two agree. The cash count is left alone: nobody but the person who
-    counted the drawer knows that figure. Over/short is then re-derived with
-    overShortCentsFor, the same function the form and the actions use.
-  */
-  let cashCloseTouched = false;
-  const close = await prisma.cashClose.findFirst({
-    where: { locationId: scope.locationId, businessDate },
+  // What Square knows about the day's close (card takings, expected), and
+  // nothing it does not — see applySquareToClose.
+  const cashCloseTouched = await applySquareToClose(prisma, {
+    locationId: scope.locationId, businessDate, netCents, cardCents,
   });
-  if (close) {
-    // Derived from the rows, the way the cash actions do it, rather than
-    // trusting the totals cached on the close.
-    const [deposits, payouts] = await Promise.all([
-      prisma.deposit.findMany({ where: { locationId: scope.locationId, businessDate } }),
-      prisma.cashPayout.findMany({ where: { locationId: scope.locationId, businessDate } }),
-    ]);
-    const depositCents = deposits.reduce((a, d) => a + d.amountCents, 0);
-    const paidOutCents = payouts.reduce((a, p) => a + p.amountCents, 0);
-    const expectedCents = netCents;
-    const creditCents = cardCents > 0 ? cardCents : close.creditCents;
-    const overShortCents = overShortCentsFor({
-      cashCents: close.cashCents,
-      creditCents,
-      depositCents,
-      paidOutCents,
-      paidInCents: close.paidInCents,
-      openingCents: close.openingCents,
-      expectedCents,
-    });
-    await prisma.cashClose.update({
-      where: { id: close.id },
-      data: { creditCents, depositCents, paidOutCents, expectedCents, overShortCents },
-    });
-    cashCloseTouched = true;
-  }
 
   await writeAudit({
     businessId: scope.businessId,

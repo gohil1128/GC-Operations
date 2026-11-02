@@ -99,18 +99,19 @@ model Business {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  locations       Location[]
-  users           User[]
-  suppliers       Supplier[]
-  ingredients     Ingredient[]
-  recipes         Recipe[]
-  employees       Employee[]
-  reportSnapshots ReportSnapshot[]
-  auditLogs       AuditLog[]
-  events          Event[]
-  expenses        Expense[]
-  vendors         Vendor[]
-  mailConnection  MailConnection?
+  locations        Location[]
+  users            User[]
+  suppliers        Supplier[]
+  ingredients      Ingredient[]
+  recipes          Recipe[]
+  employees        Employee[]
+  reportSnapshots  ReportSnapshot[]
+  auditLogs        AuditLog[]
+  events           Event[]
+  expenses         Expense[]
+  vendors          Vendor[]
+  mailConnection   MailConnection?
+  squareConnection SquareConnection?
 }
 
 model Location {
@@ -122,23 +123,24 @@ model Location {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
-  business        Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users           UserLocation[]
-  inventoryCounts InventoryCount[]
-  movements       InventoryMovement[]
-  purchaseOrders  PurchaseOrder[]
-  shifts          Shift[]
-  dailySales      DailySales[]
-  cashCloses      CashClose[]
-  deposits        Deposit[]
-  cashPayouts     CashPayout[]
-  itemRecipeLinks ItemRecipeLink[]
-  reportSnapshots ReportSnapshot[]
-  invoices        Invoice[]
-  expenses        Expense[]
-  salesItems      SalesItem[]
-  capitalAssets   CapitalAsset[]
-  mailConnections MailConnection[]
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users             UserLocation[]
+  inventoryCounts   InventoryCount[]
+  movements         InventoryMovement[]
+  purchaseOrders    PurchaseOrder[]
+  shifts            Shift[]
+  dailySales        DailySales[]
+  cashCloses        CashClose[]
+  deposits          Deposit[]
+  cashPayouts       CashPayout[]
+  itemRecipeLinks   ItemRecipeLink[]
+  reportSnapshots   ReportSnapshot[]
+  invoices          Invoice[]
+  expenses          Expense[]
+  salesItems        SalesItem[]
+  capitalAssets     CapitalAsset[]
+  mailConnections   MailConnection[]
+  squareConnections SquareConnection[]
 
   @@index([businessId])
 }
@@ -162,19 +164,20 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  business        Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  locations       UserLocation[]
-  inventoryCounts InventoryCount[]
-  purchaseOrders  PurchaseOrder[]
-  cashCloses      CashClose[]
-  verifiedCloses  CashClose[]          @relation("CashCloseVerifier")
-  auditLogs       AuditLog[]
-  invoices        Invoice[]
-  expenses        Expense[]
-  capitalAssets   CapitalAsset[]
-  resetTokens     PasswordResetToken[]
-  mailConnections MailConnection[]
-  reviewedMail    MailMessage[]
+  business          Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  locations         UserLocation[]
+  inventoryCounts   InventoryCount[]
+  purchaseOrders    PurchaseOrder[]
+  cashCloses        CashClose[]
+  verifiedCloses    CashClose[]          @relation("CashCloseVerifier")
+  auditLogs         AuditLog[]
+  invoices          Invoice[]
+  expenses          Expense[]
+  capitalAssets     CapitalAsset[]
+  resetTokens       PasswordResetToken[]
+  mailConnections   MailConnection[]
+  reviewedMail      MailMessage[]
+  squareConnections SquareConnection[]
 
   @@index([businessId])
 }
@@ -1004,4 +1007,45 @@ model SupplierMailSender {
 
   @@unique([supplierId, address])
   @@index([address])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Square sales sync (see src/modules/square and docs/SQUARE-SYNC.md)
+// ──────────────────────────────────────────────────────────────────────────────
+
+model SquareConnection {
+  id                String    @id @default(cuid())
+  // One Square account per business.
+  businessId        String    @unique
+  // The app location synced sales are filed under.
+  locationId        String
+  connectedById     String
+  merchantId        String
+  merchantName      String
+  // The Square locations whose orders are read, and their names for the screen.
+  squareLocationIds String[]
+  squareLocations   Json
+  // The Square location's own timezone decides which day an order belongs to,
+  // so totals match the day Square's own reports put them on.
+  timezone          String
+  // AES-256-GCM, never stored in the clear. See src/modules/mail/crypto.ts.
+  refreshTokenEnc   String
+  // ACTIVE | NEEDS_RECONNECT
+  status            String    @default("ACTIVE")
+  statusNote        String?
+  // Every business day BEFORE this one (YYYY-MM-DD) has been synced in full.
+  // It only moves forward when a run finishes those days, so a run that runs
+  // out of time is picked up by the next one rather than leaving a gap.
+  syncedThroughDay  String
+  // Set while a run is in progress, so two runs never write the same days.
+  runningSince      DateTime?
+  lastSyncAt        DateTime?
+  // Counts from the last run, for the settings card. Never order contents.
+  lastResult        Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  connectedBy User     @relation(fields: [connectedById], references: [id])
 }
