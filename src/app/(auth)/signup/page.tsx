@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { signUpAction, type SignupState } from "@/modules/auth/signup";
+import { BrandLogo } from "@/components/brand-logo";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -86,9 +87,8 @@ export default function SignupPage() {
       <main className="flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-[380px]">
           {!logoFailed && (
-            <span className="logo-plate mb-6 inline-block lg:hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="" className="h-14 w-auto" />
+            <span className="mb-6 inline-block lg:hidden">
+              <BrandLogo alt="" className="h-14 w-auto" />
             </span>
           )}
           <h1 className="display-num text-[30px] font-medium">Start your back-office</h1>

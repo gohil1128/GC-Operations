@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@/lib/brand";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-md text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <span className="logo-plate mx-auto mb-8 inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt={APP_NAME} className="h-14 w-auto" />
+        <span className="mx-auto mb-8 inline-block">
+          <BrandLogo alt={APP_NAME} className="h-14 w-auto" />
         </span>
         <div className="display-num text-[64px] font-medium leading-none text-brand">404</div>
         <h1 className="mt-4 text-xl font-semibold">This page doesn&apos;t exist</h1>
