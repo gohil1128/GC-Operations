@@ -1,7 +1,7 @@
 import type { Scope } from "@/lib/scope";
 import type { SectionKey } from "@/modules/section-lock/sections";
 import { fromCents } from "@/lib/money";
-import { dailySummary, weeklyTrend, purchaseSpendByPeriod, pnlByEvent } from "@/modules/reports/queries";
+import { weeklyTrend, purchaseSpendByPeriod, pnlByEvent } from "@/modules/reports/queries";
 import { getLaborReport } from "@/modules/labor/queries";
 import { getVarianceReport, listIngredients } from "@/modules/inventory/queries";
 import { listCashCloses, listPayouts } from "@/modules/cash/queries";
@@ -131,29 +131,6 @@ export const EXPORTS: ExportDef[] = [
           tax: money(i.taxCents),
           transactions: i.txCount,
           event: i.event?.name ?? "",
-        })),
-      };
-    },
-  },
-  {
-    key: "daily",
-    label: "Daily summary (last 30 days)",
-    description: "Sales with food cost, labor cost and cash over/short per day.",
-    group: "Sales",
-    build: async ({ scope }) => {
-      const data = await dailySummary(scope.locationId, 30);
-      return {
-        columns: ["date", "netSales", "tips", "guests", "foodCost", "foodPct", "laborCost", "laborPct", "cashOverShort"],
-        rows: data.map((r) => ({
-          date: r.date,
-          netSales: money(r.netSalesCents),
-          tips: money(r.tipsCents),
-          guests: r.guests,
-          foodCost: money(r.foodCostCents),
-          foodPct: r.foodPct.toFixed(2),
-          laborCost: money(r.laborCostCents),
-          laborPct: r.laborPct.toFixed(2),
-          cashOverShort: money(r.cashOverShortCents),
         })),
       };
     },

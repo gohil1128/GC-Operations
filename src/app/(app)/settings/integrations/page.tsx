@@ -81,7 +81,7 @@ export default async function IntegrationsPage({
 
         <EmailInvoicesCard businessId={scope.businessId} flash={mailFlash} canReview={can(scope.role, "purchasing")} />
 
-        <Card className="border-brand/50">
+        <Card>
           <CardHeader>
             <CardTitle>
               Square Sales Summary CSV

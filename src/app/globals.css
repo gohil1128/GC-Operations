@@ -124,9 +124,9 @@
     --destructive: 0 55% 41%;          /* #A33030 ← v3 danger */
     --destructive-foreground: 0 0% 100%;
     --destructive-muted: 0 75% 94%;    /* #FBE3E3 ← v3 */
-    --success: 148 55% 27%;            /* darkened for 4.5:1 on success-muted */
+    --success: 84 70% 22%;             /* lime family, dark olive: 6.3:1 on success-muted */
     --success-foreground: 0 0% 100%;
-    --success-muted: 142 39% 90%;      /* #DDF0E4 ← v3 */
+    --success-muted: 75 60% 88%;       /* pale lime tint */
     --warning: 32 81% 33%;             /* #9A5A10 ← v3 pill text */
     --warning-foreground: 0 0% 100%;
     --warning-muted: 48 90% 93%;
@@ -253,9 +253,9 @@
     --destructive: 0 72% 72%;
     --destructive-foreground: 96 16% 13%;
     --destructive-muted: 0 35% 17%;
-    --success: 148 52% 58%;
+    --success: 74 85% 60%;             /* lime: 8.6:1 on success-muted */
     --success-foreground: 0 0% 100%;
-    --success-muted: 148 30% 17%;
+    --success-muted: 80 35% 18%;
     --warning: 39 82% 62%;
     --warning-foreground: 96 16% 13%;
     --warning-muted: 52 32% 13%;
@@ -1754,6 +1754,10 @@
   on a page that has no gradient behind it.
 */
 @media print {
+  /* A collapsed section is a screen convenience. On paper it must be open: a
+     printed P&L with the breakdown folded away would be a list of headlines. */
+  .print-show { display: block !important; }
+
   /* Chrome, not content. */
   nav,
   header,
