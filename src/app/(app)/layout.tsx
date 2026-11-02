@@ -2,18 +2,19 @@ import { redirect } from "next/navigation";
 import { auth, currentUser } from "@/lib/auth";
 import { getScope } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
+import { relativeDay } from "@/lib/date";
 import { lockedSectionsNow } from "@/modules/section-lock/actions";
 import { getActiveEvent, listActiveEvents } from "@/modules/events/queries";
 import { countOpenInvoices } from "@/modules/invoices/queries";
+import { findUncountedDrawers, lastPosImportAt } from "@/modules/cash/queries";
 import { BrandBar } from "@/components/shell/brand-bar";
 import { LocationSwitcher } from "@/components/shell/location-switcher";
 import { EventSwitcher } from "@/components/shell/event-switcher";
 import { UserMenu } from "@/components/shell/user-menu";
 import { PageTransition } from "@/components/shell/page-transition";
 import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
-import { IconRail } from "@/components/shell/icon-rail";
+import { Sidebar } from "@/components/shell/sidebar";
 import { HeaderHeightVar } from "@/components/shell/header-height";
-import { LiquidGlass } from "@/components/liquid-glass";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -31,13 +32,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (me.mustChangePassword) redirect("/change-password");
 
   const scope = await getScope();
-  const [business, lockedSections, events, activeEvent, openInvoices] = await Promise.all([
-    prisma.business.findUnique({ where: { id: scope.businessId }, select: { name: true } }),
-    lockedSectionsNow(scope.businessId),
-    listActiveEvents(scope.businessId),
-    getActiveEvent(scope.businessId),
-    countOpenInvoices(scope.locationId),
-  ]);
+  const [business, lockedSections, events, activeEvent, openInvoices, uncounted, posImport] =
+    await Promise.all([
+      prisma.business.findUnique({ where: { id: scope.businessId }, select: { name: true } }),
+      lockedSectionsNow(scope.businessId),
+      listActiveEvents(scope.businessId),
+      getActiveEvent(scope.businessId),
+      countOpenInvoices(scope.locationId),
+      findUncountedDrawers(scope.locationId),
+      lastPosImportAt(scope.locationId),
+    ]);
   const activeLocation = scope.availableLocations.find((l) => l.id === scope.locationId)!;
 
   return (
@@ -46,19 +50,27 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           through, the capability probe that decides whether this engine can
           run it, and the single pointer listener that moves the light. Mounted
           once, here, because all three are page-wide. */}
-      <LiquidGlass />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-espresso focus:px-4 focus:py-2 focus:text-sm focus:text-espresso-foreground"
       >
         Skip to main content
       </a>
-      {/* Soft glass: a floating frosted rail at lg+, MobileTabBar below it. */}
-      <IconRail role={scope.role} userName={session.user.name ?? "User"} />
+      {/* The v3 sidebar at lg+, MobileTabBar below it. It is a real column in
+          the flex row now rather than a floating element the content had to
+          leave a hole for, so there is no inset to keep in step with its
+          width. */}
+      <Sidebar
+        role={scope.role}
+        userName={session.user.name ?? "User"}
+        userEmail={session.user.email ?? ""}
+        locationName={activeLocation.name}
+        openInvoices={openInvoices}
+        hasUncountedDrawer={uncounted.count > 0}
+        squareLastImport={posImport ? relativeDay(posImport) : null}
+      />
 
-      {/* 18px gutter + the 88px rail + 14px = the inset the floating rail needs.
-          It grew with the rail when the destinations gained visible names. */}
-      <div className="relative flex min-w-0 flex-1 flex-col lg:pl-[120px]">
+      <div className="relative flex min-w-0 flex-1 flex-col">
         {/* Content top strip: scope on the left, switchers on the right.
             Transparent now — it floats over the photograph, and the pieces
             inside it carry their own frosted pills. */}
@@ -69,35 +81,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <div className="lg:hidden">
                 <BrandBar businessName={business?.name ?? "Operations"} />
               </div>
-              {/*
-                The business name, and nothing else.
-
-                This pill used to read "God's Chai Operations · Downtown Cafe ·
-                All events", and the location switcher and the event switcher
-                sit 200px to the right of it saying "Downtown Cafe" and "All
-                events". So two thirds of the line was repeating, in text you
-                cannot act on, what the controls next to it already show and
-                can change. On the Overview the same event name then appeared
-                twice more — in the masthead title and on its own period
-                control — four times on one screen.
-
-                What is left is the one thing the switchers never show, which
-                is also the only orientation this strip owes anybody on
-                desktop, where the rail's logo is a mark with no words.
-              */}
-              <span className="glass-pill hidden truncate rounded-full px-3.5 py-1.5 text-[13px] text-secondary-foreground lg:inline">
-                {business?.name ?? "Operations"}
-              </span>
+              {/* The business name is the sidebar's logo at lg+, and the
+                  BrandBar's below it, so this strip no longer names it. */}
             </div>
             <div className="glass-pill flex shrink-0 items-center gap-1 rounded-full p-1 sm:gap-1.5">
               <LocationSwitcher active={activeLocation} options={scope.availableLocations} />
               <EventSwitcher events={events} activeEventId={activeEvent?.id ?? null} />
-              <UserMenu
-                name={session.user.name ?? "User"}
-                email={session.user.email ?? ""}
-                role={scope.role}
-                locationName={activeLocation.name}
-              />
+              {/* lg:hidden — at desktop widths the sidebar's user card is
+                  this same menu, and two triggers for one menu on one screen
+                  is the duplication the sidebar was meant to end. */}
+              <span className="lg:hidden">
+                <UserMenu
+                  name={session.user.name ?? "User"}
+                  email={session.user.email ?? ""}
+                  role={scope.role}
+                  locationName={activeLocation.name}
+                />
+              </span>
             </div>
           </div>
         </header>

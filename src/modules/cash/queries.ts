@@ -182,3 +182,57 @@ export async function getCashPosition(locationId: string) {
     lastCountedDate: newest?.businessDate ?? null,
   };
 }
+
+/*
+  Did a day take money and never get counted?
+
+  This feeds two things the v3 design adds: the rust dot on the sidebar's Cash
+  item and the banner across the top of the Overview. Both run on every page
+  load, so this has to be cheap.
+
+  It is two indexed range reads over the same (locationId, businessDate) index
+  and a set difference in Node, rather than a LEFT JOIN ... IS NULL. The window
+  is bounded at 30 days because the question is "is there a drawer still owed",
+  not "has every drawer in history been counted" — a close from last season
+  that was never counted is not something anybody is going to act on tonight,
+  and leaving the window open would make this grow with tenure.
+
+  Only days that actually took money count. A day with no sales has no drawer
+  to count, and flagging it would put a permanent dot on the nav of any
+  business that does not trade every day — which is this one.
+*/
+export async function findUncountedDrawers(locationId: string, days = 30) {
+  const { from, to } = lastNDays(days);
+  const range = { gte: from, lte: to };
+
+  const [sold, closed] = await Promise.all([
+    prisma.dailySales.findMany({
+      where: { locationId, businessDate: range, netSalesCents: { gt: 0 } },
+      select: { businessDate: true },
+      orderBy: { businessDate: "desc" },
+    }),
+    prisma.cashClose.findMany({
+      where: { locationId, businessDate: range },
+      select: { businessDate: true },
+    }),
+  ]);
+
+  const counted = new Set(closed.map((c) => c.businessDate.toISOString()));
+  const missing = sold.filter((d) => !counted.has(d.businessDate.toISOString()));
+  // Newest first, so the banner can name the most recent one.
+  return { count: missing.length, latest: missing[0]?.businessDate ?? null };
+}
+
+/*
+  When sales last arrived from the POS, for the sidebar's Connected section.
+  null means they never have — which is a real state here, since a business can
+  key its sales in by hand and never connect Square at all.
+*/
+export async function lastPosImportAt(locationId: string) {
+  const row = await prisma.dailySales.findFirst({
+    where: { locationId, source: "POS" },
+    orderBy: { updatedAt: "desc" },
+    select: { updatedAt: true },
+  });
+  return row?.updatedAt ?? null;
+}

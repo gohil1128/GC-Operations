@@ -21,12 +21,22 @@ export function UserMenu({
   email,
   role,
   locationName,
+  trigger,
+  align = "end",
 }: {
   name: string;
   email: string;
   role: Role;
   /** Shown here because the header no longer prints it when there is only one. */
   locationName?: string;
+  /*
+    An alternative thing to click. The sidebar's user card is the menu in the
+    v3 layout, and without this the card would either be dead decoration with
+    sign-out hidden somewhere else, or a second copy of this menu's contents
+    that could drift from it.
+  */
+  trigger?: React.ReactNode;
+  align?: "start" | "end";
 }) {
   const { theme, setTheme } = useTheme();
   // next-themes only knows the resolved theme after mount; rendering the icon
@@ -38,14 +48,16 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 data-[state=open]:bg-accent">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-            {name.slice(0, 1).toUpperCase()}
-          </div>
-          <span className="hidden sm:inline">{name}</span>
-        </Button>
+        {trigger ?? (
+          <Button variant="ghost" size="sm" className="gap-2 data-[state=open]:bg-accent">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              {name.slice(0, 1).toUpperCase()}
+            </div>
+            <span className="hidden sm:inline">{name}</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align={align} className="w-56">
         <DropdownMenuLabel className="normal-case tracking-normal">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">{name}</span>

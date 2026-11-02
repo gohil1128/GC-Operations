@@ -30,19 +30,25 @@
        (16%). Every brown and orange below is one of those two hues held fixed
        while lightness/saturation move, so the whole app reads as shades of
        the logo rather than a palette that merely sits near it. */
-    --ink-950: 19 48% 9%;              /* #22130C */
+    --ink-950: 23 45% 11%;             /* #2A1A10 ← v3 ink */
     --ink-900: 19 47% 12%;             /* #2D1910 */
-    --ink-800: 19 46% 16%;             /* #3C2216 ← logo brown, exact */
+    --ink-800: 24 47% 15%;             /* #3A2415 ← v3 espresso */
     --ink-700: 19 42% 22%;             /* #502F21 */
-    --ink-600: 20 34% 30%;             /* #674432 */
-    --ink-500: 21 24% 40%;             /* #7E5F4E */
-    --ink-400: 24 18% 52%;             /* #9B806F */
+    --ink-600: 28 25% 23%;             /* #4A3A2C ← v3 secondary text */
+    --ink-500: 28 19% 35%;             /* #6B5949 ← v3 body muted */
+    --ink-400: 28 16% 41%;             /* #7A6858 ← v3 label */
     --ink-300: 28 18% 66%;             /* #B8A799 taupe */
 
     --rust-800: 16 58% 30%;            /* #793820 */
-    --rust-700: 16 56% 36%;            /* #8F4428 */
+    /* v3 specifies link rust #B4532D (17 60% 44%). Held two points darker
+       because the handoff's own two values collide: #B4532D on the v3
+       surface tint #F3EFE9 is 4.33:1, under the 4.5:1 that link-sized text
+       needs, and links do sit on tinted tiles. At 42% it is 4.67:1 on the
+       tint, 5.08:1 on the page and 5.38:1 on white — safe everywhere — and
+       the shift is not visible side by side. */
+    --rust-700: 17 60% 42%;            /* #AB4F2B ← v3 link rust, darkened */
     --rust-600: 16 54% 42%;            /* #A55031 */
-    --rust-500: 16 51% 48%;            /* #B95D3C ← logo rust, exact */
+    --rust-500: 17 54% 50%;            /* #C4623A ← v3 rust */
     --rust-400: 16 56% 60%;            /* #D27E60 */
     --rust-300: 17 62% 74%;            /* #E6AB94 */
     --rust-200: 20 55% 87%;            /* #F0D8CC */
@@ -62,10 +68,10 @@
        gradient the solid-card system used — a gradient under translucent
        panels shows through them and makes identical cards read as different
        shades depending on where they sit. */
-    --background: 37 37% 93%;          /* #F4EFE7 */
-    --canvas-from: 37 37% 93%;
-    --canvas-via:  37 37% 93%;
-    --canvas-to:   37 37% 93%;
+    --background: 36 38% 97%;          /* #FBF9F6 ← v3 page */
+    --canvas-from: 36 38% 97%;
+    --canvas-via:  36 38% 97%;
+    --canvas-to:   36 38% 97%;
 
     /* Glass. --panel-glass is the cream the frosted cards are tinted with,
        --glass-edge the white their borders and the toolbar are drawn from,
@@ -91,7 +97,7 @@
     --board-amber: 36 100% 81%;        /* #FFD9A0 */
     --board-red: 0 100% 89%;           /* #FFC9C9 */
     --foreground: var(--ink-950);      /* 17.4:1 on card */
-    --card: 40 50% 98%;                /* #FCFBF7 */
+    --card: 0 0% 100%;                 /* #FFFFFF ← v3 card */
     --card-foreground: var(--ink-950);
     --popover: 40 50% 98%;
     --popover-foreground: var(--ink-950);
@@ -107,21 +113,28 @@
 
     --secondary: 38 44% 96%;
     --secondary-foreground: var(--ink-600);
-    --muted: 38 40% 95%;
+    --muted: 36 29% 93%;               /* #F3EFE9 ← v3 surface tint */
     --muted-foreground: var(--ink-500);  /* 5.6:1 on card, 4.8:1 on canvas */
     --accent: 32 32% 92%;
     --accent-foreground: var(--ink-600);
 
     /* Status — foreground on its own tinted background */
-    --destructive: 0 60% 42%;          /* darkened for 4.5:1 as text on its tint and white on fill */
+    --destructive: 0 55% 41%;          /* #A33030 ← v3 danger */
     --destructive-foreground: 0 0% 100%;
-    --destructive-muted: 0 65% 93%;    /* #F9E3E3 */
+    --destructive-muted: 0 75% 94%;    /* #FBE3E3 ← v3 */
     --success: 148 55% 27%;            /* darkened for 4.5:1 on success-muted */
     --success-foreground: 0 0% 100%;
-    --success-muted: 144 39% 92%;      /* #E4F3EA */
-    --warning: 39 85% 26%;             /* darkened for 4.5:1 on warning-muted */
+    --success-muted: 142 39% 90%;      /* #DDF0E4 ← v3 */
+    --warning: 32 81% 33%;             /* #9A5A10 ← v3 pill text */
     --warning-foreground: 0 0% 100%;
-    --warning-muted: 41 81% 92%;       /* #FBF0D9 */
+    --warning-muted: 32 87% 94%;       /* #FDF1E3 ← v3 banner / pill ground */
+    --warning-border: 35 70% 83%;      /* #F2D9B6 ← v3 banner edge */
+    --warning-ink: 33 67% 21%;         /* #5A3A12 ← v3 banner body text */
+    /* Alert: rust-tinted rather than amber. v3 uses it where something is
+       piling up rather than going wrong — the Invoices count badge, the
+       "9 open" chip — so it must not read as an error. */
+    --alert: 17 69% 36%;               /* #9A3F1C */
+    --alert-muted: 19 67% 88%;         /* #F5D9CC */
 
     /* Single accent + data highlight */
     --brand: var(--rust-500);          /* logo rust — fills, dots, borders */
@@ -132,12 +145,17 @@
     /* Filled brand buttons need a darker ground for white text to pass. */
     --brand-strong: var(--rust-600);   /* white on it: 5.5:1 */
     --brand-muted: var(--rust-100);
-    --amber: 34 76% 58%;               /* #E59F43 — rust hue rotated to gold */
+    --amber: 36 79% 57%;               /* #E8A33D ← v3 amber */
     --amber-foreground: var(--ink-950);/* 8.0:1 on the amber fill */
     --amber-deep: 34 62% 46%;          /* #BE7F2D legend / second event colour */
 
-    --border: 30 30% 88%;              /* hairline */
-    --input: 30 28% 86%;
+    /* v3 names two hairlines, and the difference is load-bearing: the
+       stronger one draws structural edges (the sidebar's right edge, a
+       control's outline), the softer one draws dividers INSIDE a card, where
+       a structural weight would cut the card into pieces. */
+    --border: 35 26% 87%;              /* #E7E0D6 structural */
+    --border-soft: 36 31% 90%;         /* #EEE8DF dividers within a card */
+    --input: 35 26% 87%;
     --ring: var(--rust-500);
     --radius: 1.5rem;                  /* 24px bento card */
 
@@ -266,44 +284,29 @@
      background-attachment:fixed on <body> instead forces the browser to
      repaint the whole gradient on every scroll frame, which is what made
      scrolling feel sticky. */
+  /*
+    The page is one flat colour again.
+
+    What stood here was an ambient field: three wide radial washes in the logo
+    hues plus a wallpaper, fixed behind everything. It existed for exactly one
+    reason — glass is only visible by what it does to what is behind it, and a
+    pane over a single flat colour is indistinguishable from that colour, so
+    the floating rail needed something to bend or it read as a white
+    rectangle.
+
+    There is no glass now. v3's page is #FBF9F6 and its surfaces separate by
+    hairline, so the washes had nothing left to serve: they were three
+    gradients and a background image being composited on every frame to be
+    refracted by nothing. The warm cast they threw across the content area was
+    also fighting the flat tint the new cards sit on.
+  */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    /*
-      The ambient field, and the reason the material works at all.
-
-      Glass is only visible by what it does to what is behind it. The canvas
-      used to be one flat cream — deliberately, because the old translucent
-      cards sat directly on it and a gradient showed through them unevenly.
-      Those cards are opaque now, so that constraint is gone; and the floating
-      chrome that replaced them had nothing to refract. A pane of glass over a
-      single flat colour is indistinguishable from that colour. The rail read
-      as a white rectangle, because optically that is exactly what it was.
-
-      So the canvas carries light: three very wide, very low-contrast washes in
-      the logo hues, placed where the chrome actually floats — behind the rail
-      at the left, behind the switchers at the top right, and low on the right
-      where the page runs out. Wide enough that no edge of any wash is ever
-      visible, faint enough that a figure on an opaque card beside it is
-      unaffected, and present enough that the glass has something to bend.
-    */
-    background-image:
-      radial-gradient(70rem 48rem at 4% -10%, hsl(var(--rust-300) / 0.32), transparent 58%),
-      radial-gradient(56rem 40rem at 96% -4%, hsl(var(--amber) / 0.22), transparent 60%),
-      radial-gradient(80rem 56rem at 78% 104%, hsl(var(--rust-200) / 0.34), transparent 58%),
-      linear-gradient(
-        135deg,
-        hsl(var(--canvas-from) / var(--lg-veil)) 0%,
-        hsl(var(--canvas-via) / var(--lg-veil)) 55%,
-        hsl(var(--canvas-to) / var(--lg-veil)) 100%
-      ),
-      var(--lg-wallpaper);
-    background-size: auto, auto, auto, auto, cover;
-    background-position: center, center, center, center, center;
-    background-repeat: no-repeat;
+    background-color: hsl(var(--background));
   }
 
   /* One strong, consistent keyboard focus indicator. The rust --ring alone is
@@ -416,9 +419,8 @@
       soft lift do the separating that translucency used to.
     */
     background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--lg-r-xl);
-    box-shadow: var(--lg-shadow);
+    border: 1px solid hsl(var(--border-soft));
+    border-radius: var(--lg-r-lg);
   }
   /* The one dark panel per screen that carries contrast. Translucent for the
      same reason, so the photograph is faintly present through it too. */
@@ -449,38 +451,26 @@
     own material through the iOS 26 betas after shipping it too transparent to
     read. Learning that second-hand is cheaper.
   */
+  /* v3's chrome control: white, one structural hairline, radius 14. The lit
+     top rim and dark bottom rim went with the glass — they were there to
+     fake a thickness this surface no longer claims to have. */
   .glass-pill {
     position: relative;
     isolation: isolate;
-    background-color: hsl(var(--lg-tint) / var(--lg-tint-a));
-    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
-    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
-    border: var(--lg-rim-w) solid hsl(var(--lg-rim-light));
-    box-shadow:
-      inset 0 var(--lg-rim-w) 0 0 hsl(var(--lg-rim-light)),
-      inset 0 calc(-1 * var(--lg-rim-w)) 0 0 hsl(var(--lg-rim-dark)),
-      var(--lg-shadow-chrome);
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--lg-r-md);
   }
-  .lg-probe-ok .glass-pill {
-    backdrop-filter: url(#lg-lens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
-    -webkit-backdrop-filter: url(#lg-lens) blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
-  }
+  /* The lens pass that used to run on these pills is gone with the glass.
+     It had to go explicitly: liquid-glass.tsx put .lg-probe-ok on <html> at
+     runtime, so leaving this rule would have re-applied a backdrop-filter
+     to every pill the moment the page hydrated, and the flattening above
+     would have lasted exactly until first paint. */
+
   /* The specular rim, built in rather than bolted on, so every pill gets it
      without a second class in the markup. See .lg-rim for how the ring is cut. */
-  .glass-pill::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1.5px;
-    pointer-events: none;
-    z-index: 1;
-    background: var(--lg-rim-paint);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  }
-
+  /* The specular rim went with the glass. It drew a lit ring to suggest a
+     thickness the surface no longer claims to have. */
 
   /* The photograph band behind the top of every page.
 
@@ -539,11 +529,13 @@
   /* Panel — the ledger layout's smaller card. Content layer, so opaque, and
      on the same radius scale as everything else so a panel nested in a bento
      is concentric with it rather than merely near it. */
+  /* Same object as .bento. v3 has ONE card, so the two names that used to
+     mean two different frostings now resolve to the same white rectangle;
+     they are kept apart only so the 29 routes using them need no edit. */
   .panel {
     background-color: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--lg-r-md);
-    box-shadow: var(--lg-shadow);
+    border: 1px solid hsl(var(--border-soft));
+    border-radius: var(--lg-r-lg);
   }
 
   /* A heavy top rule in the logo brown opens the KPI strip and the P&L
@@ -630,10 +622,21 @@
      Same material as the pills; no lens, because an edge-to-edge band has no
      rim on two of its sides and refracting only the other two looks like a
      rendering fault rather than like glass. */
+  /*
+    NOT GLASS ANY MORE. v3 has no translucency anywhere: chrome is a solid
+    surface with a hairline, and the page behind it simply stops at the edge.
+
+    The name is kept because the mobile tab bar and a handful of other
+    surfaces reference it, and renaming them would be a diff across files
+    that are otherwise untouched by this redesign. What it paints changed;
+    where it is used did not.
+
+    Dropping the backdrop-filter also drops the compositor layer each of
+    these forced, and the whole class of "legible text showing through the
+    tab bar" problems that comes with a 0.72 wash over live content.
+  */
   .glass {
-    background-color: hsl(var(--lg-tint) / var(--lg-tint-a));
-    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
-    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+    background-color: hsl(var(--card));
   }
 
   .cascade > * {
@@ -793,11 +796,14 @@
        than picking the next step down by eye — picking by eye is what produces
        the thin crescent of mismatched curve in a corner that makes a careful
        layout look careless. */
+    /* v3's scale. The old one was built for big frosted slabs and ran up to
+       32px; the new cards are smaller, flatter and sit next to each other, and
+       at 32px a 16px-tall row of numbers inside one loses its corners. */
     --lg-r-xs: 8px;
-    --lg-r-sm: 12px;
-    --lg-r-md: 18px;
-    --lg-r-lg: 26px;
-    --lg-r-xl: 32px;
+    --lg-r-sm: 12px;                   /* inputs */
+    --lg-r-md: 14px;                   /* buttons, chrome pills */
+    --lg-r-lg: 16px;                   /* cards and tiles */
+    --lg-r-xl: 22px;                   /* the frame */
 
     /*
       Deliberately NOT squircles.
@@ -887,7 +893,11 @@
 
     /* Separation. Long and soft and tinted with the logo brown, never black —
        the previous system's rule, kept, because it is right. */
-    --lg-shadow: 0 10px 30px -12px hsl(var(--ink-800) / 0.30), 0 2px 8px -4px hsl(var(--ink-800) / 0.18);
+    /* v3 separates surfaces with a hairline, not a lift. The old pair was a
+       30px drop that made every card hover above the page; what is left is
+       the 1px seat v3 puts under the sidebar's active item, and cards get
+       none at all. */
+    --lg-shadow: 0 1px 2px hsl(var(--ink-800) / 0.08);
     --lg-shadow-high: 0 24px 60px -20px hsl(var(--ink-800) / 0.42), 0 4px 14px -6px hsl(var(--ink-800) / 0.22);
     /* The chrome's own shadow, which rides --lg-scrolled. Nearly flush on an
        unscrolled page, lifting as content passes under it. */

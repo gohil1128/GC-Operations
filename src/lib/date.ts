@@ -189,3 +189,21 @@ export function timeInZone(value: Date | string, timeZone: string): string {
     .replace(/\s/g, "")
     .toLowerCase();
 }
+
+/*
+  "Today" / "Yesterday" / a date, for a status line that answers "is this
+  thing still running?".
+
+  Deliberately not minutes-ago. The design shows "4m ago" against the POS, but
+  what this reads is the last DAY that has sales, and a daily total that
+  arrived at 2am would otherwise render as "22h ago" and look broken. Day
+  granularity is the truth the data actually carries.
+*/
+export function relativeDay(d: Date | string, now: Date = new Date()): string {
+  const then = businessDay(d);
+  const days = Math.round((startOfDay(now).getTime() - then.getTime()) / 86_400_000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  return fmtDate(then, "MMM d");
+}

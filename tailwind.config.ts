@@ -21,6 +21,11 @@ const config: Config = {
     extend: {
       colors: {
         border: "hsl(var(--border))",
+        "border-soft": "hsl(var(--border-soft))",
+        alert: {
+          DEFAULT: "hsl(var(--alert))",
+          muted: "hsl(var(--alert-muted))",
+        },
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
@@ -63,6 +68,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
           muted: "hsl(var(--warning-muted))",
+          border: "hsl(var(--warning-border))",
+          ink: "hsl(var(--warning-ink))",
         },
         brand: {
           DEFAULT: "hsl(var(--brand))",

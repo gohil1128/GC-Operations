@@ -1,58 +1,77 @@
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /*
-  The KPI strip: four figures in one ruled band, opened by a heavy rule in the
-  logo brown and closed by a hairline. Cells are divided rather than boxed, so
-  the row reads as one statement heading instead of four separate cards.
+  The v3 KPI tile: four separate tiles on the surface tint, each an icon circle
+  beside a label, a figure and an optional delta chip.
 
-  Below `lg` four columns would each be ~80px wide, which the display numerals
-  can't survive, so it drops to two and the dividers rearrange to match. The
-  nth-child variants keep whichever cell starts a row flush with the page
-  margin at both counts.
+  It used to be one ruled band with four cells divided by hairlines. The change
+  is not only visual: the old band put the figure at 42px with the comparison
+  in grey underneath, so "how are we doing" was a sentence you had to read. v3
+  puts the direction in a coloured chip next to the number, which is the part
+  people actually scan for, and drops the figure to 24px to make room for it.
+
+  The chip carries a glyph as well as a colour — ▲ and ▼ — so direction does
+  not depend on telling green from red.
 */
+
+export type KpiDelta = {
+  /** The chip's text, e.g. "12.4%" or "9 open". */
+  text: string;
+  /** up/down colour the movement; alert is rust for "piling up", not an error. */
+  tone: "up" | "down" | "alert" | "flat";
+};
 
 export type Kpi = {
   label: string;
   value: string;
   sub: React.ReactNode;
-  tone?: "muted" | "success" | "danger" | "brand";
+  icon: LucideIcon;
+  delta?: KpiDelta | null;
 };
 
-const TONE = {
-  muted: "text-muted-foreground",
-  success: "text-success",
-  danger: "text-destructive",
-  brand: "text-brand-ink",
+const CHIP = {
+  up: "bg-success-muted text-success",
+  down: "bg-destructive-muted text-destructive",
+  alert: "bg-alert-muted text-alert",
+  flat: "bg-card text-muted-foreground",
 } as const;
 
+const GLYPH = { up: "▲ ", down: "▼ ", alert: "", flat: "" } as const;
+
 export function KpiStrip({ items }: { items: Kpi[] }) {
-  const last = items.length - 1;
   return (
-    /*
-      A frosted panel, not a bare ruled band. The strip sits inside the
-      photograph band now, and dark figures straight on the photo were
-      unreadable — the handoff specifies this same glass treatment for it.
-    */
-    <div className="bento mt-7 grid grid-cols-2 overflow-hidden lg:grid-cols-4">
-      {items.map((k, i) => (
-        <div
-          key={k.label}
-          className={cn(
-            "min-w-0 border-input px-4 py-4 sm:px-5 sm:py-[18px]",
-            // Dividers: vertical between columns, horizontal only while wrapped.
-            i % 2 === 0 && "border-r",
-            i < last - 1 && "border-b",
-            "lg:border-b-0",
-            i !== last && "lg:border-r",
-          )}
-        >
-          <div className="text-xs text-muted-foreground">{k.label}</div>
-          <div className="display-num mt-2 truncate text-[30px] font-medium leading-[1.05] sm:text-[36px] lg:text-[42px]">
-            {k.value}
+    <div className="mt-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map((k) => {
+        const Icon = k.icon;
+        return (
+          <div key={k.label} className="flex items-start gap-3.5 rounded-2xl bg-muted px-[18px] py-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card">
+              <Icon className="h-[18px] w-[18px] text-espresso" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[12.5px] text-muted-foreground">{k.label}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="display-num text-2xl font-medium tabular-nums tracking-[-0.02em]">
+                  {k.value}
+                </span>
+                {k.delta && (
+                  <span
+                    className={cn(
+                      "rounded-full px-[7px] py-0.5 text-[11px] font-semibold",
+                      CHIP[k.delta.tone],
+                    )}
+                  >
+                    {GLYPH[k.delta.tone]}
+                    {k.delta.text}
+                  </span>
+                )}
+              </div>
+              <div className="mt-[3px] text-[11px] text-muted-foreground">{k.sub}</div>
+            </div>
           </div>
-          <div className={cn("mt-1.5 text-xs", TONE[k.tone ?? "muted"])}>{k.sub}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

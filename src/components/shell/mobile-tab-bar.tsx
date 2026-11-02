@@ -205,11 +205,11 @@ export function MobileTabBar({ role }: { role: Role }) {
         </div>
       </div>
 
-      {/* Scroll edge: the page dissolves into the bar instead of being cut
-          off at a hard line where it passes beneath. */}
-      <div className="lg-edge lg:hidden" aria-hidden>
-        <i><i><i><i><i><i /></i></i></i></i></i>
-      </div>
+      {/* The scroll-edge band is gone with the glass. It existed to stop
+          content being cut off at a hard line as it passed under a
+          see-through bar; the bar is opaque now, so there is nothing showing
+          through to dissolve, and six stacked blur layers were being painted
+          on every mobile frame to soften an edge nobody could see. */}
 
       {/* Fixed bottom bar — hidden once the desktop pill nav has room. */}
       <nav
