@@ -3,7 +3,7 @@ import { Download, Lock, ShoppingBag, TrendingUp, FileText, Receipt, AlertTriang
 import { auth } from "@/lib/auth";
 import { requireCapability } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
-import { getDashboard, getPriorNetSales } from "@/modules/dashboard/queries";
+import { getDashboard, getPriorNetSales, recentTradingDays } from "@/modules/dashboard/queries";
 import { getTopItems } from "@/modules/dashboard/items";
 import { resolveEventScope, listEventOptions } from "@/modules/dashboard/event-scope";
 import { getActiveEvent, listUpcomingEvents } from "@/modules/events/queries";
@@ -22,7 +22,8 @@ import {
   InvoicesDueCard,
   UpcomingEventsCard,
 } from "@/components/dashboard/ledger/rail-cards";
-import { EventRevenueChart } from "@/components/dashboard/event-revenue-chart";
+import { HeroCard } from "@/components/dashboard/hero-card";
+import { EventCards, type EventCard } from "@/components/dashboard/event-cards";
 import { ItemMixDonut } from "@/components/dashboard/bento/item-mix-donut";
 import { isCardVisible, type OverviewCardKey } from "@/modules/dashboard/cards";
 import { can } from "@/lib/permissions";
@@ -74,7 +75,7 @@ export default async function DashboardPage({
   const show = (key: OverviewCardKey) => isCardVisible(business?.hiddenOverviewCards, key);
   // How many of the three rail cards survive, so the statement can take the
   // full width when the whole rail is switched off.
-  const railCards = (["topItems", "invoicesDue", "upcomingEvents"] as const).filter(show).length;
+  const railCards = (["topItems", "invoicesDue", "upcomingEvents", "itemMix"] as const).filter(show).length;
   // Locking "Profit & loss" has to cover the Overview too. The statement and
   // the profit figures live here as well, so gating only /reports would hide
   // the page while leaving the same margins on the landing screen.
@@ -96,6 +97,7 @@ export default async function DashboardPage({
     listUpcomingEvents(scope.businessId, now, 3),
     findUncountedDrawers(scope.locationId),
   ]);
+  const tradingDays = await recentTradingDays(scope.locationId, range.eventId);
 
   const topItems = await getTopItems({
     locationId: scope.locationId,
@@ -185,39 +187,22 @@ export default async function DashboardPage({
     },
   ];
 
-  /*
-    Revenue by event, not by day. The P&L already has a column per event, so
-    the bars read straight off it rather than being recomputed — the chart and
-    the statement under it cannot disagree. "Overall" is the statement's total
-    column, not an event, so it is dropped.
-  */
-  const eventBars = pnl
+  // Same columns as the statement, so a card and its column cannot disagree.
+  const eventCards: EventCard[] = pnl
     .filter((c) => c.key !== "overall" && c.netSalesCents > 0)
+    .sort((a, b) => b.netSalesCents - a.netSalesCents)
+    .slice(0, 4)
     .map((c) => ({
       id: c.key,
       name: c.name,
       color: c.color,
       netSalesCents: c.netSalesCents,
-      /*
-        Cost, profit and margin are withheld when "Profit & loss" is locked.
-
-        The statement above shows a padlock and the Profit KPI reads "•••" when
-        locked, but this chart printed exact per-event profit and margin right
-        underneath them — so the lock hid the two places that say "locked" and
-        left the numbers themselves on screen. Net sales stays visible, matching
-        the Net sales KPI, which is deliberately not masked.
-
-        Withheld here rather than hidden in the component: a figure that never
-        reaches the client cannot be read out of the HTML.
-      */
-      costCents: pnlLocked ? null : c.cogsCents + c.laborCents + c.opexCents + c.feeCents,
-      profitCents: pnlLocked ? null : c.profitCents,
       marginPct: pnlLocked ? null : c.marginPct,
-    }))
-    .sort((a, b) => b.netSalesCents - a.netSalesCents);
+    }));
+  const highlightId = range.eventId ?? eventCards[0]?.id ?? null;
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pb-12 pt-5 sm:px-6 lg:px-8">
+    <div className="arrive mx-auto max-w-[1400px] px-4 pb-12 pt-5 sm:px-6 lg:px-8">
       {/*
         The v3 page header: a greeting over a line of context, with the event
         control on the right and a rule under the lot.
@@ -274,20 +259,47 @@ export default async function DashboardPage({
                 ? `${fmtDate(uncounted.latest, "MMM d")} has no cash close`
                 : "A day has no cash close"}
             </b>{" "}
-            {uncounted.count > 1 &&
-              `and ${uncounted.count - 1} other ${uncounted.count === 2 ? "day" : "days"} too. `}
-            The drawer was never counted, so the cash figures for it are expected, not counted.
+            {/* The explanation is for screens with room for it. On a phone the
+                line above and the action beside it are the whole message, and
+                the sentence was wrapping the banner to four lines. */}
+            <span className="hidden sm:inline">
+              {uncounted.count > 1 &&
+                `and ${uncounted.count - 1} other ${uncounted.count === 2 ? "day" : "days"} too. `}
+              The drawer was never counted, so the cash figures for it are expected, not counted.
+            </span>
           </span>
           <Link
             href="/cash/new"
-            className="ml-auto shrink-0 whitespace-nowrap font-semibold text-alert hover:underline"
+            className="ml-auto shrink-0 whitespace-nowrap font-semibold text-alert hover:underline relative after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-['']"
           >
             Close drawer →
           </Link>
         </div>
       )}
 
-      {show("kpis") && <KpiStrip items={kpis} />}
+      {/*
+        The hero and the stats beside it. Net sales leads as the hero figure,
+        so the stat column carries the other three and does not repeat it.
+      */}
+      <div className={cn("mt-5 grid gap-4", show("kpis") && "lg:grid-cols-[minmax(0,1fr)_300px]")}>
+        <HeroCard
+          figure={formatMoneyHeadline(netSalesCents)}
+          figureLabel={`Net sales · ${range.label}`}
+          delta={deltaPct === null ? null : { text: formatPercent(Math.abs(deltaPct)), up: deltaPct >= 0 }}
+          days={tradingDays}
+          canCloseDrawer={can(scope.role, "cash")}
+          canLogInvoice={can(scope.role, "purchasing")}
+        />
+        {show("kpis") && (
+          <KpiStrip items={kpis.slice(1)} className="mt-0 grid-cols-3 gap-2.5 sm:gap-3 lg:grid-cols-1" />
+        )}
+      </div>
+
+      {show("revenueByEvent") && (
+        <div className="mt-8">
+          <EventCards events={eventCards} highlightId={highlightId} />
+        </div>
+      )}
 
       {/* Statement + rail. The grid collapses to one column when a business has
           turned off everything on one side, so a hidden card leaves no gap. */}
@@ -352,68 +364,8 @@ export default async function DashboardPage({
           {show("topItems") && <TopItemsCard items={topItems.items} />}
           {show("invoicesDue") && <InvoicesDueCard invoices={dueInvoices} now={now} />}
           {show("upcomingEvents") && <UpcomingEventsCard events={upcoming} />}
-        </div>
-        )}
-      </div>
-      )}
-
-      {/* Per-event and category views, below the statement. */}
-      {(show("revenueByEvent") || show("itemMix")) && (
-      <div className={cn("mt-5 grid gap-5 [&>*]:min-w-0", show("revenueByEvent") && show("itemMix") && "lg:grid-cols-[minmax(0,1fr)_300px]")}>
-        {show("revenueByEvent") && (
-        <div className="bento min-w-0 p-4 sm:p-[22px]">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-5">
-              <h2 className="text-base font-semibold">Revenue · by event</h2>
-              <span className="flex gap-3.5 text-xs text-muted-foreground">
-                <span>● Net sales</span>
-                <span className="text-brand-ink">● What it cost</span>
-              </span>
-            </div>
-            {/* Was a 28px circle holding an arrow: under the 44px minimum, and
-                an arrow in a ring names no destination. */}
-            <Link href="/reports" className="relative inline-flex items-center text-xs font-medium text-muted-foreground after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-[''] hover:text-foreground hover:underline">
-              Full report
-            </Link>
-          </div>
-          {/*
-            v3 sets a headline figure beside the chart: the whole window's
-            total, with what was kept out of it, so the bars have something to
-            be a breakdown OF.
-
-            It reads off the statement's Overall column — the same object the
-            bars come from — rather than being summed again here, so the
-            headline and the bars under it cannot disagree. Withheld when the
-            section is locked, for the same reason the bars' cost is: it is a
-            profit figure, and the lock exists to hide those.
-          */}
-          <div className="mt-3 grid gap-6 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] lg:items-start">
-            <div className="rounded-2xl bg-muted px-[18px] py-4">
-              <div className="text-[12.5px] text-muted-foreground">
-                {range.label} · {eventBars.length} {eventBars.length === 1 ? "event" : "events"}
-              </div>
-              <div className="display-num mt-1 text-[28px] font-medium tabular-nums tracking-[-0.02em]">
-                {formatMoneyHeadline(overall?.netSalesCents ?? 0)}
-              </div>
-              {!pnlLocked && (overall?.netSalesCents ?? 0) > 0 && (
-                <div className="mt-1.5 text-xs text-muted-foreground">
-                  <span className={(overall?.profitCents ?? 0) >= 0 ? "text-success" : "text-destructive"}>
-                    {(overall?.profitCents ?? 0) >= 0 ? "▲" : "▼"}{" "}
-                    {formatMoneyHeadline(overall?.profitCents ?? 0, { signed: true })} kept
-                  </span>{" "}
-                  · {formatPercent(overall?.marginPct ?? 0)} margin
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <EventRevenueChart bars={eventBars} />
-            </div>
-          </div>
-        </div>
-        )}
-
         {show("itemMix") && (
-        <div className="bento min-w-0 p-4 sm:p-[22px]">
+        <div className="panel min-w-0 p-[18px]">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold">Item mix</h2>
             {/* Points at /sales, which is the item-level page. Its label already
@@ -435,8 +387,11 @@ export default async function DashboardPage({
           )}
         </div>
         )}
+        </div>
+        )}
       </div>
       )}
+
     </div>
   );
 }

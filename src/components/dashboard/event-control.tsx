@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { EventOption } from "@/modules/dashboard/event-scope";
+import { setActiveEventAction } from "@/modules/events/actions";
 
 /*
   Picks which event a screen is about — what used to be a date-range control.
@@ -47,12 +48,13 @@ export function EventControl({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-[60vh] w-64 overflow-y-auto">
         <DropdownMenuLabel className="normal-case tracking-normal">Show</DropdownMenuLabel>
-        <Row href={`${basePath}?event=all`} label="All events" active={activeKey === "all"} />
+        <Row href={`${basePath}?event=all`} eventId={null} label="All events" active={activeKey === "all"} />
         {events.length > 0 && <DropdownMenuSeparator />}
         {events.map((e) => (
           <Row
             key={e.id}
             href={`${basePath}?event=${e.id}`}
+            eventId={e.id}
             label={e.name}
             color={e.color}
             active={activeKey === e.id}
@@ -68,20 +70,45 @@ export function EventControl({
   );
 }
 
+/*
+  ONE event scope, not two.
+
+  The header's event switcher stores its choice in a cookie, and every
+  event-scoped screen reads that cookie. This menu stored its choice only in
+  the URL. Both offer exactly the same options — all events, or one event —
+  so the Overview showed two "All events" controls that could quietly
+  disagree: pick Garba here, open Invoices, and you were back on whatever the
+  header had last been set to.
+
+  So a pick here is written to the same cookie as well. The link still
+  carries ?event=, which is what this page renders from and what keeps the
+  choice in a bookmark and on the back button — the cookie is only for the
+  screens you go to next, so it is fired alongside the navigation rather than
+  awaited in front of it. Somebody without the events capability cannot set
+  the scope; for them the write is refused and swallowed, and the menu
+  behaves exactly as it did before.
+*/
 function Row({
   href,
+  eventId,
   label,
   color,
   active,
 }: {
   href: string;
+  eventId: string | null;
   label: string;
   color?: string | null;
   active: boolean;
 }) {
   return (
     <DropdownMenuItem asChild>
-      <Link href={href} aria-current={active ? "true" : undefined} className="gap-2">
+      <Link
+        href={href}
+        onClick={() => void setActiveEventAction(eventId).catch(() => {})}
+        aria-current={active ? "true" : undefined}
+        className="gap-2"
+      >
         {color !== undefined ? (
           <span
             aria-hidden

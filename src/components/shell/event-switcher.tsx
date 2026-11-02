@@ -15,7 +15,11 @@ import {
 // labor, recipes, settings) has no event dimension, and /reports is a
 // cross-event matrix by design — showing a per-event filter there would imply
 // a narrowing that never happens.
-const EVENT_SCOPED = ["/dashboard", "/expenses", "/cash", "/purchasing/invoices"];
+//
+// Not /dashboard. The Overview has its own event control, which writes this
+// same cookie, so a second one in the header was the same choice offered twice
+// on one screen.
+const EVENT_SCOPED = ["/expenses", "/cash", "/purchasing/invoices"];
 import { Button } from "@/components/ui/button";
 import { setActiveEventAction } from "@/modules/events/actions";
 

@@ -64,33 +64,52 @@ export function TimezoneNotice({ businessTimezone }: { businessTimezone: string 
     }
   };
 
+  /*
+    One line, with the reasoning one tap away.
+
+    The full explanation used to be the notice — four sentences that ran to
+    seven lines on a phone, which together with the cash-close banner put
+    most of a screen of warnings above the first figure. The facts that
+    decide anything (which timezone the books use, which one you are in, and
+    where to change it) fit on one line; the why is kept, verbatim, behind a
+    disclosure for anyone who needs it. Same family as the cash-close banner,
+    so the two read as one kind of thing rather than two competing styles.
+  */
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-xs">
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
-      <div className="flex-1 space-y-1">
-        <p className="font-medium text-foreground">
-          This business keeps its books on {label(businessTimezone)} time
+    <div className="rounded-[18px] border border-warning-border bg-warning-muted px-3.5 py-2 text-[12.5px] text-warning-ink">
+      <div className="flex items-center gap-3">
+        <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-amber text-espresso">
+          <AlertTriangle className="h-3 w-3" aria-hidden />
+        </span>
+        <p className="min-w-0 flex-1">
+          <b className="font-semibold">Books run on {label(businessTimezone)} time</b>
+          <span className="hidden sm:inline"> — this device is on {label(deviceTimezone)}</span>
         </p>
-        <p className="leading-relaxed text-muted-foreground">
-          You are on {label(deviceTimezone)}, where it is already{" "}
-          <span className="text-foreground">{dateIn(deviceTimezone)}</span> while the books still
-          read <span className="text-foreground">{dateIn(businessTimezone)}</span>. Which day a
-          cash close, a sale or a payout belongs to is decided by the business timezone, so a late
-          market can be filed under the wrong day.{" "}
-          <Link href="/settings" className="font-medium text-foreground underline underline-offset-2">
-            Change it in Settings
-          </Link>{" "}
-          if you trade here.
-        </p>
+        <Link href="/settings" className="shrink-0 whitespace-nowrap font-semibold text-alert hover:underline relative after:absolute after:-inset-x-2 after:-inset-y-3.5 after:content-['']">
+          Change
+        </Link>
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Dismiss timezone notice"
+          // 44px target around a 14px glyph; the negative margin keeps the
+          // banner one line tall.
+          className="-my-2 -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-warning-ink/80 hover:text-warning-ink"
+        >
+          <X className="h-3.5 w-3.5" aria-hidden />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Dismiss timezone notice"
-        className="-m-1 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <X className="h-3.5 w-3.5" aria-hidden />
-      </button>
+      <details className="group pb-1 pl-[34px]">
+        <summary className="cursor-pointer list-none text-xs text-warning-ink/80 underline underline-offset-2 group-open:no-underline">
+          Why this matters
+        </summary>
+        <p className="mt-1 leading-relaxed">
+          You are on {label(deviceTimezone)}, where it is already <b>{dateIn(deviceTimezone)}</b>,
+          while the books still read <b>{dateIn(businessTimezone)}</b>. Which day a cash close, a
+          sale or a payout belongs to is decided by the business timezone, so a late market can be
+          filed under the wrong day. Change it in Settings if you trade here.
+        </p>
+      </details>
     </div>
   );
 }

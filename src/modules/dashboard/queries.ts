@@ -178,3 +178,26 @@ export async function getPriorNetSales(
   const cents = agg._sum.netSalesCents ?? 0;
   return cents > 0 ? cents : null;
 }
+
+/*
+  The last N days that actually took money, oldest first, for the Overview's
+  hero chart.
+
+  Trading days, not calendar days. The reference this design follows draws the
+  last seven calendar days, which suits a business that opens every day; this
+  one trades at events with weeks of nothing between them, so a calendar week
+  would usually be seven empty bars. The last seven nights it was open is the
+  same question asked of the business that actually exists.
+
+  Scoped to the event when one is selected, so the chart moves with the rest
+  of the page. One read on the (locationId, businessDate) index, capped at N.
+*/
+export async function recentTradingDays(locationId: string, eventId?: string | null, n = 7) {
+  const rows = await prisma.dailySales.findMany({
+    where: { locationId, netSalesCents: { gt: 0 }, ...(eventId ? { eventId } : {}) },
+    orderBy: { businessDate: "desc" },
+    take: n,
+    select: { businessDate: true, netSalesCents: true },
+  });
+  return rows.reverse();
+}

@@ -21,9 +21,10 @@ export default function manifest(): MetadataRoute.Manifest {
       already has breakpoints from the mobile tab bar up to the desktop rail.
     */
     orientation: "any",
-    // Match the cream canvas so the splash and status bar don't flash slate.
-    background_color: "#F8F4EC",
-    theme_color: "#F8F4EC",
+    // The dark base, because that is what the app opens into now. A cream
+    // splash would flash bright for a moment before every launch.
+    background_color: "#140E0A",
+    theme_color: "#140E0A",
     categories: ["business", "productivity", "finance"],
     // Real square assets on the cream plate. Previously all three entries
     // pointed at one 300x290 transparent PNG, so the declared sizes were false

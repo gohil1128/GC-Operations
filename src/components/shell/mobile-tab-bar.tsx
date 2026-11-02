@@ -5,11 +5,10 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, TrendingUp, Wallet, FileText, Menu,
   Boxes, Users, Receipt, Settings as SettingsIcon, ChefHat, X, CalendarDays, ShoppingBag,
-  ClipboardCheck, Scale, Clock, Truck, CirclePlus, Plug, Download, Contact, CalendarClock,
+  ClipboardCheck, Scale, Clock, Plug, Download, Contact, CalendarClock,
 } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { LiquidIndicator } from "@/components/liquid-indicator";
 import { can, type Capability } from "@/lib/permissions";
 
 /*
@@ -48,8 +47,15 @@ const DESTINATIONS: { href: string; label: string; icon: typeof Wallet; cap: Cap
   { href: "/labor/report", label: "Labor report", icon: Clock, cap: "labor" },
   { href: "/labor/employees", label: "Employees", icon: Contact, cap: "labor" },
   { href: "/expenses", label: "Expenses", icon: Receipt, cap: "expenses" },
-  { href: "/purchasing", label: "Purchase orders", icon: Truck, cap: "purchasing" },
-  { href: "/purchasing/new", label: "New purchase order", icon: CirclePlus, cap: "purchasing" },
+  /*
+    Purchase orders are hidden, not deleted. A pop-up buys its supplies and
+    logs the invoice, which Invoices already covers; the raise-a-PO-then-
+    receive-it workflow is for a kitchen with standing suppliers. The routes,
+    the code and every existing PO are untouched — putting these two lines
+    back restores the section exactly as it was.
+      { href: "/purchasing", label: "Purchase orders", icon: Truck, cap: "purchasing" },
+      { href: "/purchasing/new", label: "New purchase order", icon: CirclePlus, cap: "purchasing" },
+  */
   { href: "/settings", label: "Business & events", icon: SettingsIcon, cap: "settings" },
   { href: "/settings/users", label: "Team", icon: Users, cap: "settings" },
   { href: "/settings/integrations", label: "Integrations", icon: Plug, cap: "settings" },
@@ -139,14 +145,6 @@ export function MobileTabBar({ role }: { role: Role }) {
   const isCurrent = (href: string) => href === bestMatch;
   const moreActive = moreItems.some((m) => isActive(m.href)) && !tabs.some((t) => isActive(t.href));
 
-  /* Which item the indicator sits under. "More" counts as a destination for
-     this purpose: when the current page lives behind it, the bar should still
-     show where you are rather than going blank. Null on a page that is in no
-     tab at all, which hides the indicator rather than parking it at zero. */
-  const activeTabKey = moreActive || moreOpen
-    ? "__more"
-    : (tabs.find((t) => isActive(t.href))?.href ?? null);
-
   return (
     <>
       {moreOpen && (
@@ -211,14 +209,23 @@ export function MobileTabBar({ role }: { role: Role }) {
           through to dissolve, and six stacked blur layers were being painted
           on every mobile frame to soften an edge nobody could see. */}
 
-      {/* Fixed bottom bar — hidden once the desktop pill nav has room. */}
+      {/*
+        The dock: the reference's floating pill, inset from the screen edges.
+
+        Each destination is a 44px circle with its name under it. The
+        reference draws the circles alone, but a touch screen has no hover to
+        reveal a tooltip, so an unlabelled glyph is a guess every time — the
+        labels are the one place this deliberately departs from the image.
+
+        The current item's circle belongs to the item. There is no travelling
+        indicator any more: it measured the DOM on every route change to slide
+        a pill that the reference does not have.
+      */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border glass px-2 pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
         aria-label="Primary"
+        className="fixed inset-x-3 bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-full bg-dock px-2 py-1.5 shadow-[0_18px_40px_-18px_hsl(22_45%_5%/0.7)] lg:hidden"
       >
-        <div className="relative mx-auto flex max-w-lg items-stretch">
-          {/* Travels along the bar rather than lighting up in place. */}
-          <LiquidIndicator activeKey={activeTabKey} axis="x" className="lg-indicator-soft" />
+        <div className="flex items-stretch justify-between">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = isActive(t.href);
@@ -227,40 +234,42 @@ export function MobileTabBar({ role }: { role: Role }) {
                 key={t.href}
                 href={t.href}
                 aria-current={isCurrent(t.href) ? "page" : undefined}
-                className={cn(
-                  "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition-colors",
-                  active ? "text-brand-ink" : "text-muted-foreground",
-                )}
+                className="lg-press flex min-w-0 flex-1 flex-col items-center gap-0.5 py-0.5"
               >
                 <span
-                  data-lg-item={t.href}
-                  className="relative z-10 grid h-8 w-14 place-items-center rounded-full"
+                  className={cn(
+                    "grid h-11 w-11 place-items-center rounded-full transition-colors",
+                    active ? "bg-dock-active text-dock-active-ink" : "text-dock-muted",
+                  )}
                 >
-                  <Icon className="h-[18px] w-[18px]" />
+                  <Icon className="h-[19px] w-[19px]" aria-hidden />
                 </span>
-                {t.label}
+                <span className={cn("truncate text-[10px] font-medium", active ? "text-dock-ink" : "text-dock-muted")}>
+                  {t.label}
+                </span>
               </Link>
             );
           })}
-          {/* A staff member's whole app fits in the bar, so there is nothing
+          {/* A staff member's whole app fits in the dock, so there is nothing
               left to put behind "More" — an empty sheet would be a dead end. */}
           {moreItems.length > 0 && (
             <button
               ref={triggerRef}
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
-              className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition-colors",
-                moreActive || moreOpen ? "text-brand-ink" : "text-muted-foreground",
-              )}
+              className="lg-press flex min-w-0 flex-1 flex-col items-center gap-0.5 py-0.5"
             >
               <span
-                data-lg-item="__more"
-                className="relative z-10 grid h-8 w-14 place-items-center rounded-full"
+                className={cn(
+                  "grid h-11 w-11 place-items-center rounded-full transition-colors",
+                  moreActive || moreOpen ? "bg-dock-active text-dock-active-ink" : "text-dock-muted",
+                )}
               >
-                <Menu className="h-[18px] w-[18px]" />
+                <Menu className="h-[19px] w-[19px]" aria-hidden />
               </span>
-              More
+              <span className={cn("text-[10px] font-medium", moreActive || moreOpen ? "text-dock-ink" : "text-dock-muted")}>
+                More
+              </span>
             </button>
           )}
         </div>

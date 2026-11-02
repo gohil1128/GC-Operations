@@ -39,20 +39,32 @@ const CHIP = {
 
 const GLYPH = { up: "▲ ", down: "▼ ", alert: "", flat: "" } as const;
 
-export function KpiStrip({ items }: { items: Kpi[] }) {
+export function KpiStrip({ items, className }: { items: Kpi[]; className?: string }) {
   return (
-    <div className="mt-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={cn("mt-[18px] grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4", className)}>
       {items.map((k) => {
         const Icon = k.icon;
         return (
-          <div key={k.label} className="flex items-start gap-3.5 rounded-2xl bg-muted px-[18px] py-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card">
-              <Icon className="h-[18px] w-[18px] text-espresso" aria-hidden />
+          /*
+            Compact on a phone: three across, the icon dropped, the figure a
+            size down. Stacked full-width they took ~420px of scroll to show
+            three numbers, and pushed the event cards — the part of this page
+            most specific to the business — off the first two screens.
+          */
+          <div
+            key={k.label}
+            className="flex min-w-0 flex-col gap-1 rounded-3xl bg-card px-3 py-3.5 sm:flex-row sm:items-start sm:gap-3.5 sm:px-[18px] sm:py-4"
+          >
+            <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-full bg-muted sm:grid">
+              <Icon className="h-[18px] w-[18px] text-foreground" aria-hidden />
             </span>
             <div className="min-w-0">
-              <div className="text-[12.5px] text-muted-foreground">{k.label}</div>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="display-num text-2xl font-medium tabular-nums tracking-[-0.02em]">
+              <div className="truncate text-[11.5px] text-muted-foreground sm:text-[12.5px]">{k.label}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span
+                  className="display-num truncate text-[19px] font-medium tabular-nums tracking-[-0.02em] sm:text-2xl"
+                  title={k.value}
+                >
                   {k.value}
                 </span>
                 {k.delta && (
@@ -67,7 +79,7 @@ export function KpiStrip({ items }: { items: Kpi[] }) {
                   </span>
                 )}
               </div>
-              <div className="mt-[3px] text-[11px] text-muted-foreground">{k.sub}</div>
+              <div className="mt-[3px] line-clamp-2 text-[11px] text-muted-foreground">{k.sub}</div>
             </div>
           </div>
         );

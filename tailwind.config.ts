@@ -22,6 +22,17 @@ const config: Config = {
       colors: {
         border: "hsl(var(--border))",
         "border-soft": "hsl(var(--border-soft))",
+        dock: {
+          DEFAULT: "hsl(var(--dock))",
+          ink: "hsl(var(--dock-ink))",
+          muted: "hsl(var(--dock-muted))",
+          active: "hsl(var(--dock-active))",
+          "active-ink": "hsl(var(--dock-active-ink))",
+        },
+        saffron: {
+          DEFAULT: "hsl(var(--saffron))",
+          foreground: "hsl(var(--saffron-foreground))",
+        },
         alert: {
           DEFAULT: "hsl(var(--alert))",
           muted: "hsl(var(--alert-muted))",

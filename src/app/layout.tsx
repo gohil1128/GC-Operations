@@ -44,10 +44,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f4ec" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f0a07" },
-  ],
+  /* One value, the dark base. The app opens dark regardless of the OS setting
+     now, so keying the status bar off prefers-color-scheme would paint a cream
+     bar over a near-black page for everyone whose phone is in light mode. */
+  themeColor: "#140E0A",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -64,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GlassDensityScript />
       </head>
       <body className="min-h-screen antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />
           <ServiceWorkerRegister />
