@@ -7,8 +7,11 @@ import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
 import { newAvgCostCents } from "@/modules/inventory/costing";
 import { newPoSchema, receivePoSchema, supplierSchema } from "./schemas";
+import { requireCan } from "@/lib/auth";
+import { ownedId, requiredOwnedId, assertAllOwned } from "@/lib/ownership";
 
 export async function createSupplierAction(formData: FormData) {
+  await requireCan("purchasing");
   const scope = await getScope();
   const parsed = supplierSchema.parse({
     name: formData.get("name"),
@@ -35,6 +38,7 @@ export async function createSupplierAction(formData: FormData) {
 // details can be added later. Idempotent on name so re-typing an existing
 // supplier reuses it instead of duplicating.
 export async function quickCreateSupplierAction(nameRaw: string): Promise<{ id: string; name: string }> {
+  await requireCan("purchasing");
   const scope = await getScope();
   const name = String(nameRaw ?? "").trim();
   if (!name) throw new Error("Supplier name is required");
@@ -54,13 +58,24 @@ export async function quickCreateSupplierAction(nameRaw: string): Promise<{ id: 
 }
 
 export async function createPoAction(payload: unknown) {
+  await requireCan("purchasing");
   const scope = await getScope();
   const parsed = newPoSchema.parse(payload);
+
+  /*
+    The supplier and every ingredient must belong to this business before any
+    of them is written. Without this, receivePoAction later ran
+    ingredient.update() on whatever id was supplied — a write into another
+    tenant's stock and costs.
+  */
+  const supplierId = await requiredOwnedId("supplier", scope.businessId, parsed.supplierId);
+  await assertAllOwned("ingredient", scope.businessId, parsed.items.map((it) => it.ingredientId));
+
   const subtotalCents = parsed.items.reduce((a, it) => a + Math.round(it.qtyOrdered * toCents(it.unitCostDollars)), 0);
   const po = await prisma.purchaseOrder.create({
     data: {
       locationId: scope.locationId,
-      supplierId: parsed.supplierId,
+      supplierId,
       status: "DRAFT",
       expectedAt: parsed.expectedAt ? new Date(parsed.expectedAt) : null,
       notes: parsed.notes ?? null,
@@ -84,6 +99,7 @@ export async function createPoAction(payload: unknown) {
 }
 
 export async function setPoStatusAction(poId: string, status: "DRAFT" | "SENT" | "CANCELLED") {
+  await requireCan("purchasing");
   const scope = await getScope();
   const po = await prisma.purchaseOrder.findFirst({ where: { id: poId, locationId: scope.locationId } });
   if (!po) throw new Error("Not found");
@@ -94,6 +110,7 @@ export async function setPoStatusAction(poId: string, status: "DRAFT" | "SENT" |
 }
 
 export async function receivePoAction(poId: string, payload: unknown) {
+  await requireCan("purchasing");
   const scope = await getScope();
   const parsed = receivePoSchema.parse(payload);
   const po = await prisma.purchaseOrder.findFirst({
@@ -162,13 +179,24 @@ export async function receivePoAction(poId: string, payload: unknown) {
 }
 
 export async function deleteSupplierAction(id: string) {
+  await requireCan("purchasing");
   const scope = await getScope();
   const s = await prisma.supplier.findFirst({ where: { id, businessId: scope.businessId } });
   if (!s) throw new Error("Not found");
-  // Unlink ingredients, delete POs (cascades items)
+  /*
+    Unlink ingredients, delete POs (which cascade their items) — both scoped to
+    this business rather than keyed on the supplier alone. Unscoped, deleting a
+    supplier would have wiped any other business's purchase orders that
+    referenced it, and silently blanked their ingredients' supplier links.
+  */
   await prisma.$transaction([
-    prisma.ingredient.updateMany({ where: { supplierId: id }, data: { supplierId: null } }),
-    prisma.purchaseOrder.deleteMany({ where: { supplierId: id } }),
+    prisma.ingredient.updateMany({
+      where: { supplierId: id, businessId: scope.businessId },
+      data: { supplierId: null },
+    }),
+    prisma.purchaseOrder.deleteMany({
+      where: { supplierId: id, location: { businessId: scope.businessId } },
+    }),
     prisma.supplier.delete({ where: { id } }),
   ]);
   await writeAudit({ businessId: scope.businessId, userId: scope.userId, action: "supplier.delete", entityType: "Supplier", entityId: id, diff: { name: s.name } });
@@ -177,6 +205,7 @@ export async function deleteSupplierAction(id: string) {
 }
 
 export async function deletePoAction(id: string) {
+  await requireCan("purchasing");
   const scope = await getScope();
   const po = await prisma.purchaseOrder.findFirst({ where: { id, locationId: scope.locationId } });
   if (!po) throw new Error("Not found");

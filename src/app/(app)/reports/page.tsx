@@ -1,23 +1,24 @@
 import Link from "next/link";
-import { getScope } from "@/lib/scope";
-import { dailySummary, weeklyTrend, purchaseSpendByPeriod, supplierSpendByEvent, categorySpendByEvent, pnlByEvent } from "@/modules/reports/queries";
+import { requireCapability } from "@/lib/scope";
+import { weeklyTrend, purchaseSpendByPeriod, supplierSpendByEvent, categorySpendByEvent, pnlByEvent } from "@/modules/reports/queries";
 import { getLaborReport } from "@/modules/labor/queries";
 import { getVarianceReport } from "@/modules/inventory/queries";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { formatMoney, formatPercent } from "@/lib/money";
-import { DeleteReportDayButton } from "./_components/delete-report-day-button";
+import { PrintButton } from "@/components/print-button";
+import { EventPnlCards } from "./_components/event-pnl-cards";
+import { SpendExplorer, type SpendTable } from "./_components/spend-explorer";
+import { BreakdownToggle } from "./_components/breakdown-toggle";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
-  const scope = await getScope();
-  const isOwner = scope.role === "OWNER";
-  const [daily, weekly, labor, spend, variance, supplierMatrix, categoryMatrix, pnl] = await Promise.all([
-    dailySummary(scope.locationId, 14),
+  const scope = await requireCapability("financials");
+  const [weekly, labor, spend, variance, supplierMatrix, categoryMatrix, pnl] = await Promise.all([
     weeklyTrend(scope.locationId, 4),
     getLaborReport(scope.locationId, 14),
     purchaseSpendByPeriod(scope.locationId, 30),
@@ -27,14 +28,35 @@ export default async function ReportsPage() {
     pnlByEvent(scope.businessId, scope.locationId),
   ]);
 
+  // Both matrices share one shape so a single explorer can show either.
+  const bySupplier: SpendTable = {
+    events: supplierMatrix.events,
+    rows: supplierMatrix.suppliers.map((s) => ({ key: s.supplierId, name: s.name, byEvent: s.byEvent, sharedCents: s.sharedCents, untaggedCents: s.untaggedCents, totalCents: s.totalCents })),
+    eventTotals: supplierMatrix.eventTotals,
+    grandShared: supplierMatrix.grandShared,
+    grandUntagged: supplierMatrix.grandUntagged,
+    grandTotal: supplierMatrix.grandTotal,
+  };
+  const byCategory: SpendTable = {
+    events: categoryMatrix.events,
+    rows: categoryMatrix.categories.map((c) => ({ key: c.category, name: c.category, byEvent: c.byEvent, sharedCents: c.sharedCents, untaggedCents: c.untaggedCents, totalCents: c.totalCents })),
+    eventTotals: categoryMatrix.eventTotals,
+    grandShared: categoryMatrix.grandShared,
+    grandUntagged: categoryMatrix.grandUntagged,
+    grandTotal: categoryMatrix.grandTotal,
+  };
+  const noPnl = pnl.length <= 1 && (pnl[0]?.netSalesCents ?? 0) === 0;
+  const noSpend = bySupplier.rows.length === 0 && byCategory.rows.length === 0;
+
   return (
     <div>
       <PageHeader
         eyebrow="Sales · Reports"
         title="Reports"
-        description="Daily, weekly, labor, variance, and purchase spend"
+        description="Profit by event, where the money went, labor and stock"
         actions={
           <>
+            <PrintButton />
             <Button asChild variant="outline" size="sm">
               <Link href="/settings/exports"><Download className="h-3.5 w-3.5" />Download CSV</Link>
             </Button>
@@ -42,310 +64,40 @@ export default async function ReportsPage() {
         }
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 grid gap-4">
-        {/* P&L — profit and loss per event + overall */}
-        <Card className="border-brand/40">
-          <CardHeader>
-            <CardTitle>Profit &amp; Loss · by event and overall</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Sales minus supplier invoices, labor, expenses and event fees. Event columns use each
-              item&apos;s event tag (labor uses the event&apos;s dates); invoices tagged &quot;All events&quot;
-              are split evenly across event columns. Overall covers everything, including untagged items.
-              Tips are shown for reference — they belong to staff, not profit.
-            </p>
-          </CardHeader>
-          <CardContent className="p-0 report-matrix">
-            {pnl.length <= 1 && pnl[0]?.netSalesCents === 0 ? (
-              <p className="text-sm text-muted-foreground px-4 pb-4">
-                No data yet — import sales and enter invoices to see your P&amp;L.
+        {/* Profit and loss: one card per event, best first */}
+        <section aria-labelledby="pnl-h" className="space-y-3">
+          <div className="px-1">
+            <h2 id="pnl-h" className="font-display text-lg font-semibold tracking-[-0.01em]">Profit &amp; loss by event</h2>
+            <BreakdownToggle label="How this is worked out" className="-mx-1 max-w-prose">
+              <p className="px-1 pb-2 text-xs leading-relaxed text-muted-foreground">
+                Sales minus supplier invoices, labor, expenses and event fees. Each item counts toward the
+                event it is tagged to (labor uses the event&apos;s dates); invoices tagged &quot;All events&quot; are
+                split evenly across events. The total at the top covers everything, including untagged items.
+                Tips are shown for reference — they belong to staff, not profit.
               </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-40">Line</TableHead>
-                    {pnl.map((c) => (
-                      <TableHead key={c.key} className={`text-right whitespace-nowrap ${c.key === "overall" ? "font-semibold" : ""}`}>
-                        {c.key === "overall" ? (
-                          "Overall"
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: c.color ?? "hsl(var(--muted-foreground))" }} />
-                            {c.name}
-                          </span>
-                        )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="text-muted-foreground">Transactions</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num text-muted-foreground">{c.txns.toLocaleString()}</TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Net sales</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num font-medium">{formatMoney(c.netSalesCents)}</TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-muted-foreground">Supplier invoices (COGS)</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num text-muted-foreground">
-                        {c.cogsCents ? <>−{formatMoney(c.cogsCents)}</> : "—"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-muted-foreground">Labor</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num text-muted-foreground">
-                        {c.laborCents ? <>−{formatMoney(c.laborCents)}</> : "—"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-muted-foreground">Operating expenses</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num text-muted-foreground">
-                        {c.opexCents ? <>−{formatMoney(c.opexCents)}</> : "—"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-muted-foreground">Event fees</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num text-muted-foreground">
-                        {c.feeCents ? <>−{formatMoney(c.feeCents)}</> : "—"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow className="bg-muted/30 border-t-2">
-                    <TableCell className="font-semibold">Profit</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell
-                        key={c.key}
-                        className={`text-right num font-semibold ${c.profitCents < 0 ? "text-destructive" : "text-success"}`}
-                      >
-                        {formatMoney(c.profitCents, { signed: true })}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow className="bg-muted/30">
-                    <TableCell className="text-muted-foreground">Margin</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className={`text-right num ${c.profitCents < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                        {c.netSalesCents > 0 ? formatPercent(c.marginPct) : "—"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="text-muted-foreground text-xs">Tips (staff, not in profit)</TableCell>
-                    {pnl.map((c) => (
-                      <TableCell key={c.key} className="text-right num text-xs text-muted-foreground">
-                        {c.tipsCents ? formatMoney(c.tipsCents) : "—"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+            </BreakdownToggle>
+          </div>
+          {noPnl ? (
+            <Card><CardContent className="pt-6 text-sm text-muted-foreground">No data yet — import sales and enter invoices to see your P&amp;L.</CardContent></Card>
+          ) : (
+            <EventPnlCards columns={pnl} />
+          )}
+        </section>
 
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle>Daily summary (14d)</CardTitle>
-            <Button asChild variant="outline" size="sm"><a href="/api/exports/daily"><Download className="h-3.5 w-3.5" /> CSV</a></Button>
-          </CardHeader>
-          <CardContent className="p-0 report-matrix">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Net Sales</TableHead>
-                  <TableHead className="text-right">Tips</TableHead>
-                  <TableHead className="text-right">Guests</TableHead>
-                  <TableHead className="text-right">Food $</TableHead>
-                  <TableHead className="text-right">Food %</TableHead>
-                  <TableHead className="text-right">Labor $</TableHead>
-                  <TableHead className="text-right">Labor %</TableHead>
-                  <TableHead className="text-right">Cash O/S</TableHead>
-                  {isOwner && <TableHead className="w-12 text-right">Delete</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {daily.map((r, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{r.date}</TableCell>
-                    <TableCell className="text-right num">{formatMoney(r.netSalesCents)}</TableCell>
-                    <TableCell className="text-right num text-muted-foreground">{formatMoney(r.tipsCents)}</TableCell>
-                    <TableCell className="text-right num text-muted-foreground">{r.guests}</TableCell>
-                    <TableCell className="text-right num">{formatMoney(r.foodCostCents)}</TableCell>
-                    <TableCell className={`text-right num ${r.foodPct > 35 ? "text-destructive" : ""}`}>{formatPercent(r.foodPct)}</TableCell>
-                    <TableCell className="text-right num">{formatMoney(r.laborCostCents)}</TableCell>
-                    <TableCell className={`text-right num ${r.laborPct > 30 ? "text-destructive" : ""}`}>{formatPercent(r.laborPct)}</TableCell>
-                    <TableCell className={`text-right num ${r.cashOverShortCents < 0 ? "text-destructive" : r.cashOverShortCents > 0 ? "text-warning" : ""}`}>{formatMoney(r.cashOverShortCents, { signed: true })}</TableCell>
-                    {isOwner && (
-                      <TableCell className="text-right">
-                        {r.hasSales ? (
-                          <DeleteReportDayButton iso={r.iso} label={r.date} />
-                        ) : (
-                          <span className="text-2xs text-muted-foreground/50">—</span>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Supplier spend × event matrix — where the money went, per event and overall */}
+        {/* Where the money went */}
         <Card>
           <CardHeader>
-            <CardTitle>Supplier spend by event · all-time</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Every supplier invoice, split by the event it&apos;s tagged to. &quot;All events (shared)&quot; is spend that covers every event (split evenly in the P&amp;L);
-              &quot;Untagged&quot; is spend with no event — tag those invoices to make per-event costs exact.
-            </p>
+            <CardTitle>Where the money went</CardTitle>
+            <CardDescription>
+              Every supplier invoice, ever. Tag an invoice to an event to see it in that event&apos;s slice;
+              &quot;Untagged&quot; is spend with no event yet.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="p-0 report-matrix">
-            {supplierMatrix.suppliers.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-4 pb-4">No invoices yet.</p>
+          <CardContent>
+            {noSpend ? (
+              <p className="text-sm text-muted-foreground">No invoices yet.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-36">Supplier</TableHead>
-                    {supplierMatrix.events.map((e) => (
-                      <TableHead key={e.id} className="text-right whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
-                          {e.name}
-                        </span>
-                      </TableHead>
-                    ))}
-                    {supplierMatrix.hasShared && <TableHead className="text-right">All events (shared)</TableHead>}
-                    {supplierMatrix.hasUntagged && <TableHead className="text-right">Untagged</TableHead>}
-                    <TableHead className="text-right font-semibold">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {supplierMatrix.suppliers.map((s) => (
-                    <TableRow key={s.supplierId}>
-                      <TableCell className="font-medium">{s.name}</TableCell>
-                      {supplierMatrix.events.map((e) => (
-                        <TableCell key={e.id} className="text-right num text-muted-foreground">
-                          {s.byEvent[e.id] ? formatMoney(s.byEvent[e.id]) : "—"}
-                        </TableCell>
-                      ))}
-                      {supplierMatrix.hasShared && (
-                        <TableCell className="text-right num text-muted-foreground">
-                          {s.sharedCents ? formatMoney(s.sharedCents) : "—"}
-                        </TableCell>
-                      )}
-                      {supplierMatrix.hasUntagged && (
-                        <TableCell className="text-right num text-muted-foreground">
-                          {s.untaggedCents ? formatMoney(s.untaggedCents) : "—"}
-                        </TableCell>
-                      )}
-                      <TableCell className="text-right num font-semibold">{formatMoney(s.totalCents)}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="bg-muted/30">
-                    <TableCell className="font-semibold">All suppliers</TableCell>
-                    {supplierMatrix.events.map((e) => (
-                      <TableCell key={e.id} className="text-right num font-semibold">
-                        {formatMoney(supplierMatrix.eventTotals[e.id] ?? 0)}
-                      </TableCell>
-                    ))}
-                    {supplierMatrix.hasShared && (
-                      <TableCell className="text-right num font-semibold">{formatMoney(supplierMatrix.grandShared)}</TableCell>
-                    )}
-                    {supplierMatrix.hasUntagged && (
-                      <TableCell className="text-right num font-semibold">{formatMoney(supplierMatrix.grandUntagged)}</TableCell>
-                    )}
-                    <TableCell className="text-right num font-semibold text-brand">{formatMoney(supplierMatrix.grandTotal)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Invoice spend by category × event matrix */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Spend by category · by event and overall</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Every supplier invoice grouped by what it was for. Set a category on any invoice
-              (create or detail page) to see it here.
-            </p>
-          </CardHeader>
-          <CardContent className="p-0 report-matrix">
-            {categoryMatrix.categories.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-4 pb-4">No invoices yet.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-40">Category</TableHead>
-                    {categoryMatrix.events.map((e) => (
-                      <TableHead key={e.id} className="text-right whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
-                          {e.name}
-                        </span>
-                      </TableHead>
-                    ))}
-                    {categoryMatrix.hasShared && <TableHead className="text-right">All events (shared)</TableHead>}
-                    {categoryMatrix.hasUntagged && <TableHead className="text-right">Untagged</TableHead>}
-                    <TableHead className="text-right font-semibold">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categoryMatrix.categories.map((c) => (
-                    <TableRow key={c.category}>
-                      <TableCell className="font-medium">{c.category}</TableCell>
-                      {categoryMatrix.events.map((e) => (
-                        <TableCell key={e.id} className="text-right num text-muted-foreground">
-                          {c.byEvent[e.id] ? formatMoney(c.byEvent[e.id]) : "—"}
-                        </TableCell>
-                      ))}
-                      {categoryMatrix.hasShared && (
-                        <TableCell className="text-right num text-muted-foreground">
-                          {c.sharedCents ? formatMoney(c.sharedCents) : "—"}
-                        </TableCell>
-                      )}
-                      {categoryMatrix.hasUntagged && (
-                        <TableCell className="text-right num text-muted-foreground">
-                          {c.untaggedCents ? formatMoney(c.untaggedCents) : "—"}
-                        </TableCell>
-                      )}
-                      <TableCell className="text-right num font-semibold">{formatMoney(c.totalCents)}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="bg-muted/30">
-                    <TableCell className="font-semibold">All categories</TableCell>
-                    {categoryMatrix.events.map((e) => (
-                      <TableCell key={e.id} className="text-right num font-semibold">
-                        {formatMoney(categoryMatrix.eventTotals[e.id] ?? 0)}
-                      </TableCell>
-                    ))}
-                    {categoryMatrix.hasShared && (
-                      <TableCell className="text-right num font-semibold">{formatMoney(categoryMatrix.grandShared)}</TableCell>
-                    )}
-                    {categoryMatrix.hasUntagged && (
-                      <TableCell className="text-right num font-semibold">{formatMoney(categoryMatrix.grandUntagged)}</TableCell>
-                    )}
-                    <TableCell className="text-right num font-semibold text-brand">{formatMoney(categoryMatrix.grandTotal)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <SpendExplorer suppliers={bySupplier} categories={byCategory} />
             )}
           </CardContent>
         </Card>

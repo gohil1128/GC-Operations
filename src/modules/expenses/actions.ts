@@ -4,10 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { getScope } from "@/lib/scope";
 import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
-import { startOfDay } from "@/lib/date";
+import { businessDayFromIso } from "@/lib/date";
 import { expenseSchema } from "./schemas";
+import { requireCan } from "@/lib/auth";
+import { ownedId, requiredOwnedId, assertAllOwned } from "@/lib/ownership";
 
 export async function createExpenseAction(formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = expenseSchema.parse({
     category: formData.get("category"),
@@ -20,9 +23,9 @@ export async function createExpenseAction(formData: FormData) {
     data: {
       businessId: scope.businessId,
       locationId: scope.locationId,
-      eventId: parsed.eventId || null,
+      eventId: await ownedId("event", scope.businessId, parsed.eventId),
       category: parsed.category,
-      businessDate: startOfDay(new Date(parsed.businessDate)),
+      businessDate: businessDayFromIso(parsed.businessDate),
       amountCents: toCents(parsed.amountDollars),
       description: parsed.description || null,
       createdById: scope.userId,
@@ -38,6 +41,7 @@ export async function createExpenseAction(formData: FormData) {
 }
 
 export async function updateExpenseAction(id: string, formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = expenseSchema.parse({
     category: formData.get("category"),
@@ -54,10 +58,10 @@ export async function updateExpenseAction(id: string, formData: FormData) {
     where: { id },
     data: {
       category: parsed.category,
-      businessDate: startOfDay(new Date(parsed.businessDate)),
+      businessDate: businessDayFromIso(parsed.businessDate),
       amountCents: toCents(parsed.amountDollars),
       description: parsed.description || null,
-      eventId: parsed.eventId || null,
+      eventId: await ownedId("event", scope.businessId, parsed.eventId),
     },
   });
   await writeAudit({
@@ -69,6 +73,7 @@ export async function updateExpenseAction(id: string, formData: FormData) {
 }
 
 export async function deleteExpenseAction(id: string) {
+  await requireCan("expenses");
   const scope = await getScope();
   const e = await prisma.expense.findFirst({ where: { id, businessId: scope.businessId } });
   if (!e) throw new Error("Not found");

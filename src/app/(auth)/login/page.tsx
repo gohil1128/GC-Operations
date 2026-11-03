@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/modules/auth/actions";
+import { APP_NAME } from "@/lib/brand";
+import { BrandLogo } from "@/components/brand-logo";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -27,7 +29,7 @@ export default function LoginPage() {
           Deliberately carries no live figures: this page is unauthenticated,
           so real season numbers here would be public. */}
       <div className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col lg:justify-between"
-        style={{ background: "radial-gradient(120% 120% at 0% 100%, #5A3620 0%, #3A2415 50%, #2A1A10 100%)" }}
+        style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
       >
         {!logoFailed && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -41,7 +43,7 @@ export default function LoginPage() {
         {!logoFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src="/logo.png" alt="God's Chai"
+            src="/logo.png" alt={APP_NAME}
             className="h-16 w-auto self-start"
             style={{ filter: "brightness(3.4) saturate(.4)" }}
             onError={() => setLogoFailed(true)}
@@ -61,7 +63,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="relative text-2xs opacity-50">God&apos;s Chai Operations</div>
+        <div className="relative text-2xs opacity-50">{APP_NAME}</div>
       </div>
 
       {/* Form side */}
@@ -69,8 +71,9 @@ export default function LoginPage() {
         <div className="w-full max-w-[380px]">
           {/* Logo shows here on small screens, where the brand panel is hidden. */}
           {!logoFailed && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src="/logo.png" alt="God's Chai" className="mb-6 h-14 w-auto lg:hidden" />
+            <span className="mb-6 inline-block lg:hidden">
+              <BrandLogo alt={APP_NAME} className="h-14 w-auto" />
+            </span>
           )}
           <h1 className="display-num text-[30px] font-medium">Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-muted-foreground">Sign in to your back-office</p>
@@ -95,12 +98,12 @@ export default function LoginPage() {
             )}
 
             <Submit />
-
-            <label className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-              <input type="checkbox" name="keepSignedIn" className="h-3.5 w-3.5 accent-[hsl(var(--brand))]" />
-              Keep me signed in on this device
-            </label>
           </form>
+
+          <p className="mt-5 text-center text-xs text-muted-foreground">
+            New here?{" "}
+            <Link href="/signup" className="text-brand-ink hover:underline">Create an account</Link>
+          </p>
         </div>
       </main>
     </div>

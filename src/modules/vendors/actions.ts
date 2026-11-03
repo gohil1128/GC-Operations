@@ -4,17 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { getScope } from "@/lib/scope";
 import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
-import { startOfDay } from "@/lib/date";
+import { businessDayFromIso } from "@/lib/date";
 import { vendorSchema, payVendorSchema, incentiveSchema } from "./schemas";
+import { requireCan } from "@/lib/auth";
 
 export async function createVendorAction(formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = vendorSchema.parse({
     name: formData.get("name"),
     role: formData.get("role"),
     country: formData.get("country"),
     monthlyFeeDollars: formData.get("monthlyFeeDollars"),
-    currency: formData.get("currency") || "USD",
+    currency: formData.get("currency") || "CAD",
     defaultCategory: formData.get("defaultCategory") || "CONTRACTOR",
     isFlatFee: formData.get("isFlatFee") !== "false",
     notes: formData.get("notes"),
@@ -43,13 +45,14 @@ export async function createVendorAction(formData: FormData) {
 }
 
 export async function updateVendorAction(id: string, formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = vendorSchema.parse({
     name: formData.get("name"),
     role: formData.get("role"),
     country: formData.get("country"),
     monthlyFeeDollars: formData.get("monthlyFeeDollars"),
-    currency: formData.get("currency") || "USD",
+    currency: formData.get("currency") || "CAD",
     defaultCategory: formData.get("defaultCategory") || "CONTRACTOR",
     isFlatFee: formData.get("isFlatFee") !== "false",
     notes: formData.get("notes"),
@@ -76,6 +79,7 @@ export async function updateVendorAction(id: string, formData: FormData) {
 }
 
 export async function deleteVendorAction(id: string) {
+  await requireCan("expenses");
   const scope = await getScope();
   const v = await prisma.vendor.findFirst({ where: { id, businessId: scope.businessId } });
   if (!v) throw new Error("Not found");
@@ -91,6 +95,7 @@ export async function deleteVendorAction(id: string) {
  * row using the vendor's defaultCategory and monthly fee (unless overridden).
  */
 export async function payVendorAction(formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = payVendorSchema.parse({
     vendorId: formData.get("vendorId"),
@@ -107,7 +112,7 @@ export async function payVendorAction(formData: FormData) {
       locationId: scope.locationId,
       vendorId: vendor.id,
       category: vendor.defaultCategory,
-      businessDate: startOfDay(new Date(parsed.businessDate)),
+      businessDate: businessDayFromIso(parsed.businessDate),
       amountCents: toCents(parsed.amountDollars),
       description: parsed.description || `${vendor.name} — monthly fee`,
       isIncentive: false,
@@ -129,6 +134,7 @@ export async function payVendorAction(formData: FormData) {
  * and surfaced separately on the vendor's history.
  */
 export async function logIncentiveAction(formData: FormData) {
+  await requireCan("expenses");
   const scope = await getScope();
   const parsed = incentiveSchema.parse({
     vendorId: formData.get("vendorId"),
@@ -150,7 +156,7 @@ export async function logIncentiveAction(formData: FormData) {
       locationId: scope.locationId,
       vendorId: vendor.id,
       category: vendor.defaultCategory,
-      businessDate: startOfDay(new Date(parsed.businessDate)),
+      businessDate: businessDayFromIso(parsed.businessDate),
       amountCents: toCents(parsed.amountDollars),
       description: note,
       isIncentive: true,

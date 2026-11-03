@@ -6,8 +6,11 @@ import { getScope } from "@/lib/scope";
 import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
 import { ingredientSchema, newCountSchema, wasteSchema } from "./schemas";
+import { requireCan } from "@/lib/auth";
+import { ownedId, requiredOwnedId, assertAllOwned } from "@/lib/ownership";
 
 export async function createIngredientAction(formData: FormData) {
+  await requireCan("inventory");
   const scope = await getScope();
   const parsed = ingredientSchema.parse({
     name: formData.get("name"),
@@ -30,7 +33,7 @@ export async function createIngredientAction(formData: FormData) {
       parLevel: parsed.parLevel,
       reorderPoint: parsed.reorderPoint,
       reorderQty: parsed.reorderQty,
-      supplierId: parsed.supplierId || null,
+      supplierId: await ownedId("supplier", scope.businessId, parsed.supplierId) || null,
       lastCostCents: toCents(parsed.lastCostDollars),
       avgCostCents: toCents(parsed.lastCostDollars),
     },
@@ -41,6 +44,7 @@ export async function createIngredientAction(formData: FormData) {
 }
 
 export async function updateIngredientAction(id: string, formData: FormData) {
+  await requireCan("inventory");
   const scope = await getScope();
   const parsed = ingredientSchema.parse({
     name: formData.get("name"),
@@ -75,7 +79,7 @@ export async function updateIngredientAction(id: string, formData: FormData) {
         parLevel: parsed.parLevel,
         reorderPoint: parsed.reorderPoint,
         reorderQty: parsed.reorderQty,
-        supplierId: parsed.supplierId || null,
+        supplierId: await ownedId("supplier", scope.businessId, parsed.supplierId) || null,
         lastCostCents: toCents(parsed.lastCostDollars),
         ...(onHandDelta !== 0 ? { onHand: onHandNext! } : {}),
       },
@@ -107,6 +111,7 @@ export async function updateIngredientAction(id: string, formData: FormData) {
 }
 
 export async function saveCountAction(formData: FormData) {
+  await requireCan("inventoryCount");
   const scope = await getScope();
   const raw = JSON.parse(String(formData.get("payload") ?? "{}"));
   const parsed = newCountSchema.parse(raw);
@@ -172,6 +177,7 @@ export async function saveCountAction(formData: FormData) {
 }
 
 export async function recordWasteAction(formData: FormData) {
+  await requireCan("inventory");
   const scope = await getScope();
   const parsed = wasteSchema.parse({
     ingredientId: formData.get("ingredientId"),
@@ -211,6 +217,7 @@ export async function quickCreateIngredientAction(input: {
   lastCostDollars?: number;
   supplierId?: string | null;
 }): Promise<{ id: string; name: string; sku: string | null; unit: string; category: string | null; lastCostCents: number; supplierId: string | null }> {
+  await requireCan("inventory");
   const scope = await getScope();
   const name = input.name.trim();
   const unit = input.unit.trim();
@@ -245,14 +252,36 @@ export async function quickCreateIngredientAction(input: {
 }
 
 export async function deleteIngredientAction(id: string) {
+  await requireCan("inventory");
   const scope = await getScope();
   const ing = await prisma.ingredient.findFirst({ where: { id, businessId: scope.businessId } });
   if (!ing) throw new Error("Not found");
+  /*
+    Every cascade is scoped to this business, not just keyed on the ingredient.
+
+    These were `deleteMany({ where: { ingredientId: id } })` — correct only
+    while no other business's row could point at this ingredient. Deleting an
+    ingredient is an ordinary thing an owner does, and if a row elsewhere
+    referenced it, that row was destroyed with no error and no trace. The
+    ownership guards now stop such a reference being created, but a delete
+    should not depend on another file having done its job.
+
+    UnitConversion is the exception: it cascades on the Ingredient FK in the
+    schema, so it belongs to this ingredient by construction.
+  */
   await prisma.$transaction([
-    prisma.inventoryMovement.deleteMany({ where: { ingredientId: id } }),
-    prisma.inventoryCountLine.deleteMany({ where: { ingredientId: id } }),
-    prisma.recipeIngredient.deleteMany({ where: { ingredientId: id } }),
-    prisma.purchaseOrderItem.deleteMany({ where: { ingredientId: id } }),
+    prisma.inventoryMovement.deleteMany({
+      where: { ingredientId: id, location: { businessId: scope.businessId } },
+    }),
+    prisma.inventoryCountLine.deleteMany({
+      where: { ingredientId: id, count: { location: { businessId: scope.businessId } } },
+    }),
+    prisma.recipeIngredient.deleteMany({
+      where: { ingredientId: id, recipe: { businessId: scope.businessId } },
+    }),
+    prisma.purchaseOrderItem.deleteMany({
+      where: { ingredientId: id, purchaseOrder: { location: { businessId: scope.businessId } } },
+    }),
     prisma.unitConversion.deleteMany({ where: { ingredientId: id } }),
     prisma.ingredient.delete({ where: { id } }),
   ]);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Users, BarChart3 } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
+import { prisma } from "@/lib/prisma";
 import { listShifts, listEmployees, getWeekStart } from "@/modules/labor/queries";
 import { addDays, fmtDate } from "@/lib/date";
 import { PageHeader } from "@/components/page-header";
@@ -14,10 +15,11 @@ export default async function LaborPage({ searchParams }: { searchParams: Promis
   const ref = sp.week ? new Date(sp.week) : new Date();
   const weekStart = getWeekStart(ref);
   const weekEnd = addDays(weekStart, 6);
-  const scope = await getScope();
-  const [shifts, employees] = await Promise.all([
+  const scope = await requireCapability("labor");
+  const [shifts, employees, business] = await Promise.all([
     listShifts(scope.locationId, weekStart, addDays(weekEnd, 1)),
     listEmployees(scope.businessId),
+    prisma.business.findUnique({ where: { id: scope.businessId }, select: { timezone: true } }),
   ]);
   const prev = addDays(weekStart, -7).toISOString().slice(0, 10);
   const next = addDays(weekStart, 7).toISOString().slice(0, 10);
@@ -39,6 +41,7 @@ export default async function LaborPage({ searchParams }: { searchParams: Promis
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8">
         <ScheduleGrid
+          timezone={business?.timezone ?? "UTC"}
           weekStart={weekStart.toISOString()}
           employees={employees.filter((e) => e.isActive).map((e) => ({ id: e.id, name: e.name, position: e.position, rateCents: e.hourlyRateCents }))}
           shifts={shifts.map((s) => ({

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getPurchaseOrder } from "@/modules/purchasing/queries";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,7 @@ const statusVariant = (s: string) => (s === "DRAFT" ? "muted" : s === "SENT" ? "
 
 export default async function PoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const scope = await getScope();
+  const scope = await requireCapability("purchasing");
   const po = await getPurchaseOrder(scope.locationId, id);
   if (!po) notFound();
   return (

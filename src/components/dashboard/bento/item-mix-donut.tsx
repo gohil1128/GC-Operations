@@ -1,4 +1,3 @@
-import { categoryStyle } from "@/modules/items/categories";
 import { formatPercent } from "@/lib/money";
 
 // Donut of item-category share, drawn as stacked SVG arcs (design 1a).
@@ -42,7 +41,7 @@ export function ItemMixDonut({ slices, totalQty }: { slices: Slice[]; totalQty: 
       <div className="mt-3.5 flex flex-wrap justify-between gap-x-3 gap-y-2 text-sm">
         {top.map((s, i) => (
           <span key={s.category} className="flex items-center gap-1.5">
-            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: STROKES[i % STROKES.length] }} />
+            <span className="h-2 w-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/25" style={{ background: STROKES[i % STROKES.length] }} />
             <b className="display-num text-lg">{formatPercent(s.sharePct, 0)}</b>
             <span className="text-2xs text-muted-foreground">{s.category}</span>
           </span>

@@ -203,7 +203,10 @@ export function NewInvoiceForm({
           </div>
           <div className="grid gap-1.5">
             <Label>Total</Label>
-            <div className="num h-9 inline-flex items-center font-semibold text-brand">
+            {/* brand-ink, not brand: the rust is an accent tuned for fills and
+                measured 4.25:1 as a 16px label on the panel. Same fix the
+                reports totals already carry. */}
+            <div className="num h-9 inline-flex items-center font-semibold text-brand-ink">
               ${liveTotal.toFixed(2)}
             </div>
           </div>
@@ -257,14 +260,14 @@ export function NewInvoiceForm({
                 {events.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
                     <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                      <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
                       {e.name}
                     </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-2xs text-muted-foreground">Or "All events" for shared costs (cups, tent…), split evenly in the P&L.</span>
+            <span className="text-2xs text-muted-foreground">Or &ldquo;All events&rdquo; for shared costs (cups, tent…), split evenly in the P&amp;L.</span>
           </div>
         )}
         <div className="grid gap-1.5">

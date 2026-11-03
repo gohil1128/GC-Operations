@@ -1,4 +1,4 @@
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getReorderSuggestions, listSuppliers } from "@/modules/purchasing/queries";
 import { PageHeader } from "@/components/page-header";
 import { ReorderBuilder } from "./_components/reorder-builder";
@@ -6,7 +6,7 @@ import { ReorderBuilder } from "./_components/reorder-builder";
 export const dynamic = "force-dynamic";
 
 export default async function NewPoPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("purchasing");
   const [groups, suppliers] = await Promise.all([
     getReorderSuggestions(scope.businessId),
     listSuppliers(scope.businessId),

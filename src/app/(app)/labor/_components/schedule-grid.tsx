@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { addDays, format } from "date-fns";
+import { dayKeyInZone, timeInZone, businessDayFromIso, isoFromBusinessDay, fmtBusinessDate } from "@/lib/date";
 import { Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,24 +18,50 @@ type Shift = {
   start: string; end: string; scheduledMinutes: number; actualMinutes: number | null;
 };
 
-export function ScheduleGrid({ weekStart, employees, shifts }: { weekStart: string; employees: Employee[]; shifts: Shift[] }) {
-  const start = new Date(weekStart);
-  const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+export function ScheduleGrid({
+  weekStart, employees, shifts, timezone,
+}: {
+  weekStart: string; employees: Employee[]; shifts: Shift[];
+  /*
+    The zone the business trades in. Shifts are bucketed and their times printed
+    in it, not in whatever zone the process happens to be in.
+
+    Without this the server rendered the grid in UTC and the browser re-rendered
+    it in the viewer's zone: React reported a hydration mismatch, and a 7pm
+    Vancouver shift sat under the NEXT day's column on the server before jumping
+    back a column once the client took over.
+  */
+  timezone: string;
+}) {
+  /*
+    The seven columns are plain calendar dates (YYYY-MM-DD), stepped in UTC from
+    weekStart so the same string is produced on the server and in the browser.
+    Shifts are bucketed to the calendar date they fall on IN THE BUSINESS'S
+    ZONE — the same kind of value — so the two line up.
+
+    Previously both sides were Date objects formatted with date-fns, which reads
+    the process timezone: the server said "Mon Sep 14" and a Vancouver browser
+    said "Sun Sep 13" for the same column.
+  */
+  const startMs = businessDayFromIso(weekStart.slice(0, 10)).getTime();
+  const days = Array.from({ length: 7 }, (_, i) =>
+    isoFromBusinessDay(new Date(startMs + i * 86_400_000)),
+  );
   const router = useRouter();
 
-  const [open, setOpen] = React.useState<{ date: Date; employeeId?: string } | null>(null);
+  const [open, setOpen] = React.useState<{ day: string; employeeId?: string } | null>(null);
   const [pending, startTx] = React.useTransition();
 
   const shiftsByCell = React.useMemo(() => {
     const m = new Map<string, Shift[]>();
     for (const s of shifts) {
-      const day = format(new Date(s.start), "yyyy-MM-dd");
+      const day = dayKeyInZone(s.start, timezone);
       const key = `${s.employeeId}__${day}`;
       if (!m.has(key)) m.set(key, []);
       m.get(key)!.push(s);
     }
     return m;
-  }, [shifts]);
+  }, [shifts, timezone]);
 
   const totalsByEmployee = React.useMemo(() => {
     const m = new Map<string, number>();
@@ -46,11 +72,11 @@ export function ScheduleGrid({ weekStart, employees, shifts }: { weekStart: stri
   const totalsByDay = React.useMemo(() => {
     const m = new Map<string, number>();
     for (const s of shifts) {
-      const k = format(new Date(s.start), "yyyy-MM-dd");
+      const k = dayKeyInZone(s.start, timezone);
       m.set(k, (m.get(k) ?? 0) + s.scheduledMinutes);
     }
     return m;
-  }, [shifts]);
+  }, [shifts, timezone]);
 
   const totalScheduled = shifts.reduce((a, s) => a + s.scheduledMinutes, 0);
   const totalCostCents = shifts.reduce((a, s) => {
@@ -71,10 +97,10 @@ export function ScheduleGrid({ weekStart, employees, shifts }: { weekStart: stri
             <tr>
               <th className="text-left p-2 sticky left-0 bg-muted/30 z-10 min-w-[160px]">Employee</th>
               {days.map((d) => (
-                <th key={d.toISOString()} className="text-left p-2 min-w-[120px]">
-                  <div className="font-medium">{format(d, "EEE")}</div>
-                  <div className="text-2xs text-muted-foreground">{format(d, "MMM d")}</div>
-                  <div className="text-2xs text-muted-foreground mt-1">{((totalsByDay.get(format(d, "yyyy-MM-dd")) ?? 0) / 60).toFixed(1)}h</div>
+                <th key={d} className="text-left p-2 min-w-[120px]">
+                  <div className="font-medium">{fmtBusinessDate(d, "EEE")}</div>
+                  <div className="text-2xs text-muted-foreground">{fmtBusinessDate(d, "MMM d")}</div>
+                  <div className="text-2xs text-muted-foreground mt-1">{((totalsByDay.get(d) ?? 0) / 60).toFixed(1)}h</div>
                 </th>
               ))}
               <th className="text-right p-2">Week</th>
@@ -88,14 +114,14 @@ export function ScheduleGrid({ weekStart, employees, shifts }: { weekStart: stri
                   <div className="text-2xs text-muted-foreground">{emp.position} · ${(emp.rateCents / 100).toFixed(2)}/hr</div>
                 </td>
                 {days.map((d) => {
-                  const key = `${emp.id}__${format(d, "yyyy-MM-dd")}`;
+                  const key = `${emp.id}__${d}`;
                   const cellShifts = shiftsByCell.get(key) ?? [];
                   return (
-                    <td key={d.toISOString()} className="p-1 align-top">
+                    <td key={d} className="p-1 align-top">
                       <div className="flex flex-col gap-1">
                         {cellShifts.map((s) => (
                           <div key={s.id} className="group relative rounded border bg-secondary/50 px-1.5 py-1">
-                            <div className="font-medium num">{format(new Date(s.start), "h:mma").toLowerCase()}–{format(new Date(s.end), "h:mma").toLowerCase()}</div>
+                            <div className="font-medium num">{timeInZone(s.start, timezone)}–{timeInZone(s.end, timezone)}</div>
                             <div className="text-2xs text-muted-foreground">{(s.scheduledMinutes / 60).toFixed(1)}h · {s.position}</div>
                             {s.actualMinutes !== null && (
                               <div className={cn("text-2xs num", Math.abs(s.actualMinutes - s.scheduledMinutes) > 10 ? "text-warning" : "text-success")}>
@@ -117,7 +143,7 @@ export function ScheduleGrid({ weekStart, employees, shifts }: { weekStart: stri
                           </div>
                         ))}
                         <button
-                          onClick={() => setOpen({ date: d, employeeId: emp.id })}
+                          onClick={() => setOpen({ day: d, employeeId: emp.id })}
                           className="flex items-center justify-center rounded border border-dashed text-muted-foreground hover:bg-secondary/50 px-1.5 py-1 text-2xs"
                           aria-label="Add shift"
                         >
@@ -140,14 +166,14 @@ export function ScheduleGrid({ weekStart, employees, shifts }: { weekStart: stri
       <Dialog open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add shift {open ? `on ${format(open.date, "EEE MMM d")}` : ""}</DialogTitle>
+            <DialogTitle>Add shift {open ? `on ${fmtBusinessDate(open.day, "EEE MMM d")}` : ""}</DialogTitle>
           </DialogHeader>
           {open && (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
-                const date = format(open.date, "yyyy-MM-dd");
+                const date = open.day;
                 const startTime = String(fd.get("startTime"));
                 const endTime = String(fd.get("endTime"));
                 const employeeId = String(fd.get("employeeId"));

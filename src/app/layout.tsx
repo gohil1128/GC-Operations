@@ -1,35 +1,44 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { GlassDensityScript } from "@/components/glass-density";
+import { APP_NAME, APP_SHORT_NAME } from "@/lib/brand";
 
-// Self-hosted at build time and exposed as CSS variables that feed
-// --font-display / --font-sans in globals.css.
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Self-hosted variable fonts, committed in ./fonts (SIL OFL, see the
+// LICENSE files there). No build-time fetch from Google Fonts: the
+// next/font/google loader crashed fresh Vercel builds with
+// "Cannot read properties of null (reading '1')" in
+// nextFontGoogleFontLoader when the fetched CSS yielded a font URL
+// without a recognised extension, and a cached build was the only thing
+// masking it. The variable names below are unchanged, so they still feed
+// --font-display / --font-sans in globals.css, and the weight ranges
+// cover every weight the app used before (400-700 display, 400-600 sans).
+const display = localFont({
+  src: "./fonts/bricolage-grotesque-latin-standard-normal.woff2",
+  weight: "200 800",
   variable: "--font-display-src",
   display: "swap",
 });
-const sans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const sans = localFont({
+  src: "./fonts/dm-sans-latin-standard-normal.woff2",
+  weight: "100 1000",
   variable: "--font-sans-src",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "God's Chai Operations",
+  title: APP_NAME,
   description: "Restaurant operations platform — inventory, labor, cash, reporting.",
-  applicationName: "God's Chai Operations",
+  applicationName: APP_NAME,
   // `capable: true` emits both apple-mobile-web-app-capable and the modern
   // mobile-web-app-capable, so older iOS web clips launch without Safari chrome.
   appleWebApp: {
     capable: true,
-    title: "God's Chai",
+    title: APP_SHORT_NAME,
     statusBarStyle: "default",
   },
   icons: {
@@ -42,10 +51,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f4ec" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f0a07" },
-  ],
+  /* One value, the dark base. The app opens dark regardless of the OS setting
+     now, so keying the status bar off prefers-color-scheme would paint a cream
+     bar over a near-black page for everyone whose phone is in light mode. */
+  themeColor: "#283018",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -54,8 +63,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${display.variable} ${sans.variable}`}>
+      <head>
+        {/* Before the first paint. As an effect it would run after the page
+            had already been painted with the full material, so anyone who
+            asked for Solid would watch the glass appear and be taken away
+            again on every navigation. */}
+        <GlassDensityScript />
+      </head>
       <body className="min-h-screen antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />
           <ServiceWorkerRegister />

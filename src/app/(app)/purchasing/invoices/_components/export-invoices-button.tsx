@@ -15,7 +15,7 @@ import {
 // Downloads the invoice list as CSV. Carries the page's active filters through
 // to the export route so the file matches exactly what's on screen — a
 // filtered view downloads the filtered rows, not the whole table.
-const FILTER_KEYS = ["supplier", "status", "number", "from", "to", "untagged"] as const;
+const FILTER_KEYS = ["supplier", "event", "status", "number", "from", "to", "untagged"] as const;
 
 export function ExportInvoicesButton({ count }: { count: number }) {
   const searchParams = useSearchParams();

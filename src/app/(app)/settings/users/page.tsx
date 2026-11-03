@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
@@ -9,14 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { fmtDate } from "@/lib/date";
+import { ROLE_LABELS } from "@/lib/permissions";
 import { InviteUserButton } from "./_components/invite-user-button";
 import { UserRowActions } from "./_components/user-row-actions";
 
 export const dynamic = "force-dynamic";
 
+// Most privileged reads loudest; staff sit quietly, which is also how often
+// you need to think about them.
+const ROLE_BADGE = {
+  OWNER: "default",
+  MANAGER: "secondary",
+  STAFF: "muted",
+} as const;
+
 export default async function UsersPage() {
-  const scope = await getScope();
-  if (scope.role !== "OWNER") redirect("/dashboard");
+  const scope = await requireCapability("settings");
 
   const users = await prisma.user.findMany({
     where: { businessId: scope.businessId },
@@ -54,11 +62,18 @@ export default async function UsersPage() {
               {users.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">
-                    {u.name}
+                    <Link href={`/settings/users/${u.id}`} className="hover:underline">
+                      {u.name}
+                    </Link>
                     {u.id === scope.userId && <Badge variant="muted" className="ml-2 text-2xs">You</Badge>}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                  <TableCell><Badge variant={u.role === "OWNER" ? "default" : "secondary"}>{u.role}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant={ROLE_BADGE[u.role]}>{ROLE_LABELS[u.role]}</Badge>
+                    {u.mustChangePassword && (
+                      <Badge variant="muted" className="ml-1.5 text-2xs">Temp password</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{u.locations.map((l) => l.location.name).join(", ") || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{fmtDate(u.createdAt)}</TableCell>
                   <TableCell>
@@ -80,11 +95,16 @@ export default async function UsersPage() {
               {users.map((u) => (
                 <MobileRow
                   key={u.id}
-                  title={u.name}
+                  title={
+                    <Link href={`/settings/users/${u.id}`} className="hover:underline">
+                      {u.name}
+                    </Link>
+                  }
                   subtitle={u.email}
                   badges={
                     <>
-                      <Badge variant={u.role === "OWNER" ? "default" : "secondary"}>{u.role}</Badge>
+                      <Badge variant={ROLE_BADGE[u.role]}>{ROLE_LABELS[u.role]}</Badge>
+                      {u.mustChangePassword && <Badge variant="muted">Temp password</Badge>}
                       {u.id === scope.userId && <Badge variant="muted">You</Badge>}
                       <span className="ml-auto">
                         <UserRowActions

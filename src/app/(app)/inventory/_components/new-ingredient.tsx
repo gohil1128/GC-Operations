@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { UnitSelect } from "@/components/ui/unit-select";
 import { CategorySelect } from "@/components/ui/category-select";
 import { INGREDIENT_CATEGORIES } from "@/lib/gc-categories";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createIngredientAction } from "@/modules/inventory/actions";
 import { toast } from "@/components/ui/use-toast";
 
@@ -16,6 +16,17 @@ export function NewIngredientButton() {
   const [open, setOpen] = React.useState(false);
   const [pending, start] = React.useTransition();
   const router = useRouter();
+  /*
+    Opened by ?new=1, which is where /inventory/new lands. The parameter is
+    dropped as soon as it has been read so that closing the dialog and
+    reloading, or sharing the address, does not reopen it.
+  */
+  const params = useSearchParams();
+  React.useEffect(() => {
+    if (params.get("new") !== "1") return;
+    setOpen(true);
+    router.replace("/inventory", { scroll: false });
+  }, [params, router]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

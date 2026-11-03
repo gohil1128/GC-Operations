@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getScope } from "@/lib/scope";
-import { requireOwner } from "@/lib/auth";
+import { requireOwner, requireCan } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { toCents } from "@/lib/money";
 
@@ -109,6 +109,7 @@ export async function deleteEventAction(id: string) {
 }
 
 export async function setActiveEventAction(eventId: string | null) {
+  await requireCan("events");
   const cookieStore = await cookies();
   if (!eventId || eventId === "all") {
     cookieStore.delete(EVENT_COOKIE);

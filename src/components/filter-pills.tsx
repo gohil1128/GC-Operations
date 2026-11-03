@@ -15,7 +15,7 @@ export function FilterPills({ pills, className }: { pills: FilterPill[]; classNa
           className={cn(
             "rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors",
             p.active
-              ? "border-espresso bg-espresso text-espresso-foreground"
+              ? "border-highlight bg-highlight text-highlight-foreground"
               : p.tone === "danger"
                 ? "border-destructive/30 bg-card text-destructive hover:bg-destructive-muted"
                 : "border-border bg-card text-secondary-foreground hover:bg-accent",

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock, Unlock, Plus } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { getInvoice } from "@/modules/invoices/queries";
 import { listActiveEvents } from "@/modules/events/queries";
 import { closeInvoiceAction, deleteInvoiceAction } from "@/modules/invoices/actions";
@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const scope = await getScope();
+  const scope = await requireCapability("purchasing");
   const inv = await getInvoice(scope.locationId, id);
   if (!inv) notFound();
   const events = await listActiveEvents(scope.businessId);

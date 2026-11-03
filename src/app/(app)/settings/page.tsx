@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, Plug } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,17 +9,20 @@ import { Button } from "@/components/ui/button";
 import { LocationsManager } from "./_components/locations-manager";
 import { DangerZone } from "./_components/danger-zone";
 import { BusinessForm } from "./_components/business-form";
-import { RecipesLockCard } from "./_components/recipes-lock-card";
+import { OverviewCardsCard } from "./_components/overview-cards-card";
+import { CostClassesCard } from "./_components/cost-classes-card";
+import { GlassDensityCard } from "@/components/glass-density";
+import { SectionLockCard } from "./_components/section-lock-card";
+import { sectionLockSettings } from "@/modules/section-lock/actions";
 import { EventsManager } from "./_components/events-manager";
 import { Lock, Calendar } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const scope = await getScope();
-  if (scope.role !== "OWNER") redirect("/dashboard");
+  const scope = await requireCapability("settings");
 
-  const [business, locations, events, counts] = await Promise.all([
+  const [business, locations, events, counts, lockSettings] = await Promise.all([
     prisma.business.findUnique({ where: { id: scope.businessId } }),
     prisma.location.findMany({ where: { businessId: scope.businessId }, orderBy: { name: "asc" } }),
     prisma.event.findMany({ where: { businessId: scope.businessId }, orderBy: { startDate: "desc" } }),
@@ -34,6 +37,7 @@ export default async function SettingsPage() {
     ]).then(([ingredients, recipes, suppliers, employees, pos, sales, cashCloses]) => ({
       ingredients, recipes, suppliers, employees, pos, sales, cashCloses,
     })),
+    sectionLockSettings(scope.businessId),
   ]);
 
   return (
@@ -59,6 +63,7 @@ export default async function SettingsPage() {
             {business && (
               <BusinessForm initial={{
                 name: business.name,
+                timezone: business.timezone,
                 foodTargetPct: business.foodTargetPct,
                 laborTargetPct: business.laborTargetPct,
                 ebitdaMultiplier: business.ebitdaMultiplier,
@@ -67,6 +72,12 @@ export default async function SettingsPage() {
             )}
           </CardContent>
         </Card>
+
+        {business && <OverviewCardsCard hidden={business.hiddenOverviewCards} />}
+
+        {business && <CostClassesCard opex={business.opexInvoiceCategories} />}
+
+        <GlassDensityCard />
 
         <Card>
           <CardHeader>
@@ -84,11 +95,11 @@ export default async function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> Recipes lock</CardTitle>
-            <CardDescription>Hide recipes and BOM costs behind a 4-digit PIN</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> Section lock</CardTitle>
+            <CardDescription>Hide P&amp;L, events or recipes behind a 4-digit PIN</CardDescription>
           </CardHeader>
           <CardContent>
-            <RecipesLockCard hasPin={!!business?.recipesPinHash} />
+            <SectionLockCard hasPin={lockSettings.hasPin} locked={lockSettings.locked} />
           </CardContent>
         </Card>
 

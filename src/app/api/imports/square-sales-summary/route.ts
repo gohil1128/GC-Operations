@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import Papa from "papaparse";
-import { getScope } from "@/lib/scope";
+import { scopeFor } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
-import { startOfDay } from "@/lib/date";
+import { businessDayFromIso } from "@/lib/date";
 import { toCents } from "@/lib/money";
 import { writeAudit } from "@/lib/audit";
+import { applySquareToClose } from "@/modules/cash/square-close";
 
 // Importer for Square's "Sales Summary" page export
 // (Reports → Sales summary → Export → "Summary").
@@ -66,7 +67,8 @@ function get(lookup: Map<string, string>, candidates: string[]): string | undefi
 }
 
 export async function POST(req: Request) {
-  const scope = await getScope();
+  const scope = await scopeFor("settings");
+  if (!scope) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
   if (!isoDate) {
     return NextResponse.json({ error: `Bad date "${dateRaw}". Use YYYY-MM-DD.` }, { status: 400 });
   }
-  const businessDate = startOfDay(new Date(`${isoDate[1]}-${isoDate[2]}-${isoDate[3]}`));
+  const businessDate = businessDayFromIso(`${isoDate[1]}-${isoDate[2]}-${isoDate[3]}`);
 
   const eventIdRaw = String(form.get("eventId") ?? "");
   const eventId = eventIdRaw && eventIdRaw !== "none" ? eventIdRaw : null;
@@ -148,23 +150,11 @@ export async function POST(req: Request) {
     dayCreated = 1;
   }
 
-  // Pre-fill cash close split if one exists for the day.
-  let cashCloseTouched = false;
-  if (cashCents > 0 || cardCents > 0) {
-    const close = await prisma.cashClose.findFirst({
-      where: { locationId: scope.locationId, businessDate },
-    });
-    if (close) {
-      const expectedCents = close.openingCents + cashCents + cardCents;
-      const overShortCents =
-        cashCents + cardCents + close.depositCents - close.openingCents - expectedCents;
-      await prisma.cashClose.update({
-        where: { id: close.id },
-        data: { cashCents, creditCents: cardCents, expectedCents, overShortCents },
-      });
-      cashCloseTouched = true;
-    }
-  }
+  // What Square knows about the day's close (card takings, expected), and
+  // nothing it does not — see applySquareToClose.
+  const cashCloseTouched = await applySquareToClose(prisma, {
+    locationId: scope.locationId, businessDate, netCents, cardCents,
+  });
 
   await writeAudit({
     businessId: scope.businessId,

@@ -1,0 +1,14 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "ignorePatterns": ["node_modules/", ".next/", "public/", "prisma/migrations/", "gc-tasks/", "mobile/"],
+  "rules": {
+    "@next/next/no-img-element": "warn",
+
+    // Fires on <a href="/api/exports/...">. Those are CSV downloads served by
+    // route handlers, not pages: next/link would client-side navigate and the
+    // file would never download. The rule resolves against the pages directory
+    // and has no way to tell the difference, so it is off here rather than
+    // suppressed at eight call sites.
+    "@next/next/no-html-link-for-pages": "off"
+  }
+}

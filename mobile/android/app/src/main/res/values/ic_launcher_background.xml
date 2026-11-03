@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The web app's canvas colour, matching manifest.ts background_color, so
+         the adaptive icon's plate and the app's splash are the same cream
+         rather than the template's white. -->
+    <color name="ic_launcher_background">#F8F4EC</color>
+</resources>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listSuppliersForInvoice } from "@/modules/invoices/queries";
 import { listActiveEvents } from "@/modules/events/queries";
 import { PageHeader } from "@/components/page-header";
@@ -11,7 +11,7 @@ import { NewInvoiceForm } from "../../_components/new-invoice-form";
 export const dynamic = "force-dynamic";
 
 export default async function NewInvoicePage() {
-  const scope = await getScope();
+  const scope = await requireCapability("purchasing");
   const [suppliers, events] = await Promise.all([
     listSuppliersForInvoice(scope.businessId),
     listActiveEvents(scope.businessId),

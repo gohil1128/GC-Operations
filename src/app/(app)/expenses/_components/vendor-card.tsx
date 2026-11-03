@@ -16,7 +16,7 @@ import {
   payVendorAction, logIncentiveAction,
 } from "@/modules/vendors/actions";
 import { toast } from "@/components/ui/use-toast";
-import { formatMoney, fromCents } from "@/lib/money";
+import { formatMoney, fromCents, APP_LOCALE } from "@/lib/money";
 
 type Vendor = {
   id: string;
@@ -40,7 +40,10 @@ const CATEGORIES = [
   { value: "OTHER", label: "Other" },
 ];
 
-const CURRENCIES = ["USD", "CAD", "GBP", "EUR", "INR", "AUD"];
+// CAD first: it is the app's own currency and the one almost every
+// subscription here is billed in. The rest are for the occasional US or
+// overseas supplier, whose code is shown beside the amount.
+const CURRENCIES = ["CAD", "USD", "GBP", "EUR", "INR", "AUD"];
 
 export function VendorsSection({
   vendors, payments, yearMonth,
@@ -209,7 +212,7 @@ function VendorForm({
           <div className="flex gap-1.5">
             <Input id="vd-fee" name="monthlyFeeDollars" type="number" step="0.01" min="0" required
               defaultValue={initial ? fromCents(initial.monthlyFeeCents).toString() : "0"} className="flex-1" />
-            <Select name="currency" defaultValue={initial?.currency ?? "USD"}>
+            <Select name="currency" defaultValue={initial?.currency ?? "CAD"}>
               <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -295,7 +298,7 @@ function PayThisMonthButton({ vendor, yearMonth, alreadyPaid }: { vendor: Vendor
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="pay-desc">Note (optional)</Label>
-            <Input id="pay-desc" name="description" placeholder={`e.g. ${new Date().toLocaleString("en-US", { month: "long" })} retainer`} />
+            <Input id="pay-desc" name="description" placeholder={`e.g. ${new Date().toLocaleString(APP_LOCALE, { month: "long" })} retainer`} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

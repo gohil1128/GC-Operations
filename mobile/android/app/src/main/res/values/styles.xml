@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+    </style>
+
+
+    <!--
+      The launch splash.
+
+      Capacitor's template points this at @drawable/splash — a generic 480x320
+      placeholder carrying the Capacitor logo, which is what anyone opening the
+      app would have seen first. Those bitmaps are deleted.
+
+      This uses the Android 12 splash-screen attributes instead of a stretched
+      bitmap, which core-splashscreen (already a dependency) backports to
+      older versions. The platform composes the splash itself: our cream behind
+      the app's own icon, centred and masked correctly at any screen size and
+      density. A bitmap cannot do that without a dozen per-density variants,
+      and still letterboxes on aspect ratios nobody generated.
+
+      The icon is the MASKABLE foreground, not the full-bleed square: the
+      platform crops this to a circle, so the variant drawn with a safe zone is
+      the one that survives it.
+
+      postSplashScreenTheme hands over to the real theme when the WebView is
+      ready, so the splash does not linger as the window background underneath
+      the loaded page.
+    -->
+    <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brandCanvas</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+</resources>

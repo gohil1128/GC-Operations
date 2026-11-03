@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listActiveEvents } from "@/modules/events/queries";
 import { listImportedDays } from "@/modules/imports/queries";
 import { listItemCatalog } from "@/modules/items/queries";
+import { listItemRecipeLinks } from "@/modules/items/costing";
+import { listRecipes } from "@/modules/recipes/queries";
 import { fmtDate } from "@/lib/date";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,25 +14,50 @@ import { SquareSalesSummaryImporter } from "./_components/square-sales-summary-i
 import { SquareItemSummaryImporter } from "./_components/square-item-summary-importer";
 import { ImportedDataManager } from "./_components/imported-data-manager";
 import { ItemsManager } from "./_components/items-manager";
+import { EmailInvoicesCard } from "./_components/email-invoices-card";
+import { SquareSyncCard } from "./_components/square-sync-card";
+import { can } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
+// "Sync now" and "Scan now" are server actions, and run inside this page's
+// function, so they get this page's time limit. Both budget themselves well
+// inside a minute; the platform default would cut them off first.
+export const maxDuration = 60;
 
-export default async function IntegrationsPage() {
-  const scope = await getScope();
-  if (scope.role !== "OWNER") redirect("/dashboard");
+export default async function IntegrationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [params, scope] = await Promise.all([searchParams, requireCapability("settings")]);
+  const mailFlash = typeof params.mail === "string" ? params.mail : undefined;
+  const squareFlash = typeof params.square === "string" ? params.square : undefined;
   const events = await listActiveEvents(scope.businessId);
   const eventProps = events.map((e) => ({ id: e.id, name: e.name, color: e.color }));
   const broadway = events.find((e) => /broadway/i.test(e.name));
   const defaultEventId = broadway?.id;
 
   const importedDays = await listImportedDays(scope.locationId);
-  const itemCatalog = await listItemCatalog(scope.locationId);
+  const [itemCatalog, itemLinks, recipes] = await Promise.all([
+    listItemCatalog(scope.locationId),
+    listItemRecipeLinks(scope.locationId),
+    listRecipes(scope.businessId),
+  ]);
+  const linkByName = new Map(itemLinks.map((l) => [l.itemName, l.recipeId]));
   const itemRows = itemCatalog.map((i) => ({
     itemName: i.itemName,
     category: i.category,
     qty: i.qty,
     netSalesDollars: i.netSalesCents / 100,
     dayCount: i.dayCount,
+    recipeId: linkByName.get(i.itemName) ?? null,
+  }));
+  // Plate cost is the whole batch; what a sold unit costs is that over the
+  // recipe's yield, which is the number worth showing next to a menu item.
+  const recipeOptions = recipes.map((r) => ({
+    id: r.id,
+    name: r.name,
+    unitCostCents: Math.round(r.plateCostCents / (r.yieldQty > 0 ? r.yieldQty : 1)),
   }));
   const managerDays = importedDays.map((d) => ({
     iso: d.iso,
@@ -55,15 +82,18 @@ export default async function IntegrationsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Settings · Integrations" title="Integrations" description="Upload Square's Sales Summary and Item Sales Summary CSVs · external APIs are wired as placeholders" />
+      <PageHeader eyebrow="Settings · Integrations" title="Integrations" description="Square sales and emailed invoices, brought in on their own" />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        <Card className="border-brand/50">
+        <SquareSyncCard businessId={scope.businessId} flash={squareFlash} />
+
+        <EmailInvoicesCard businessId={scope.businessId} flash={mailFlash} canReview={can(scope.role, "purchasing")} />
+
+        <Card>
           <CardHeader>
             <CardTitle>
               Square Sales Summary CSV
-              <Badge variant="success" className="ml-2">Live</Badge>
-              <Badge variant="brand" className="ml-2">Recommended</Badge>
+              <Badge variant="muted" className="ml-2">Manual upload</Badge>
             </CardTitle>
             <CardDescription>
               Upload Square&apos;s <em>Sales Summary</em> page export — the one-day report with
@@ -82,7 +112,7 @@ export default async function IntegrationsPage() {
           <CardHeader>
             <CardTitle>
               Square Item Sales Summary CSV
-              <Badge variant="success" className="ml-2">Live</Badge>
+              <Badge variant="muted" className="ml-2">Manual upload</Badge>
             </CardTitle>
             <CardDescription>
               Upload Square&apos;s <em>Item Sales</em> export — one row per item with totals for
@@ -120,18 +150,7 @@ export default async function IntegrationsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ItemsManager items={itemRows} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Square POS sync <Badge variant="muted" className="ml-2">Coming soon</Badge></CardTitle>
-            <CardDescription>Direct OAuth sync (no CSV upload needed) — requires Square developer approval</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" size="sm" disabled>Connect Square</Button>
-            <Button variant="outline" size="sm" disabled>Connect Toast</Button>
+            <ItemsManager items={itemRows} recipes={recipeOptions} />
           </CardContent>
         </Card>
 

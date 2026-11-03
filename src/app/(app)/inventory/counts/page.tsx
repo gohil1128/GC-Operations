@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ClipboardList } from "lucide-react";
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listIngredients, listCounts } from "@/modules/inventory/queries";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { CountEntryGrid } from "./_components/count-entry-grid";
 export const dynamic = "force-dynamic";
 
 export default async function CountsPage() {
-  const scope = await getScope();
+  const scope = await requireCapability("inventoryCount");
   const [ingredients, counts] = await Promise.all([listIngredients(scope.businessId), listCounts(scope.locationId)]);
   return (
     <div>

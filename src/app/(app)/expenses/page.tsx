@@ -1,4 +1,4 @@
-import { getScope } from "@/lib/scope";
+import { requireCapability } from "@/lib/scope";
 import { listExpenses, EXPENSE_CATEGORIES } from "@/modules/expenses/queries";
 import { listVendors, getMonthlyFeePaymentStatus } from "@/modules/vendors/queries";
 import { listActiveEvents, getActiveEvent } from "@/modules/events/queries";
@@ -29,7 +29,7 @@ export default async function ExpensesPage({
   searchParams: Promise<{ category?: ExpenseCategory; from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const scope = await getScope();
+  const scope = await requireCapability("expenses");
   const activeEvent = await getActiveEvent(scope.businessId);
   const [expenses, vendors, events, capitalAssets] = await Promise.all([
     listExpenses(scope.locationId, { category: sp.category, eventId: activeEvent?.id, from: safeDateParam(sp.from), to: safeDateParam(sp.to) }),
@@ -136,7 +136,7 @@ export default async function ExpensesPage({
                         )}
                         {e.event && (
                           <span className="inline-flex items-center gap-1.5 text-xs">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: e.event.color ?? "hsl(var(--muted-foreground))" }} />
+                            <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.event.color ?? "hsl(var(--muted-foreground))" }} />
                             {e.event.name}
                           </span>
                         )}
@@ -177,7 +177,7 @@ export default async function ExpensesPage({
                       {e.vendor && <Badge variant="brand">{e.vendor.name}</Badge>}
                       {e.event && (
                         <Badge variant="muted">
-                          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: e.event.color ?? "hsl(var(--muted-foreground))" }} />
+                          <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.event.color ?? "hsl(var(--muted-foreground))" }} />
                           {e.event.name}
                         </Badge>
                       )}
