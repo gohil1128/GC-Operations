@@ -12,7 +12,7 @@
 //   - Static assets (_next/static, images, fonts): cache-first.
 //   - API/data: always network.
 
-const CACHE = "gco-shell-v2";
+const CACHE = "gco-shell-v3";
 // Data-free assets only. No authenticated route is precached.
 const SHELL = ["/offline", "/logo.png", "/manifest.webmanifest"];
 
@@ -83,4 +83,65 @@ self.addEventListener("fetch", (event) => {
       })
     );
   }
+});
+
+// ── Push notifications ───────────────────────────────────────────────────────
+// For now one kind: "someone asked to join" (see src/modules/push). The payload
+// is JSON from the server: { title, body, tag, url, actions, tokens, name }.
+
+self.addEventListener("push", (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch { /* fall through to the default */ }
+  event.waitUntil(
+    self.registration.showNotification(d.title || "New notification", {
+      body: d.body || "",
+      tag: d.tag,
+      icon: "/icon-192.png?v=2",
+      badge: "/icon-192.png?v=2",
+      // Action buttons show on Android and desktop. iPhone ignores them, which is
+      // why tapping the notification itself opens the page where it can be answered.
+      actions: d.actions || [],
+      data: { url: d.url || "/dashboard", tokens: d.tokens || {}, name: d.name || "" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  const n = event.notification;
+  const data = n.data || {};
+  n.close();
+
+  // Approve / Decline straight from the notification: post the signed ticket and say how it went.
+  if ((event.action === "approve" || event.action === "decline") && data.tokens && data.tokens[event.action]) {
+    event.waitUntil(
+      fetch("/api/push/decision", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: data.tokens[event.action] }),
+      })
+        .then((r) => r.json())
+        .catch(() => ({ ok: false, message: "Couldn't reach the server. Open the app to answer." }))
+        .then((r) =>
+          self.registration.showNotification(r.ok ? "Done" : "Not done", {
+            body: r.message,
+            tag: n.tag,
+            icon: "/icon-192.png?v=2",
+          })
+        )
+    );
+    return;
+  }
+
+  // Tapping the notification itself: open (or focus) the app on the Users page.
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((all) => {
+      for (const c of all) {
+        if ("focus" in c) {
+          if ("navigate" in c) c.navigate(data.url);
+          return c.focus();
+        }
+      }
+      return self.clients.openWindow(data.url || "/dashboard");
+    })
+  );
 });

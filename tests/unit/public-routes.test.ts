@@ -46,6 +46,13 @@ describe("routes reachable without a session", () => {
     }
   });
 
+  it("opens the notification-decision endpoint only, and not the subscription one", () => {
+    // The Approve / Decline buttons on a push notification post a signed ticket
+    // from the service worker. Subscribing, which needs a real owner session, must stay private.
+    expect(publicExact.has("/api/push/decision")).toBe(true);
+    for (const path of ["/api/push", "/api/push/subscribe"]) expect(publicExact.has(path), `${path} must NOT be public`).toBe(false);
+  });
+
   it("keeps the app itself private", () => {
     for (const path of ["/dashboard", "/cash", "/settings", "/reports", "/events", "/sales"]) {
       expect(publicExact.has(path), `${path} must NOT be public`).toBe(false);

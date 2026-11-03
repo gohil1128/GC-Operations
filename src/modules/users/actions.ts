@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getScope } from "@/lib/scope";
 import { requireOwner } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
+import { approveJoinRequest, declineJoinRequest } from "@/modules/users/approval";
 import { createResetToken, generatePassword, hashPassword } from "@/modules/auth/password";
 
 const inviteSchema = z.object({
@@ -285,19 +286,11 @@ export async function approveUserAction(userId: string, role: string): Promise<{
   await requireOwner();
   const scope = await getScope();
   if (role !== "MANAGER" && role !== "STAFF") return { error: "Choose Manager or Staff." };
-  const user = await prisma.user.findFirst({ where: { id: userId, businessId: scope.businessId, approved: false } });
-  if (!user) return { error: "That request is no longer there." };
-
-  await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: userId }, data: { approved: true, role } });
-    const locations = await tx.location.findMany({ where: { businessId: scope.businessId }, select: { id: true } });
-    if (locations.length > 0) {
-      await tx.userLocation.createMany({ data: locations.map((l) => ({ userId, locationId: l.id })), skipDuplicates: true });
-    }
-  });
+  const res = await approveJoinRequest(prisma, scope.businessId, userId, role);
+  if ("error" in res) return res;
   await writeAudit({
     businessId: scope.businessId, userId: scope.userId,
-    action: "user.approve", entityType: "User", entityId: userId, diff: { email: user.email, role },
+    action: "user.approve", entityType: "User", entityId: userId, diff: { email: res.email, role },
   });
   revalidatePath("/settings/users");
   return { ok: true };
@@ -306,12 +299,11 @@ export async function approveUserAction(userId: string, role: string): Promise<{
 export async function declineUserAction(userId: string): Promise<{ ok: true } | { error: string }> {
   await requireOwner();
   const scope = await getScope();
-  const user = await prisma.user.findFirst({ where: { id: userId, businessId: scope.businessId, approved: false } });
-  if (!user) return { error: "That request is no longer there." };
-  await prisma.user.delete({ where: { id: userId } });
+  const res = await declineJoinRequest(prisma, scope.businessId, userId);
+  if ("error" in res) return res;
   await writeAudit({
     businessId: scope.businessId, userId: scope.userId,
-    action: "user.decline", entityType: "User", entityId: userId, diff: { email: user.email },
+    action: "user.decline", entityType: "User", entityId: userId, diff: { email: res.email },
   });
   revalidatePath("/settings/users");
   return { ok: true };

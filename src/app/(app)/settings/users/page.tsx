@@ -13,6 +13,8 @@ import { ROLE_LABELS } from "@/lib/permissions";
 import { InviteUserButton } from "./_components/invite-user-button";
 import { UserRowActions } from "./_components/user-row-actions";
 import { JoinRequests } from "./_components/join-requests";
+import { JoinAlerts } from "./_components/join-alerts";
+import { vapidPublicKey } from "@/modules/push/send";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,7 @@ export default async function UsersPage() {
         }
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8">
+        {scope.role === "OWNER" && <JoinAlerts publicKey={vapidPublicKey()} />}
         <JoinRequests requests={requests} />
         <div className="bento">
           <TableOnDesktop>

@@ -25,6 +25,9 @@ const PUBLIC_EXACT = new Set([
   // a bearer secret (CRON_SECRET) and fails closed without one — see the route.
   "/api/cron/scan-invoices",
   "/api/cron/sync-square",
+  // The Approve / Decline buttons on a push notification. A service worker may
+  // have no session; the signed, expiring ticket in the body is the credential.
+  "/api/push/decision",
 ]);
 // Only NextAuth's own handler legitimately needs a subtree.
 const PUBLIC_PREFIXES = ["/api/auth/"];

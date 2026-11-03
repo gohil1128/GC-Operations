@@ -189,6 +189,7 @@ model User {
   mailConnections   MailConnection[]
   reviewedMail      MailMessage[]
   squareConnections SquareConnection[]
+  pushSubscriptions PushSubscription[]
 
   @@index([businessId])
 }
@@ -1059,4 +1060,21 @@ model SquareConnection {
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   connectedBy User     @relation(fields: [connectedById], references: [id])
+}
+
+// A phone or computer an owner has allowed to send them notifications (for now:
+// "someone asked to join"). One row per browser install; the endpoint is the
+// push service's address for it, and is removed when that service says it is gone.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

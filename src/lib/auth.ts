@@ -11,6 +11,7 @@ import { authConfig } from "@/lib/auth.config";
 import { can, type Capability } from "@/lib/permissions";
 import { findOrCreateGoogleUser, verifiedEmail } from "@/modules/auth/google";
 import { writeAudit } from "@/lib/audit";
+import { notifyJoinRequest } from "@/modules/push/send";
 import {
   checkSignupAllowed,
   recordSignupAttempt,
@@ -75,6 +76,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             action: "user.join_request", entityType: "User", entityId: u.id,
             diff: { method: "google", email },
           });
+          // Tell the owners, but never let a slow or broken push service hold up
+          // (or fail) the sign-in: five seconds, then carry on.
+          await Promise.race([
+            notifyJoinRequest(prisma, { businessId: u.businessId, userId: u.id, name: profile?.name || email, email }).catch(() => 0),
+            new Promise((r) => setTimeout(r, 5000)),
+          ]);
         }
         return true;
       } catch (e) {
