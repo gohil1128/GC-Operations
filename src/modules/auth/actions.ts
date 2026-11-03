@@ -150,3 +150,8 @@ export async function resetPasswordWithTokenAction(_prev: unknown, formData: For
   }
   return { ok: true };
 }
+
+/* "Continue with Google". Leaves for Google; the sign-in callback in lib/auth.ts does the rest. */
+export async function googleSignInAction() {
+  await signIn("google", { redirectTo: "/dashboard" });
+}

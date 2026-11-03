@@ -1,13 +1,20 @@
 import { cache } from "react";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { cookies, headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/lib/auth.config";
 import { can, type Capability } from "@/lib/permissions";
+import { findOrCreateGoogleUser, verifiedEmail } from "@/modules/auth/google";
+import { writeAudit } from "@/lib/audit";
 import {
+  checkSignupAllowed,
+  recordSignupAttempt,
+  signupKeys,
   checkLoginAllowed,
   clearLoginFailures,
   clientIpFrom,
@@ -36,9 +43,64 @@ const credentialsSchema = z.object({
   password: z.string().min(6),
 });
 
+/** Google sign-in is offered only when its keys are set, so nothing shows or breaks before then. */
+export const googleEnabled = () => Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    /*
+      Google: verified email only, then find the user or make a business for
+      them. Returning a path sends the browser there with the reason, which the
+      login page turns into a sentence.
+    */
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+      const email = verifiedEmail(profile);
+      if (!email) return "/login?error=GoogleUnverified";
+      try {
+        const exists = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+        if (!exists) {
+          // Making a business is the same act as signing up, so it shares that throttle.
+          const keys = signupKeys(clientIpFrom(await headers()));
+          const limit = await checkSignupAllowed(keys);
+          if (limit.locked) return "/login?error=GoogleRateLimited";
+          await recordSignupAttempt(keys);
+        }
+        const tz = (await cookies()).get("gc_tz")?.value ?? null;
+        const u = await findOrCreateGoogleUser(prisma, { email, name: profile?.name }, tz);
+        if (u.created) {
+          await writeAudit({
+            businessId: u.businessId, userId: u.id,
+            action: "business.signup", entityType: "Business", entityId: u.businessId,
+            diff: { method: "google" },
+          });
+        }
+        return true;
+      } catch (e) {
+        console.error("[auth] google sign-in failed:", e instanceof Error ? e.message : e);
+        return "/login?error=GoogleFailed";
+      }
+    },
+    async jwt(args) {
+      const token = (await authConfig.callbacks!.jwt!(args)) ?? args.token;
+      // First sign-in with Google: the id, role and business come from OUR user
+      // row (matched by the verified email), never from anything Google sent.
+      if (args.account?.provider === "google" && args.token.email) {
+        const u = await prisma.user.findUnique({
+          where: { email: String(args.token.email).toLowerCase() },
+          select: { id: true, role: true, businessId: true },
+        });
+        if (u) { token.id = u.id; token.role = u.role; token.businessId = u.businessId; }
+      }
+      return token;
+    },
+  },
   providers: [
+    ...(googleEnabled()
+      ? [Google({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET })]
+      : []),
     Credentials({
       credentials: { email: {}, password: {} },
       async authorize(raw, request) {
