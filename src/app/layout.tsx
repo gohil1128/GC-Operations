@@ -42,11 +42,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   icons: {
-    icon: "/icon-192.png",
+    icon: "/icon-192.png?v=2",
     // Opaque and square: iOS renders alpha as black and does not scale
     // non-square art gracefully.
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    shortcut: "/icon-192.png",
+    apple: [{ url: "/apple-touch-icon.png?v=2", sizes: "180x180", type: "image/png" }],
+    shortcut: "/icon-192.png?v=2",
   },
 };
 
