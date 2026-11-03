@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { markerColor } from "@/lib/event-color";
+import { SwipePager } from "@/components/swipe-pager";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/date";
 import { formatMoney, formatPercent } from "@/lib/money";
@@ -16,20 +18,6 @@ import { STATUS_LABELS, type EventStatus } from "@/modules/events/status";
   Its ground follows the theme (globals.css, --board-*), so in light mode it
   is a white card on the canvas and in dark mode an olive one.
 */
-
-/*
-  The event's colour as a small round dot. Very dark colours — the old
-  espresso default most events still carry — vanish on the dark board and
-  read as a hole on the light one, so those fall back to the brand lime.
-*/
-function markerColor(color: string | null): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(color ?? "");
-  if (!m) return "hsl(var(--brand))";
-  const n = parseInt(m[1], 16);
-  const lin = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
-  const lum = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
-  return lum < 0.06 ? "hsl(var(--brand))" : `#${m[1]}`;
-}
 
 export type BoardEvent = {
   id: string;
@@ -56,42 +44,48 @@ const COLUMNS: ColumnDef[] = [
 ];
 
 export function OrderBoard({ events }: { events: BoardEvent[] }) {
+  const groups = COLUMNS.map((col) => ({ col, rows: events.filter((e) => col.statuses.includes(e.status)) }));
+  // Open on the first column that has something in it, so a phone never lands
+  // on "Nothing here."
+  const first = Math.max(0, groups.findIndex((g) => g.rows.length > 0));
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      {COLUMNS.map((col) => {
-        const rows = events.filter((e) => col.statuses.includes(e.status));
-        return (
-          <section key={col.key} className="min-w-0">
-            <header className="mb-3 flex items-baseline justify-between gap-2 px-1">
-              <h2
-                className={cn(
-                  "text-xs font-semibold uppercase tracking-[0.1em]",
-                  col.key === "booked" && "text-board-dim",
-                  col.key === "stocked" && "text-board-amber",
-                  col.key === "settled" && "text-board-green",
-                )}
-              >
-                {col.title}
-              </h2>
-              <span className="num text-2xs text-board-dim">
-                {rows.length} event{rows.length === 1 ? "" : "s"}
-              </span>
-            </header>
-
-            <div className="flex flex-col gap-3">
-              {rows.map((e) => (
-                <Ticket key={e.id} event={e} />
-              ))}
-              {rows.length === 0 && (
-                <p className="rounded-[22px] border border-dashed border-board-ink/15 px-4 py-6 text-center text-xs text-board-dim">
-                  Nothing here.
-                </p>
+    <SwipePager
+      tone="board"
+      initial={first}
+      tabs={groups.map((g) => ({ key: g.col.key, label: g.col.title, count: g.rows.length }))}
+      panes={groups.map(({ col, rows }) => (
+        <section key={col.key} className="min-w-0">
+          {/* The tab strip names the column on a phone; the heading is for the
+              side-by-side layout. */}
+          <header className="mb-3 hidden items-baseline justify-between gap-2 px-1 lg:flex">
+            <h2
+              className={cn(
+                "text-xs font-semibold uppercase tracking-[0.1em]",
+                col.key === "booked" && "text-board-dim",
+                col.key === "stocked" && "text-board-amber",
+                col.key === "settled" && "text-board-green",
               )}
-            </div>
-          </section>
-        );
-      })}
-    </div>
+            >
+              {col.title}
+            </h2>
+            <span className="num text-2xs text-board-dim">
+              {rows.length} event{rows.length === 1 ? "" : "s"}
+            </span>
+          </header>
+
+          <div className="flex flex-col gap-3">
+            {rows.map((e) => (
+              <Ticket key={e.id} event={e} />
+            ))}
+            {rows.length === 0 && (
+              <p className="rounded-[22px] border border-dashed border-board-ink/15 px-4 py-6 text-center text-xs text-board-dim">
+                Nothing here.
+              </p>
+            )}
+          </div>
+        </section>
+      ))}
+    />
   );
 }
 

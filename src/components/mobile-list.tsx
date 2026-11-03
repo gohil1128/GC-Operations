@@ -34,6 +34,7 @@ export function MobileRow({
   subtitle,
   meta,
   badges,
+  actions,
   children,
   className,
 }: {
@@ -43,6 +44,8 @@ export function MobileRow({
   /** Right-aligned headline value, usually money. */
   meta?: React.ReactNode;
   badges?: React.ReactNode;
+  /** Row actions (re-open, delete…), set apart on their own line at the foot. */
+  actions?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
 }) {
@@ -67,8 +70,12 @@ export function MobileRow({
     </>
   );
 
-  const cls = cn("touch-target bento block p-4 text-left", href && "active:bg-accent/60", className);
-  return href ? <Link href={href} className={cls}>{body}</Link> : <div className={cls}>{body}</div>;
+  const cls = cn("touch-target bento block p-4 text-left", href && !actions && "active:bg-accent/60", className);
+  const foot = actions && <div className="mt-2 flex items-center justify-end gap-1.5">{actions}</div>;
+  if (href && !actions) return <Link href={href} className={cls}>{body}</Link>;
+  // Actions are buttons, which cannot live inside a link, so the link is the body alone.
+  if (href) return <div className={cls}><Link href={href} className="block">{body}</Link>{foot}</div>;
+  return <div className={cls}>{body}{foot}</div>;
 }
 
 /** One label/value pair inside a MobileRow's detail grid. */

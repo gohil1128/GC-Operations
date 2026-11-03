@@ -40,7 +40,7 @@ export function EditIngredientButton({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {variant === "icon" ? (
-          <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Edit ${ingredient.name}`}>
+          <Button size="icon-sm" variant="ghost" aria-label={`Edit ${ingredient.name}`}>
             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         ) : (

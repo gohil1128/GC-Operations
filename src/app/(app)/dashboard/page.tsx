@@ -15,6 +15,7 @@ import { fmtDate } from "@/lib/date";
 import { formatMoney, formatMoneyHeadline, formatPercent, safeDivide } from "@/lib/money";
 import { KpiStrip, type Kpi } from "@/components/dashboard/ledger/kpi-strip";
 import { EventControl } from "@/components/dashboard/event-control";
+import { Dismissible } from "@/components/dismissible";
 import { TimezoneNotice } from "@/components/dashboard/timezone-notice";
 import { PnlStatement } from "@/components/dashboard/ledger/pnl-statement";
 import {
@@ -218,8 +219,7 @@ export default async function DashboardPage({
             Good {partOfDay}, {firstName}
           </h1>
           <p className="mt-[3px] text-[13px] text-muted-foreground">
-            Here&apos;s where <span className="font-medium text-foreground">{range.label}</span>{" "}
-            stands · {range.subLabel}
+            Here&apos;s where things stand · {range.subLabel}
           </p>
         </div>
         <EventControl
@@ -249,7 +249,11 @@ export default async function DashboardPage({
         a job they are not allowed to do.
       */}
       {uncounted.count > 0 && can(scope.role, "cash") && (
-        <div className="mt-4 flex items-center gap-3 rounded-[14px] border border-warning-border bg-warning-muted px-3.5 py-[11px] text-[12.5px] text-warning-ink">
+        <Dismissible
+          id={`cash-close:${uncounted.latest ? uncounted.latest.toISOString().slice(0, 10) : "x"}:${uncounted.count}`}
+          label="Dismiss this notice"
+          className="gap-3 rounded-[14px] border border-warning-border bg-warning-muted px-3.5 py-[11px] text-[12.5px] text-warning-ink"
+        >
           <span className="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-amber text-amber-foreground">
             <AlertTriangle className="h-3 w-3" aria-hidden />
           </span>
@@ -274,7 +278,7 @@ export default async function DashboardPage({
           >
             Close drawer →
           </Link>
-        </div>
+        </Dismissible>
       )}
 
       {/*

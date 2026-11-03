@@ -172,7 +172,7 @@ function EditVendorButton({ vendor }: { vendor: Vendor }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Edit vendor"><Pencil className="h-3.5 w-3.5" /></Button>
+        <Button size="icon-sm" variant="ghost" aria-label="Edit vendor"><Pencil className="h-3.5 w-3.5" /></Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Edit vendor</DialogTitle></DialogHeader>

@@ -2,6 +2,8 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/money";
+import { markerColor } from "@/lib/event-color";
+import { useSwipe } from "@/lib/use-swipe";
 
 /*
   Where the money went — one list you steer, instead of two grids you scroll.
@@ -41,7 +43,7 @@ type Slice = { id: string; label: string; color?: string | null; total: number; 
 function slicesOf(t: SpendTable): Slice[] {
   const out: Slice[] = [{ id: "all", label: "All", total: t.grandTotal, pick: (r) => r.totalCents }];
   for (const e of t.events) {
-    out.push({ id: e.id, label: e.name, color: e.color ?? "hsl(var(--muted-foreground))", total: t.eventTotals[e.id] ?? 0, pick: (r) => r.byEvent[e.id] ?? 0 });
+    out.push({ id: e.id, label: e.name, color: markerColor(e.color), total: t.eventTotals[e.id] ?? 0, pick: (r) => r.byEvent[e.id] ?? 0 });
   }
   if (t.grandShared > 0) out.push({ id: "shared", label: "All events (shared)", total: t.grandShared, pick: (r) => r.sharedCents });
   if (t.grandUntagged > 0) out.push({ id: "untagged", label: "Untagged", total: t.grandUntagged, pick: (r) => r.untaggedCents });
@@ -65,6 +67,7 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
     .sort((a, b) => b.cents - a.cents || a.r.name.localeCompare(b.r.name));
   const top = ranked[0]?.cents ?? 0;
 
+  const swipe = useSwipe({ onLeft: () => setLens("categories"), onRight: () => setLens("suppliers") });
   const lensTabs: { id: Lens; label: string }[] = [
     { id: "suppliers", label: "By supplier" },
     { id: "categories", label: "By category" },
@@ -87,7 +90,7 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
               onClick={() => setLens(t.id)}
               className={cn(
                 "min-h-10 rounded-full px-3 text-sm font-medium transition-colors duration-150",
-                on ? "bg-highlight text-highlight-foreground" : "text-muted-foreground hover:text-foreground",
+                on ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t.label}
@@ -96,28 +99,39 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
         })}
       </div>
 
-      {/* Which slice */}
-      <div role="group" aria-label="Show spend for" className="-mx-1 flex flex-wrap gap-2 px-1">
-        {slices.map((s) => {
-          const on = s.id === slice.id;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              aria-pressed={on}
-              onClick={() => setSliceId(s.id)}
-              className={cn(
-                "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors duration-150",
-                on ? "border-transparent bg-foreground text-background" : "border-border bg-card text-foreground hover:bg-accent",
-              )}
-            >
-              {s.color && (
-                <span aria-hidden className="h-2 w-2 shrink-0 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: s.color }} />
-              )}
-              {s.label}
-            </button>
-          );
-        })}
+      {/*
+        Which slice. One row you slide sideways, not a wrapped pile of nineteen
+        pills: the current choice scrolls itself into view, the edges fade to
+        show there is more, and the chips are quiet until chosen.
+      */}
+      <div className="relative -mx-5 sm:-mx-6">
+        <div
+          role="group"
+          aria-label="Show spend for"
+          className="no-scrollbar flex snap-x gap-1.5 overflow-x-auto overscroll-x-contain px-5 py-0.5 sm:px-6"
+        >
+          {slices.map((s) => {
+            const on = s.id === slice.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                aria-pressed={on}
+                ref={on ? (el) => el?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }) : undefined}
+                onClick={() => setSliceId(s.id)}
+                className={cn(
+                  "lg-press inline-flex min-h-9 max-w-[14rem] shrink-0 snap-start items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors duration-200",
+                  on ? "bg-brand-muted text-brand-ink" : "bg-muted/70 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {s.color && <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />}
+                <span className="truncate">{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-card to-transparent sm:w-6" />
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-card to-transparent sm:w-6" />
       </div>
 
       {/* The answer */}
@@ -126,6 +140,7 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
         id={`${tabsId}-panel`}
         aria-labelledby={`${tabsId}-${lens}`}
         aria-live="polite"
+        {...swipe}
       >
         <p className="text-xs text-muted-foreground">{slice.id === "all" ? "Total spend" : slice.label}</p>
         <p className="display-num text-[28px] font-medium leading-tight tracking-[-0.025em] tabular-nums">{formatMoney(slice.total)}</p>

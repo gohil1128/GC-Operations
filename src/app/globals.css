@@ -726,6 +726,32 @@
       .reveal      an expanded breakdown fades down into place.
       page cascade the cards on every screen arrive in order on navigation.
   */
+  /*
+    Tables. A band for the header instead of a rule, hairlines between rows,
+    and rows that arrive in order (the first ten, 28ms apart, then the rest
+    at once so a long table never makes you wait). The edge fades are the
+    classic scroll shadow: a gradient that is fixed to the box while a
+    second one scrolls with the content and covers it, so a shadow shows
+    only on the side that still has something to scroll to.
+  */
+  .table-live {
+    background:
+      linear-gradient(to right, hsl(var(--card)) 30%, transparent) left center / 24px 100% no-repeat local,
+      linear-gradient(to left, hsl(var(--card)) 30%, transparent) right center / 24px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, hsl(var(--foreground) / 0.10), transparent) left center / 10px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, hsl(var(--foreground) / 0.10), transparent) right center / 10px 100% no-repeat scroll;
+  }
+  .table-live tbody tr { animation: arrive 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+  .table-live tbody tr:nth-child(2) { animation-delay: 28ms; }
+  .table-live tbody tr:nth-child(3) { animation-delay: 56ms; }
+  .table-live tbody tr:nth-child(4) { animation-delay: 84ms; }
+  .table-live tbody tr:nth-child(5) { animation-delay: 112ms; }
+  .table-live tbody tr:nth-child(6) { animation-delay: 140ms; }
+  .table-live tbody tr:nth-child(7) { animation-delay: 168ms; }
+  .table-live tbody tr:nth-child(8) { animation-delay: 196ms; }
+  .table-live tbody tr:nth-child(9) { animation-delay: 224ms; }
+  .table-live tbody tr:nth-child(n+10) { animation-delay: 252ms; }
+
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
@@ -780,6 +806,7 @@
     .more-scrim, .more-sheet[data-open="true"] .more-tile, .dock-pop, .reveal:not([hidden]),
     .animate-page > div > :is(.grid, [class*="space-y-"]) > * { animation: none; }
     .section-pill { transition: none; }
+    .table-live tbody tr { animation: none; }
   }
 
   @keyframes arrive {
@@ -1930,7 +1957,8 @@
   .animate-page,
   .animate-fade,
   .cascade > *,
-  .animate-page > div > * > * {
+  .animate-page > div > * > *,
+  .table-live tbody tr {
     animation: none !important;
     opacity: 1 !important;
   }

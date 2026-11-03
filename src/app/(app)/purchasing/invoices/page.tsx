@@ -4,6 +4,7 @@ import { requireCapability } from "@/lib/scope";
 import { getActiveEvent, listAllEvents } from "@/modules/events/queries";
 import { listInvoices, listSuppliersForInvoice } from "@/modules/invoices/queries";
 import { PageHeader } from "@/components/page-header";
+import { Dismissible } from "@/components/dismissible";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -177,14 +178,19 @@ export default async function InvoicesPage({
         </StatTileRow>
 
         {belowSubtotal.length > 0 && (
-          <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-xs">
+          <Dismissible
+            id={`invoices-below-subtotal:${belowSubtotal.map((i) => i.id).sort().join(",")}`}
+            spacing="pt-0"
+            label="Dismiss this notice"
+            className="items-start gap-3 rounded-[18px] border border-warning-border bg-warning-muted px-4 py-3 text-xs text-warning-ink"
+          >
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="font-semibold">
                 {belowSubtotal.length} invoice{belowSubtotal.length === 1 ? "" : "s"} total less
                 than the goods on {belowSubtotal.length === 1 ? "it" : "them"}
               </p>
-              <p className="leading-relaxed text-muted-foreground">
+              <p className="leading-relaxed opacity-90">
                 The total is worked out as amount before tax, plus GST, PST and shipping, less the
                 rebate — so a total under the subtotal means the rebate is bigger than the tax and
                 shipping put together. Right for a discounted bill, wrong for a rebate typed into
@@ -194,7 +200,7 @@ export default async function InvoicesPage({
                     {n > 0 && ", "}
                     <Link
                       href={`/purchasing/invoices/${i.id}`}
-                      className="font-medium text-foreground underline underline-offset-2"
+                      className="font-medium underline underline-offset-2"
                     >
                       {i.supplier.name}
                     </Link>
@@ -203,7 +209,7 @@ export default async function InvoicesPage({
                 {belowSubtotal.length > 6 && <> and {belowSubtotal.length - 6} more</>}.
               </p>
             </div>
-          </div>
+          </Dismissible>
         )}
 
         {/* Keyed to the resolved event: if the header's cookie changes (its
@@ -373,14 +379,17 @@ export default async function InvoicesPage({
                     <Badge variant="muted">No event</Badge>
                   )}
                   {i.category && <Badge variant="muted">{i.category}</Badge>}
-                  <span className="ml-auto flex items-center gap-1">
+                </>
+              }
+              actions={
+                <>
                     {i.hasImage && (
                       <a
                         href={`/api/purchasing/invoices/${i.id}/photo`}
                         target="_blank"
                         rel="noreferrer"
                         title="Open invoice photo"
-                        className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-2xs font-semibold text-brand hover:bg-brand/10 transition-colors"
+                        className="lg-press inline-flex h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-[13px] font-medium text-foreground hover:bg-muted/70"
                       >
                         <Camera className="h-3.5 w-3.5" /> Photo
                       </a>
@@ -392,7 +401,6 @@ export default async function InvoicesPage({
                       itemName={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
                       confirmText={`This will delete the ${i.supplier.name} invoice from ${fmtDate(i.invoiceDate)} and REVERSE its inventory impact (subtract ${i._count.items} items' quantities from on-hand).`}
                     />
-                  </span>
                 </>
               }
             >

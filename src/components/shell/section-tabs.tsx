@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { bestPage, hubsFor } from "./nav";
@@ -35,6 +35,49 @@ export function SectionTabs({ hub, role }: { hub: string; role: Role }) {
     el.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [current?.href]);
   React.useEffect(() => { const t = requestAnimationFrame(() => setReady(true)); return () => cancelAnimationFrame(t); }, []);
+
+  /*
+    Swipe the page to move to the next or previous tab of this section — the
+    same gesture as the tab strip itself.
+
+    It is a document-level listener, so it has to be careful not to steal a
+    swipe that belongs to something else: a table or chip strip that scrolls
+    sideways, a form control, a dialog, or a pager. Any of those under the
+    finger, and it stays out. The movement must also be clearly sideways and
+    long (72px, twice as far across as down), so ordinary scrolling and taps
+    never trip it. Touch only.
+  */
+  const router = useRouter();
+  const idx = pages.findIndex((p) => p.href === current?.href);
+  React.useEffect(() => {
+    if (pages.length < 2 || idx < 0) return;
+    let s: { x: number; y: number; ok: boolean } | null = null;
+    const blocked = (el: Element | null) => {
+      for (let n = el; n && n !== document.body; n = n.parentElement) {
+        const h = n as HTMLElement;
+        if (h.matches('input,select,textarea,[role="dialog"],[role="tablist"],[data-no-swipe]')) return true;
+        const ox = getComputedStyle(h).overflowX;
+        if ((ox === "auto" || ox === "scroll") && h.scrollWidth > h.clientWidth + 1) return true;
+      }
+      return false;
+    };
+    const down = (e: TouchEvent) => {
+      const t = e.touches[0];
+      s = { x: t.clientX, y: t.clientY, ok: e.touches.length === 1 && !blocked(e.target as Element) };
+    };
+    const up = (e: TouchEvent) => {
+      const st = s; s = null;
+      if (!st?.ok) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - st.x, dy = t.clientY - st.y;
+      if (Math.abs(dx) < 72 || Math.abs(dx) < Math.abs(dy) * 2) return;
+      const next = pages[idx + (dx < 0 ? 1 : -1)];
+      if (next) router.push(next.href);
+    };
+    document.addEventListener("touchstart", down, { passive: true });
+    document.addEventListener("touchend", up, { passive: true });
+    return () => { document.removeEventListener("touchstart", down); document.removeEventListener("touchend", up); };
+  }, [pages, idx, router]);
 
   if (pages.length < 2) return null;
 

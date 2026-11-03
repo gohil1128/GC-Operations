@@ -12,8 +12,8 @@ type Props = {
   itemName?: string;
   confirmText?: string;
   successMessage?: string;
-  size?: "sm" | "default" | "icon";
-  variant?: "ghost" | "outline" | "destructive";
+  size?: "sm" | "default" | "icon" | "icon-sm";
+  variant?: "ghost" | "outline" | "destructive" | "danger";
   children?: React.ReactNode;
   refreshAfter?: boolean;
 };
@@ -24,7 +24,7 @@ export function DeleteButton({
   itemName,
   confirmText,
   successMessage,
-  size = "icon",
+  size = "icon-sm",
   variant = "ghost",
   children,
   refreshAfter = true,
@@ -54,7 +54,7 @@ export function DeleteButton({
         aria-label={`Delete ${itemLabel}`}
         className={variant === "ghost" ? "text-muted-foreground hover:text-destructive" : ""}
       >
-        {children ?? <Trash2 className="h-3.5 w-3.5" />}
+        {children ?? <Trash2 />}
       </Button>
       <DialogContent>
         <DialogHeader>

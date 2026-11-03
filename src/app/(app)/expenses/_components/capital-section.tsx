@@ -239,7 +239,7 @@ function EditAssetButton({ asset, events }: { asset: Asset; events: Event[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Edit ${asset.name}`}>
+        <Button size="icon-sm" variant="ghost" aria-label={`Edit ${asset.name}`}>
           <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DialogTrigger>

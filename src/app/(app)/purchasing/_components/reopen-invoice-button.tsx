@@ -12,8 +12,7 @@ export function ReopenInvoiceButton({ id }: { id: string }) {
   return (
     <Button
       size="sm"
-      variant="ghost"
-      className="h-6 px-2 text-2xs"
+      variant="soft"
       disabled={pending}
       onClick={(e) => {
         e.stopPropagation();
@@ -28,7 +27,7 @@ export function ReopenInvoiceButton({ id }: { id: string }) {
         });
       }}
     >
-      <Unlock className="h-3 w-3" /> Re-open
+      <Unlock /> Re-open
     </Button>
   );
 }
