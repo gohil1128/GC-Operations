@@ -1,6 +1,8 @@
 "use client";
 import * as React from "react";
+import { Check, ChevronsUpDown, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatMoney } from "@/lib/money";
 import { markerColor } from "@/lib/event-color";
 import { useSwipe } from "@/lib/use-swipe";
@@ -100,39 +102,48 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
       </div>
 
       {/*
-        Which slice. One row you slide sideways, not a wrapped pile of nineteen
-        pills: the current choice scrolls itself into view, the edges fade to
-        show there is more, and the chips are quiet until chosen.
+        Which slice. One control that opens a list, instead of a row of up to
+        twenty chips: it shows what is selected and its total, and the list
+        carries each option's amount so you can see where the money is before
+        choosing.
       */}
-      <div className="relative -mx-5 sm:-mx-6">
-        <div
-          role="group"
-          aria-label="Show spend for"
-          className="no-scrollbar flex snap-x gap-1.5 overflow-x-auto overscroll-x-contain px-5 py-0.5 sm:px-6"
-        >
-          {slices.map((s) => {
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Showing ${slice.label}. Change which event or group of spend this shows`}
+            className="lg-press flex min-h-11 w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 text-left text-sm hover:bg-muted"
+          >
+            {slice.color ? (
+              <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} />
+            ) : (
+              <Layers aria-hidden className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            )}
+            <span className="min-w-0 flex-1 truncate font-medium">{slice.id === "all" ? "All spend" : slice.label}</span>
+            <ChevronsUpDown aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="max-h-[60vh] w-[var(--radix-dropdown-menu-trigger-width)] min-w-64 overflow-y-auto">
+          {slices.map((s, i) => {
             const on = s.id === slice.id;
             return (
-              <button
-                key={s.id}
-                type="button"
-                aria-pressed={on}
-                ref={on ? (el) => el?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }) : undefined}
-                onClick={() => setSliceId(s.id)}
-                className={cn(
-                  "lg-press inline-flex min-h-9 max-w-[14rem] shrink-0 snap-start items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors duration-200",
-                  on ? "bg-brand-muted text-brand-ink" : "bg-muted/70 text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {s.color && <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />}
-                <span className="truncate">{s.label}</span>
-              </button>
+              <React.Fragment key={s.id}>
+                {i === 1 && <DropdownMenuSeparator />}
+                <DropdownMenuItem onSelect={() => setSliceId(s.id)} className="gap-2.5">
+                  {s.color ? (
+                    <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                  ) : (
+                    <span aria-hidden className="h-2 w-2 shrink-0" />
+                  )}
+                  <span className={cn("min-w-0 flex-1 truncate", on && "font-semibold")}>{s.id === "all" ? "All spend" : s.label}</span>
+                  <span className="num shrink-0 text-xs text-muted-foreground">{formatMoney(s.total)}</span>
+                  {on && <Check aria-hidden className="h-3.5 w-3.5 shrink-0 text-brand-ink" />}
+                </DropdownMenuItem>
+              </React.Fragment>
             );
           })}
-        </div>
-        <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-card to-transparent sm:w-6" />
-        <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-card to-transparent sm:w-6" />
-      </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* The answer */}
       <div

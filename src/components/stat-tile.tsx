@@ -36,8 +36,9 @@ export function StatTile({
         </div>
         <div
           className={cn(
+            // Olive ink from the tile, never amber: amber on the lime ground
+            // measured about 1.6:1 and the date was close to invisible.
             "display-num mt-0.5 truncate text-[20px] font-medium sm:text-[28px]",
-            variant === "dark" && "text-amber",
           )}
         >
           {value}

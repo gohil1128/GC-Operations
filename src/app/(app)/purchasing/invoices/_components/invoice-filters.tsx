@@ -58,32 +58,34 @@ export function InvoiceFilters({
     (from ? 1 : 0) +
     (to ? 1 : 0);
 
+  // Two columns on a phone, with Supplier across both; every field the same
+  // height and top-aligned, so labels line up whatever sits beside them.
   return (
-    <form onSubmit={apply} className="bento grid grid-cols-2 items-end gap-2 bg-muted/20 p-3 [&>div]:min-w-0 md:grid-cols-5">
-      <div className="grid gap-1">
+    <form onSubmit={apply} className="bento grid grid-cols-2 items-start gap-x-3 gap-y-3 p-4 [&>div]:min-w-0 md:grid-cols-5">
+      <div className="col-span-2 grid gap-1.5 md:col-span-1">
         <Label className="text-xs">Supplier</Label>
         <Select value={supplierId} onValueChange={setSupplierId}>
-          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All suppliers</SelectItem>
             {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-1">
+      <div className="grid gap-1.5">
         <Label className="text-xs">Event</Label>
         <Select value={eventId} onValueChange={setEventId}>
-          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All events</SelectItem>
             {events.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-1">
+      <div className="grid gap-1.5">
         <Label className="text-xs">Status</Label>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="open">Open</SelectItem>
@@ -91,20 +93,20 @@ export function InvoiceFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-1">
+      <div className="grid gap-1.5">
         <Label htmlFor="f-from" className="text-xs">From</Label>
         <Input id="f-from" type="date"
-             className="w-full min-w-0 h-8" value={from} onChange={(e) => setFrom(e.target.value)} />
+             className="h-10 w-full min-w-0 max-w-full appearance-none [&::-webkit-date-and-time-value]:text-left" value={from} onChange={(e) => setFrom(e.target.value)} />
       </div>
-      <div className="grid gap-1">
+      <div className="grid gap-1.5">
         <Label htmlFor="f-to" className="text-xs">To</Label>
         <Input id="f-to" type="date"
-             className="w-full min-w-0 h-8" value={to} onChange={(e) => setTo(e.target.value)} />
+             className="h-10 w-full min-w-0 max-w-full appearance-none [&::-webkit-date-and-time-value]:text-left" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
-      <div className="col-span-2 md:col-span-5 flex justify-end gap-2 pt-1">
+      <div className="col-span-2 flex justify-end gap-2 pt-1 md:col-span-5">
         {activeCount > 0 && (
           <Button type="button" size="sm" variant="ghost" onClick={clear}>
-            <X className="h-3.5 w-3.5" /> Clear ({activeCount})
+            <X /> Clear ({activeCount})
           </Button>
         )}
         <Button type="submit" size="sm">Apply filters</Button>

@@ -18,16 +18,25 @@ export async function mailClientFor(connection: MailConnection): Promise<MailCli
   return createGmailClient(access);
 }
 
-/** What has to be set for scanning to work, as names a person can act on. */
-export function missingConfig(): string[] {
+/**
+ * What has to be set to CONNECT a mailbox. The Anthropic key is not on this
+ * list on purpose: signing in to Google needs none of it, and counting it here
+ * greyed out Connect Gmail for someone who had set up Google correctly and
+ * simply had not added the AI key yet.
+ */
+export function missingConnectConfig(): string[] {
   const need: [string, string | undefined][] = [
     ["GOOGLE_CLIENT_ID", process.env.GOOGLE_CLIENT_ID],
     ["GOOGLE_CLIENT_SECRET", process.env.GOOGLE_CLIENT_SECRET],
     ["GOOGLE_REDIRECT_URI", process.env.GOOGLE_REDIRECT_URI],
     ["MAIL_TOKEN_KEY", process.env.MAIL_TOKEN_KEY],
-    ["ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY],
   ];
   return need.filter(([, v]) => !v).map(([k]) => k);
+}
+
+/** What has to be set for scanning to work: everything to connect, plus the AI key. */
+export function missingConfig(): string[] {
+  return [...missingConnectConfig(), ...(process.env.ANTHROPIC_API_KEY ? [] : ["ANTHROPIC_API_KEY"])];
 }
 
 export function productionDeps(): ScanDeps {

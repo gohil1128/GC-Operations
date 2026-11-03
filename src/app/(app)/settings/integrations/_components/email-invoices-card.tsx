@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { fmtDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
 import { getMailOverview } from "@/modules/mail/queries";
-import { missingConfig } from "@/modules/mail/service";
+import { missingConfig, missingConnectConfig } from "@/modules/mail/service";
 import { DisconnectButton, ReviewActions, ScanNowButton } from "./email-invoices-client";
 
 /*
@@ -40,6 +40,8 @@ export async function EmailInvoicesCard({
 }: { businessId: string; flash?: string; canReview: boolean }) {
   const overview = await getMailOverview(businessId);
   const missing = missingConfig();
+  // Connect only needs Google and the token key; the AI key is needed to scan.
+  const cannotConnect = missingConnectConfig().length > 0;
   const note = flash ? FLASH[flash] : undefined;
 
   return (
@@ -70,7 +72,7 @@ export async function EmailInvoicesCard({
 
         {missing.length > 0 && (
           <div className="rounded-2xl border border-warning-border bg-warning-muted px-4 py-3 text-sm text-warning-ink">
-            <p className="font-semibold">Not set up yet</p>
+            <p className="font-semibold">{cannotConnect ? "Not set up yet" : "Connecting works — scanning needs one more setting"}</p>
             <p className="mt-1">
               These are missing from the app&apos;s settings in Vercel: <span className="font-mono text-xs">{missing.join(", ")}</span>.
               The step-by-step is in <span className="font-mono text-xs">docs/EMAIL-INVOICES.md</span>.
@@ -92,8 +94,8 @@ export async function EmailInvoicesCard({
               {/* A real navigation, not a client-side link: it leaves for Google. */}
               <a
                 href="/api/mail/google/connect"
-                aria-disabled={missing.length > 0}
-                className={`lg-press inline-flex h-11 items-center rounded-full bg-highlight px-6 text-[0.95rem] font-medium text-highlight-foreground ${missing.length > 0 ? "pointer-events-none opacity-50" : ""}`}
+                aria-disabled={cannotConnect}
+                className={`lg-press inline-flex h-12 items-center rounded-full bg-highlight px-6 text-[0.95rem] font-medium text-highlight-foreground ${cannotConnect ? "pointer-events-none opacity-50" : ""}`}
               >
                 Connect Gmail
               </a>

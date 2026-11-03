@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/mobile-list";
 import { cn } from "@/lib/utils";
 import { EVENT_FILTERS, eventStatus, matchesFilter, type EventFilter } from "@/modules/events/status";
 import { OrderBoard } from "./_components/order-board";
+import { StatusFilter } from "./_components/status-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,20 @@ export default async function EventsPage({
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-12 pt-4 sm:px-6 lg:px-8">
         {all.length > 0 && (
-          <div className="mb-4 flex flex-wrap items-center gap-1.5">
+          <div className="mb-4 lg:mb-0">
+          <StatusFilter
+            options={EVENT_FILTERS.map((f) => ({
+              key: f.key,
+              label: f.key === "all" ? "All events" : f.label,
+              href: f.key === "all" ? "/events" : `/events?show=${f.key}`,
+              count: f.key === "all" ? all.length : (counts[f.key] ?? 0),
+              active: filter === f.key,
+            }))}
+          />
+          </div>
+        )}
+        {all.length > 0 && (
+          <div className="mb-4 hidden flex-wrap items-center gap-1.5 lg:flex">
             {EVENT_FILTERS.map((f) => {
               const n = f.key === "all" ? all.length : (counts[f.key] ?? 0);
               const active = filter === f.key;
