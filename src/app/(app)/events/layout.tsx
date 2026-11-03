@@ -18,7 +18,7 @@ export default async function EventsLayout({ children }: { children: React.React
     requireCapability redirects them home before the PIN is ever mentioned.
   */
   const scope = await requireCapability("events");
-  if (await isSectionLocked(scope.businessId, "EVENTS")) {
+  if (await isSectionLocked(scope.userId, "EVENTS")) {
     return (
       <div>
         <PageHeader title="Events" description="Section protected by PIN" />
@@ -31,7 +31,7 @@ export default async function EventsLayout({ children }: { children: React.React
   }
   // Only when it is open because of the PIN — a section nobody locked has
   // nothing to re-lock and should not carry the control.
-  const canRelock = await isSectionUnlockedByPin(scope.businessId, "EVENTS");
+  const canRelock = await isSectionUnlockedByPin(scope.userId, "EVENTS");
   return (
     <>
       {canRelock && (

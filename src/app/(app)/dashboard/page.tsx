@@ -11,6 +11,7 @@ import { getInvoiceTracking, listOpenInvoicesDue } from "@/modules/invoices/quer
 import { findUncountedDrawers } from "@/modules/cash/queries";
 import { pnlByEvent } from "@/modules/reports/queries";
 import { isSectionLocked } from "@/modules/section-lock/actions";
+import { PnlLock } from "@/components/pnl-lock";
 import { fmtDate } from "@/lib/date";
 import { formatMoney, formatMoneyHeadline, formatPercent, safeDivide } from "@/lib/money";
 import { KpiStrip, type Kpi } from "@/components/dashboard/ledger/kpi-strip";
@@ -80,7 +81,7 @@ export default async function DashboardPage({
   // Locking "Profit & loss" has to cover the Overview too. The statement and
   // the profit figures live here as well, so gating only /reports would hide
   // the page while leaving the same margins on the landing screen.
-  const pnlLocked = await isSectionLocked(scope.businessId, "REPORTS");
+  const pnlLocked = await isSectionLocked(scope.userId, "REPORTS");
 
   const [data, pnl, invoiceTracking, dueInvoices, priorNetSales, upcoming, uncounted] =
     await Promise.all([
@@ -312,7 +313,11 @@ export default async function DashboardPage({
         {show("pnl") && (
         <section className="min-w-0">
           <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2 className="font-display text-xl font-semibold">Profit &amp; loss statement</h2>
+            <h2 className="flex items-center gap-1.5 font-display text-xl font-semibold">
+              Profit &amp; loss statement
+              {/* The tiny lock: add a personal PIN here, or re-lock. Not shown while locked. */}
+              {!pnlLocked && <PnlLock userId={scope.userId} />}
+            </h2>
             {/* Not rendered rather than CSS-hidden: a locked page should not
                 carry a live link to its own export, even an invisible one. */}
             {!pnlLocked && (
@@ -342,7 +347,7 @@ export default async function DashboardPage({
                   <Lock className="h-4 w-4 text-muted-foreground" aria-hidden />
                 </span>
                 <p className="text-sm text-muted-foreground">
-                  Profit &amp; loss is locked. Enter the PIN to see the statement.
+                  Profit &amp; loss is locked with your PIN. Enter it to see the statement.
                 </p>
                 <Link
                   href="/reports"

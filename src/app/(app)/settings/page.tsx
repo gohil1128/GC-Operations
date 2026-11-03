@@ -37,7 +37,7 @@ export default async function SettingsPage() {
     ]).then(([ingredients, recipes, suppliers, employees, pos, sales, cashCloses]) => ({
       ingredients, recipes, suppliers, employees, pos, sales, cashCloses,
     })),
-    sectionLockSettings(scope.businessId),
+    sectionLockSettings(scope.userId),
   ]);
 
   return (
@@ -95,8 +95,8 @@ export default async function SettingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> Section lock</CardTitle>
-            <CardDescription>Hide P&amp;L, events or recipes behind a 4-digit PIN</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> My PIN lock</CardTitle>
+            <CardDescription>Optional: hide P&amp;L, events or recipes on your own screen behind a 4-digit PIN</CardDescription>
           </CardHeader>
           <CardContent>
             <SectionLockCard hasPin={lockSettings.hasPin} locked={lockSettings.locked} />

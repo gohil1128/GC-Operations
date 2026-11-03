@@ -36,7 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [business, lockedSections, events, activeEvent, openInvoices, uncounted, posImport] =
     await Promise.all([
       prisma.business.findUnique({ where: { id: scope.businessId }, select: { name: true } }),
-      lockedSectionsNow(scope.businessId),
+      lockedSectionsNow(scope.userId),
       listActiveEvents(scope.businessId),
       getActiveEvent(scope.businessId),
       countOpenInvoices(scope.locationId),

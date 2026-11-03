@@ -35,19 +35,19 @@ function secret(): string {
   return s;
 }
 
-function sign(issuedAt: number, businessId: string): string {
+function sign(issuedAt: number, subjectId: string): string {
   return createHmac("sha256", secret())
-    .update(`${issuedAt}${SEPARATOR}${businessId}`)
+    .update(`${issuedAt}${SEPARATOR}${subjectId}`)
     .digest("hex");
 }
 
-/** Mint a cookie value for a business that has just entered the right PIN. */
-export function mintUnlockToken(businessId: string, now: number): string {
-  return `${now}${SEPARATOR}${sign(now, businessId)}`;
+/** Mint a cookie value for the person (subject id) who has just entered the right PIN. */
+export function mintUnlockToken(subjectId: string, now: number): string {
+  return `${now}${SEPARATOR}${sign(now, subjectId)}`;
 }
 
 /**
- * Is this cookie a genuine, unexpired unlock for this business?
+ * Is this cookie a genuine, unexpired unlock for this person?
  *
  * Returns false for anything malformed rather than throwing: a stale or
  * hand-edited cookie should re-lock the sections, not break the page that

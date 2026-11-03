@@ -6,8 +6,8 @@ import { bodyText, statusOf } from "./helpers";
   INSIDE their own business. Three separate bypasses shipped to production and
   went unnoticed; each assertion below corresponds to one of them.
 
-  Requires the business to have a PIN set and REPORTS, EVENTS and RECIPES
-  locked. The suite sets that up through the UI so it does not need database
+  Requires the signed-in account to have its own PIN set (the suite does it
+  if it is missing) and REPORTS, EVENTS and RECIPES locked. The suite sets that up through the UI so it does not need database
   access, and puts it back afterwards.
 */
 
@@ -29,7 +29,11 @@ async function setLock(page: import("@playwright/test").Page, locked: boolean) {
     const box = group.getByRole("checkbox", { name: label });
     await expect(box, `no checkbox for ${label}`).toBeVisible();
     if (await box.isDisabled()) {
-      throw new Error("Section locking is disabled — the business needs a PIN set first.");
+      // The PIN is personal now: set this account's own before choosing sections.
+      await page.getByLabel(/Set my PIN/).fill(PIN);
+      await page.getByRole("button", { name: "Set PIN" }).click();
+      await page.waitForTimeout(1200);
+      await page.waitForLoadState("networkidle");
     }
     if ((await box.isChecked()) !== locked) {
       await box.click();

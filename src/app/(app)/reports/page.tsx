@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { formatMoney, formatPercent } from "@/lib/money";
 import { PrintButton } from "@/components/print-button";
+import { PnlLock } from "@/components/pnl-lock";
 import { EventPnlCards } from "./_components/event-pnl-cards";
 import { SpendExplorer, type SpendTable } from "./_components/spend-explorer";
 import { BreakdownToggle } from "./_components/breakdown-toggle";
@@ -57,6 +58,7 @@ export default async function ReportsPage() {
         actions={
           <>
             <PrintButton />
+            <PnlLock userId={scope.userId} />
             <Button asChild variant="outline" size="sm">
               <Link href="/settings/exports"><Download className="h-3.5 w-3.5" />Download CSV</Link>
             </Button>

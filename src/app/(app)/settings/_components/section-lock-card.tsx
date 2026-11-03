@@ -72,12 +72,13 @@ export function SectionLockCard({
         ) : (
           <>
             <Unlock className="h-4 w-4 text-muted-foreground" />
-            <Badge variant="muted">Open</Badge>
+            <Badge variant="muted">Open · no PIN</Badge>
           </>
         )}
       </div>
       <p className="text-xs text-muted-foreground">
-        One PIN guards whichever sections you tick. Unlocking opens all of them for 60 minutes.
+        Everything is open by default. A PIN here is yours alone: it hides the sections you tick on <em>your</em>{" "}
+        screen, and nobody else is affected. Entering it opens them all for 60 minutes.
       </p>
 
       <fieldset disabled={!hasPin || pending} className="space-y-2 disabled:opacity-50">
@@ -94,13 +95,13 @@ export function SectionLockCard({
           </label>
         ))}
         {!hasPin && (
-          <p className="text-2xs text-muted-foreground">Set a PIN first to choose sections.</p>
+          <p className="text-2xs text-muted-foreground">Set your own PIN first to choose sections.</p>
         )}
       </fieldset>
 
       <form onSubmit={setPinSubmit} className="grid items-end gap-2 sm:grid-cols-[auto_auto]">
         <div className="grid gap-1.5">
-          <Label htmlFor="section-pin-set">{hasPin ? "Change PIN (4 digits)" : "Set PIN (4 digits)"}</Label>
+          <Label htmlFor="section-pin-set">{hasPin ? "Change my PIN (4 digits)" : "Set my PIN (4 digits)"}</Label>
           {/* Masked for the same reason as the gate itself: this is set at the
               counter, and a PIN typed in the clear here is one somebody behind
               you now knows. The vendor attributes keep password managers from
@@ -140,7 +141,7 @@ export function SectionLockCard({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => run(removeSectionPinAction, "PIN removed — all sections open")}
+                onClick={() => run(removeSectionPinAction, "PIN removed — everything is open for you")}
                 disabled={pending}
               >
                 <Trash2 className="h-3.5 w-3.5" /> Remove PIN

@@ -18,7 +18,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ report: 
 
   // Each export declares its own lock in the registry, so adding a download
   // cannot quietly skip the PIN the matching page sits behind.
-  if (def.section && (await isSectionLocked(scope.businessId, def.section))) {
+  if (def.section && (await isSectionLocked(scope.userId, def.section))) {
     return NextResponse.json({ error: "section locked" }, { status: 403 });
   }
 

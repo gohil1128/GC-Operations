@@ -86,10 +86,12 @@ model Business {
   currency              String   @default("CAD")
   laborTargetPct        Int      @default(30) // labor cost target as percent
   foodTargetPct         Int      @default(32)
-  // One PIN guards every protected section; `lockedSections` says which ones
-  // are behind it. Null hash = nothing is locked, whatever the list says.
-  sectionPinHash        String? // bcrypt hash of 4-digit PIN
-  lockedSections        String[] @default([]) // "RECIPES" | "REPORTS" | "EVENTS"
+  // RETIRED. A business-wide PIN used to live here and lock sections for
+  // everybody. Sections are open by default now, and a PIN is a personal choice
+  // on the User (below). These columns are no longer read or written; the
+  // migration cleared them, and they are kept only so nothing is dropped.
+  sectionPinHash        String?
+  lockedSections        String[] @default([])
   // Overview cards this business has turned off. Stored as the HIDDEN ones so
   // a card added later shows up for everybody instead of being invisible until
   // each business goes and enables it. See src/modules/dashboard/cards.ts.
@@ -161,6 +163,11 @@ model User {
   // person picks their own. Everything behind the app refuses to load until
   // then, so a handed-over password can only ever be used once.
   mustChangePassword Boolean  @default(false)
+  // An OPTIONAL personal PIN. Null = nothing is locked for this person, whatever
+  // the list says. `lockedSections` is which sections THEY have chosen to put
+  // behind it: "REPORTS" | "EVENTS" | "RECIPES". It only ever affects this user.
+  sectionPinHash     String? // bcrypt hash of a 4-digit PIN
+  lockedSections     String[] @default([])
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

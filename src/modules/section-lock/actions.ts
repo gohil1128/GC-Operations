@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getScope } from "@/lib/scope";
-import { requireOwner } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import {
   checkSectionPinAllowed,
@@ -16,15 +16,22 @@ import { SECTION_KEYS, UNLOCK_TTL_MINUTES, type SectionKey } from "./sections";
 import { mintUnlockToken, unlockTokenIsValid } from "./unlock-token";
 
 /*
-  Section lock.
+  Section lock — personal and optional.
 
-  One 4-digit PIN for the business, and a list of which sections sit behind it.
-  Unlocking opens every locked section for an hour, because the alternative —
-  a PIN per section — is three PINs nobody remembers and writes on the till.
+  Everything is open by default, for everyone. A person who wants Profit & loss,
+  Events or Recipes hidden on their own screen can set a 4-digit PIN of their
+  own and choose which sections it guards. It affects only them: an owner's PIN
+  does not close anything for a manager, and vice versa.
 
-  This started as a recipes-only lock; the PIN column was renamed rather than
-  replaced so existing PINs keep working, and the migration carries anyone who
-  had one over to lockedSections = ['RECIPES'].
+  Unlocking opens all of that person's locked sections for an hour, because a
+  PIN per section is three PINs nobody remembers.
+
+  History: this was one PIN for the whole business, set by the owner, which put
+  P&L and Reports behind a PIN for every staff member whether or not they
+  wanted one. The business-level columns are retired (see the migration).
+
+  Every function here takes the USER'S id where it used to take the business's:
+  the PIN, the list and the unlock cookie are all per person.
 */
 
 const UNLOCKED_COOKIE = "sections-unlocked";
@@ -32,68 +39,74 @@ const UNLOCKED_COOKIE = "sections-unlocked";
 const pinSchema = z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits");
 
 /**
- * True while this business has a genuine, unexpired unlock.
+ * True while this person has a genuine, unexpired unlock. The signed cookie is
+ * bound to their user id, so it cannot open anything for anyone else.
  *
  * The cookie is a signed token now. It used to be the raw timestamp, which
  * anyone could set by hand to open every locked section — see unlock-token.ts.
  */
-async function unlockIsFresh(businessId: string): Promise<boolean> {
+async function unlockIsFresh(userId: string): Promise<boolean> {
   const cookieStore = await cookies();
   return unlockTokenIsValid(
     cookieStore.get(UNLOCKED_COOKIE)?.value,
-    businessId,
+    userId,
     UNLOCK_TTL_MINUTES,
     Date.now(),
   );
 }
 
+/**
+ * Set or change MY PIN. A first PIN also puts Profit & loss behind it, because
+ * that is what people who add one want; they can change the list afterwards.
+ */
 export async function setSectionPinAction(formData: FormData) {
-  await requireOwner();
+  const user = await requireUser();
   const scope = await getScope();
   const pin = pinSchema.parse(formData.get("pin"));
   const hash = await bcrypt.hash(pin, 10);
-  await prisma.business.update({
-    where: { id: scope.businessId },
-    data: { sectionPinHash: hash },
+  const me = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { sectionPinHash: true, lockedSections: true } });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      sectionPinHash: hash,
+      ...(me.sectionPinHash || me.lockedSections.length > 0 ? {} : { lockedSections: ["REPORTS"] }),
+    },
   });
   // Setting a PIN should lock, not leave the setter unlocked by accident.
   (await cookies()).delete(UNLOCKED_COOKIE);
   await writeAudit({
-    businessId: scope.businessId, userId: scope.userId,
-    action: "sections.pin.set", entityType: "Business", entityId: scope.businessId,
+    businessId: scope.businessId, userId: user.id,
+    action: me.sectionPinHash ? "sections.pin.change" : "sections.pin.set", entityType: "User", entityId: user.id,
   });
   revalidatePath("/", "layout");
 }
 
+/** Remove MY PIN: everything is open for me again. */
 export async function removeSectionPinAction() {
-  await requireOwner();
+  const user = await requireUser();
   const scope = await getScope();
-  // Clearing the list too: a PIN-less business with sections still marked
-  // locked would show lock badges that guard nothing.
-  await prisma.business.update({
-    where: { id: scope.businessId },
-    data: { sectionPinHash: null, lockedSections: [] },
-  });
+  // Clearing the list too: a PIN-less person with sections still marked locked
+  // would see lock badges that guard nothing.
+  await prisma.user.update({ where: { id: user.id }, data: { sectionPinHash: null, lockedSections: [] } });
   (await cookies()).delete(UNLOCKED_COOKIE);
   await writeAudit({
-    businessId: scope.businessId, userId: scope.userId,
-    action: "sections.pin.remove", entityType: "Business", entityId: scope.businessId,
+    businessId: scope.businessId, userId: user.id,
+    action: "sections.pin.remove", entityType: "User", entityId: user.id,
   });
   revalidatePath("/", "layout");
 }
 
-/** Choose which sections the PIN guards. Owner only. */
+/** Choose which sections MY PIN guards. */
 export async function setLockedSectionsAction(sections: string[]) {
-  await requireOwner();
+  const user = await requireUser();
   const scope = await getScope();
   const clean = [...new Set(sections)].filter((s) => SECTION_KEYS.includes(s));
-  await prisma.business.update({
-    where: { id: scope.businessId },
-    data: { lockedSections: clean },
-  });
+  const me = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { sectionPinHash: true } });
+  if (!me.sectionPinHash) throw new Error("Set a PIN first.");
+  await prisma.user.update({ where: { id: user.id }, data: { lockedSections: clean } });
   await writeAudit({
-    businessId: scope.businessId, userId: scope.userId,
-    action: "sections.locked.set", entityType: "Business", entityId: scope.businessId,
+    businessId: scope.businessId, userId: user.id,
+    action: "sections.locked.set", entityType: "User", entityId: user.id,
     diff: { lockedSections: clean },
   });
   revalidatePath("/", "layout");
@@ -115,17 +128,16 @@ function sectionPinKeys(businessId: string, userId: string): string[] {
 export async function unlockSectionsAction(formData: FormData) {
   const scope = await getScope();
   const pinRaw = String(formData.get("pin") ?? "");
-  const business = await prisma.business.findUnique({
-    where: { id: scope.businessId },
+  const me = await prisma.user.findUnique({
+    where: { id: scope.userId },
     select: { sectionPinHash: true },
   });
-  if (!business?.sectionPinHash) return { ok: true as const };
+  if (!me?.sectionPinHash) return { ok: true as const };
 
   /*
-    The PIN is four digits — ten thousand possibilities. Without a limit, a
-    signed-in manager could grind the whole space in minutes and hold an
-    hour-long unlock over Profit & loss, Recipes and Events, and because only
-    the success path was audited, the owner would never see it happen.
+    The PIN is four digits — ten thousand possibilities. Without a limit it
+    could be ground through in minutes while signed in as that person, and
+    because only the success path was audited, nobody would see it happen.
   */
   const keys = sectionPinKeys(scope.businessId, scope.userId);
   const limit = await checkSectionPinAllowed(keys);
@@ -137,21 +149,21 @@ export async function unlockSectionsAction(formData: FormData) {
     };
   }
 
-  const ok = await bcrypt.compare(pinRaw, business.sectionPinHash);
+  const ok = await bcrypt.compare(pinRaw, me.sectionPinHash);
   if (!ok) {
     await recordSectionPinFailure(keys);
     // Failures are audited too, not just unlocks: a run of these is the signal
-    // that someone is guessing, and it was the one thing the log could not show.
+    // that someone is guessing.
     await writeAudit({
       businessId: scope.businessId, userId: scope.userId,
-      action: "sections.unlock.failed", entityType: "Business", entityId: scope.businessId,
+      action: "sections.unlock.failed", entityType: "User", entityId: scope.userId,
     });
     return { error: "Incorrect PIN" };
   }
 
   await clearSectionPinFailures(keys);
 
-  (await cookies()).set(UNLOCKED_COOKIE, mintUnlockToken(scope.businessId, Date.now()), {
+  (await cookies()).set(UNLOCKED_COOKIE, mintUnlockToken(scope.userId, Date.now()), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -160,7 +172,7 @@ export async function unlockSectionsAction(formData: FormData) {
   });
   await writeAudit({
     businessId: scope.businessId, userId: scope.userId,
-    action: "sections.unlock", entityType: "Business", entityId: scope.businessId,
+    action: "sections.unlock", entityType: "User", entityId: scope.userId,
   });
   revalidatePath("/", "layout");
   return { ok: true as const };
@@ -172,60 +184,61 @@ export async function lockSectionsAction() {
   revalidatePath("/", "layout");
 }
 
-/** Is this one section closed to the current session right now? */
-export async function isSectionLocked(businessId: string, section: SectionKey): Promise<boolean> {
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { sectionPinHash: true, lockedSections: true },
-  });
-  if (!business?.sectionPinHash) return false;
-  if (!business.lockedSections.includes(section)) return false;
-  return !(await unlockIsFresh(businessId));
+type Mine = { sectionPinHash: string | null; lockedSections: string[] };
+const mine = (userId: string): Promise<Mine | null> =>
+  prisma.user.findUnique({ where: { id: userId }, select: { sectionPinHash: true, lockedSections: true } });
+
+/** Is this one section closed to this person right now? Open unless THEY chose to lock it. */
+export async function isSectionLocked(userId: string, section: SectionKey): Promise<boolean> {
+  const me = await mine(userId);
+  if (!me?.sectionPinHash) return false;
+  if (!me.lockedSections.includes(section)) return false;
+  return !(await unlockIsFresh(userId));
 }
 
-/** Every section currently closed — one query, for the nav's lock badges. */
-export async function lockedSectionsNow(businessId: string): Promise<SectionKey[]> {
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { sectionPinHash: true, lockedSections: true },
-  });
-  if (!business?.sectionPinHash) return [];
-  if (await unlockIsFresh(businessId)) return [];
-  return business.lockedSections.filter((s): s is SectionKey =>
-    SECTION_KEYS.includes(s),
-  );
+/** Every section currently closed for this person — one query, for the nav's lock badges. */
+export async function lockedSectionsNow(userId: string): Promise<SectionKey[]> {
+  const me = await mine(userId);
+  if (!me?.sectionPinHash) return [];
+  if (await unlockIsFresh(userId)) return [];
+  return me.lockedSections.filter((s): s is SectionKey => SECTION_KEYS.includes(s));
 }
 
 /**
- * Is this section open right now *only* because someone entered the PIN?
- *
- * Distinct from "not locked": a section nobody chose to lock is open for good
- * and has nothing to re-lock. This is what decides whether the section shows a
- * "Lock" control.
+ * Is this section open right now *only* because this person entered their PIN?
+ * Distinct from "not locked": a section they never locked is open for good and
+ * has nothing to re-lock. This decides whether it shows a "Lock" control.
  */
-export async function isSectionUnlockedByPin(
-  businessId: string,
-  section: SectionKey,
-): Promise<boolean> {
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { sectionPinHash: true, lockedSections: true },
-  });
-  if (!business?.sectionPinHash) return false;
-  if (!business.lockedSections.includes(section)) return false;
-  return await unlockIsFresh(businessId);
+export async function isSectionUnlockedByPin(userId: string, section: SectionKey): Promise<boolean> {
+  const me = await mine(userId);
+  if (!me?.sectionPinHash) return false;
+  if (!me.lockedSections.includes(section)) return false;
+  return await unlockIsFresh(userId);
 }
 
-/** What the settings card needs: the PIN's existence and the chosen sections. */
-export async function sectionLockSettings(businessId: string) {
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { sectionPinHash: true, lockedSections: true },
-  });
+/** What the settings card and the quick-lock icon need: whether I have a PIN, and what it guards. */
+export async function sectionLockSettings(userId: string) {
+  const me = await mine(userId);
   return {
-    hasPin: !!business?.sectionPinHash,
-    locked: (business?.lockedSections ?? []).filter((s): s is SectionKey =>
-      SECTION_KEYS.includes(s),
-    ),
+    hasPin: !!me?.sectionPinHash,
+    locked: (me?.lockedSections ?? []).filter((s): s is SectionKey => SECTION_KEYS.includes(s)),
   };
+}
+
+/** One tap from the little lock icon: put Profit & loss (or another section) behind my existing PIN. */
+export async function lockSectionWithMyPinAction(section: string) {
+  const user = await requireUser();
+  const scope = await getScope();
+  if (!SECTION_KEYS.includes(section)) throw new Error("Unknown section.");
+  const me = await mine(user.id);
+  if (!me?.sectionPinHash) throw new Error("Set a PIN first.");
+  const next = [...new Set([...me.lockedSections, section])];
+  await prisma.user.update({ where: { id: user.id }, data: { lockedSections: next } });
+  // Locking should lock now, not leave this session open for the rest of the hour.
+  (await cookies()).delete(UNLOCKED_COOKIE);
+  await writeAudit({
+    businessId: scope.businessId, userId: user.id,
+    action: "sections.locked.set", entityType: "User", entityId: user.id, diff: { lockedSections: next },
+  });
+  revalidatePath("/", "layout");
 }

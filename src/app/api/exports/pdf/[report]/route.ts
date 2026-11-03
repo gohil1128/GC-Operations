@@ -22,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ report:
   const scope = await scopeFor("exports");
   if (!scope) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  if (def.section && (await isSectionLocked(scope.businessId, def.section))) {
+  if (def.section && (await isSectionLocked(scope.userId, def.section))) {
     return NextResponse.json({ error: "section locked" }, { status: 403 });
   }
 

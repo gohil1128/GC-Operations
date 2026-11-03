@@ -19,7 +19,7 @@ export default async function RecipesLayout({ children }: { children: React.Reac
     requireCapability redirects them home before the PIN is ever mentioned.
   */
   const scope = await requireCapability("inventory");
-  if (await isSectionLocked(scope.businessId, "RECIPES")) {
+  if (await isSectionLocked(scope.userId, "RECIPES")) {
     return (
       <div>
         <PageHeader title="Recipes" description="Section protected by PIN" />
@@ -32,7 +32,7 @@ export default async function RecipesLayout({ children }: { children: React.Reac
   }
   // Only when it is open because of the PIN — a section nobody locked has
   // nothing to re-lock and should not carry the control.
-  const canRelock = await isSectionUnlockedByPin(scope.businessId, "RECIPES");
+  const canRelock = await isSectionUnlockedByPin(scope.userId, "RECIPES");
   return (
     <>
       <SectionTabs hub="stock" role={scope.role} />
