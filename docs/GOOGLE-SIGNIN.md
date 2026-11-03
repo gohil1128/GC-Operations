@@ -33,7 +33,12 @@ until you turn it on.
 2. The client's ID and secret are the same ones as for Gmail. In Vercel they
    must be set as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, which you
    already did for email invoices. Redeploy if you add them now.
-3. The sign-in only asks for the basic profile and email (no Gmail access).
+3. **To let people outside your organisation sign in** (any Gmail or other Google account), the
+   consent screen's user type must be **External**, not Internal. In Google Cloud: **Google Auth
+   Platform → Audience** → *Make external*, then **Publish app**. An *Internal* app only accepts
+   accounts from your own Google Workspace, whatever the app does. The app itself puts no limit on
+   which Google accounts can sign in.
+4. The sign-in only asks for the basic profile and email (no Gmail access).
    If the app's OAuth consent screen is still in *Testing*, only listed test
    users can sign in; **Publish app** so anyone can.
 

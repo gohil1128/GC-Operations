@@ -329,6 +329,38 @@
   @media (pointer: fine) {
     html { scroll-behavior: smooth; }
   }
+
+  /*
+    Feels like an app, not a web page.
+
+    Each rule removes one thing that gives a website away on a phone:
+      - the grey flash a tapped link or button gets;
+      - the delay and zoom of a double tap;
+      - iOS zooming into any field smaller than 16px when you tap it, which
+        jumps the whole screen sideways (inputs are 14px elsewhere, so on a
+        touch screen they are raised to 16px);
+    and, only once it is installed on the home screen (display-mode:
+    standalone), so desktop and ordinary browsing are untouched:
+      - the rubber-band and pull-to-refresh past the top and bottom;
+      - selecting UI text and the long-press link/image menu. Fields and
+        anything marked .selectable keep ordinary text selection.
+  */
+  @media (hover: none) and (pointer: coarse) {
+    * { -webkit-tap-highlight-color: transparent; }
+    html { touch-action: manipulation; }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea { font-size: 16px; }
+  }
+  @media (display-mode: standalone), (display-mode: fullscreen) {
+    html, body { overscroll-behavior-y: none; }
+    body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    input, textarea, select, [contenteditable="true"], .selectable {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    a, img { -webkit-touch-callout: none; -webkit-user-drag: none; }
+  }
   body {
     @apply text-foreground;
     font-family: var(--font-sans);
