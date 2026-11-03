@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
+import { can } from "@/lib/permissions";
+import { DeleteCloseRowButton } from "./_components/delete-close-button";
 import { formatMoney } from "@/lib/money";
 import { fmtDate } from "@/lib/date";
 
@@ -25,6 +27,7 @@ const PAYOUT_ROWS = 50;
 
 export default async function CashPage() {
   const scope = await requireCapability("cash");
+  const canVerify = can(scope.role, "cashVerify");
   const activeEvent = await getActiveEvent(scope.businessId);
   /*
     The summary band reads across every event, all the way back; the table
@@ -144,6 +147,7 @@ export default async function CashPage() {
                 <TableHead className="text-right">Over/Short</TableHead>
                 <TableHead>Verified</TableHead>
                 <TableHead className="text-right">Flag</TableHead>
+                <TableHead className="w-12"><span className="sr-only">Delete</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,11 +184,14 @@ export default async function CashPage() {
                       ) : <span className="text-muted-foreground text-xs">—</span>}
                     </TableCell>
                     <TableCell className="text-right">{flagged ? <Badge variant="danger">Over $20</Badge> : <Badge variant="muted">OK</Badge>}</TableCell>
+                    <TableCell className="text-right">
+                      <DeleteCloseRowButton closeId={c.id} dateLabel={dateStr} verified={Boolean(c.verifiedBy)} canVerify={canVerify} compact />
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {closes.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-sm text-muted-foreground py-8">No closes recorded yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">No closes recorded yet.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -204,6 +211,9 @@ export default async function CashPage() {
                   <span className={c.overShortCents < 0 ? "text-destructive" : c.overShortCents > 0 ? "text-warning" : "text-success"}>
                     {formatMoney(c.overShortCents, { signed: true })}
                   </span>
+                }
+                actions={
+                  <DeleteCloseRowButton closeId={c.id} dateLabel={dateStr} verified={Boolean(c.verifiedBy)} canVerify={canVerify} />
                 }
                 badges={
                   <>
