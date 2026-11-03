@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -8,17 +8,24 @@ import { ServiceWorkerRegister } from "@/components/sw-register";
 import { GlassDensityScript } from "@/components/glass-density";
 import { APP_NAME, APP_SHORT_NAME } from "@/lib/brand";
 
-// Self-hosted at build time and exposed as CSS variables that feed
-// --font-display / --font-sans in globals.css.
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Self-hosted variable fonts, committed in ./fonts (SIL OFL, see the
+// LICENSE files there). No build-time fetch from Google Fonts: the
+// next/font/google loader crashed fresh Vercel builds with
+// "Cannot read properties of null (reading '1')" in
+// nextFontGoogleFontLoader when the fetched CSS yielded a font URL
+// without a recognised extension, and a cached build was the only thing
+// masking it. The variable names below are unchanged, so they still feed
+// --font-display / --font-sans in globals.css, and the weight ranges
+// cover every weight the app used before (400-700 display, 400-600 sans).
+const display = localFont({
+  src: "./fonts/bricolage-grotesque-latin-standard-normal.woff2",
+  weight: "200 800",
   variable: "--font-display-src",
   display: "swap",
 });
-const sans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const sans = localFont({
+  src: "./fonts/dm-sans-latin-standard-normal.woff2",
+  weight: "100 1000",
   variable: "--font-sans-src",
   display: "swap",
 });
