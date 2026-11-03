@@ -12,6 +12,7 @@ import { fmtDate } from "@/lib/date";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { InviteUserButton } from "./_components/invite-user-button";
 import { UserRowActions } from "./_components/user-row-actions";
+import { JoinRequests } from "./_components/join-requests";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +27,16 @@ const ROLE_BADGE = {
 export default async function UsersPage() {
   const scope = await requireCapability("settings");
 
-  const users = await prisma.user.findMany({
+  const everyone = await prisma.user.findMany({
     where: { businessId: scope.businessId },
     include: { locations: { include: { location: { select: { name: true } } } } },
     orderBy: { name: "asc" },
   });
+  // Google sign-ins waiting for an owner's yes sit apart from the team.
+  const users = everyone.filter((u) => u.approved);
+  const requests = everyone
+    .filter((u) => !u.approved)
+    .map((u) => ({ id: u.id, name: u.name, email: u.email, requestedAt: u.createdAt.toISOString() }));
   return (
     <div>
       <PageHeader
@@ -45,6 +51,7 @@ export default async function UsersPage() {
         }
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8">
+        <JoinRequests requests={requests} />
         <div className="bento">
           <TableOnDesktop>
               <Table>

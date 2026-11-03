@@ -1,14 +1,22 @@
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { LocationKind, Role, type PrismaClient } from "@prisma/client";
+import { Role, type PrismaClient } from "@prisma/client";
 
 /*
-  "Continue with Google": sign-up and sign-in in one.
+  "Continue with Google": sign-in, and a way to ask to join.
 
-  A Google account that matches an existing user signs that user in. One that
-  matches nobody creates a new business with that person as its owner, exactly
-  as the sign-up page does (a Business, its first Location, an OWNER, and the
-  owner's membership of the location, all or none).
+  - A Google account whose email matches an existing user signs that user in.
+  - One that matches nobody asks to JOIN the home business (below) as a
+    waiting STAFF member. They exist but are not approved: they see nothing and
+    can do nothing until an owner approves them in Settings > Users and picks
+    their role. Declining removes them.
+
+  Nobody gets a business of their own through Google. Self-serve sign-up with
+  email and password is where a new business is made.
+
+  Why approval and not instant access: the sign-in page is public, and a Google
+  account is free for anyone to make. Letting every Google sign-in straight into
+  the business would hand its sales, invoices and costs to whoever found the URL.
 
   THE EMAIL MUST BE VERIFIED BY GOOGLE. Signing in as whoever owns an address is
   only safe if somebody has proved they own it; without the check, anyone could
@@ -33,59 +41,56 @@ export function verifiedEmail(p: GoogleProfile | null | undefined): string | nul
   return email;
 }
 
-/** A starting business name from what Google tells us. It is editable in settings. */
-export function businessNameFor(name: string | null | undefined, email: string): string {
-  const first = (name ?? "").trim().split(/\s+/)[0] ?? "";
-  const base = first || email.split("@")[0] || "My";
-  return `${base.slice(0, 60)}'s business`;
-}
+export type GoogleUser = { id: string; role: Role; businessId: string; approved: boolean; created: boolean };
 
-/** Whether a string is an IANA timezone this runtime knows. */
-export function validTimezone(tz: string | null | undefined): tz is string {
-  if (!tz) return false;
-  try {
-    new Intl.DateTimeFormat("en-CA", { timeZone: tz });
-    return true;
-  } catch {
-    return false;
+/**
+ * The business Google sign-ins ask to join: GOOGLE_JOIN_BUSINESS_ID if it is set,
+ * otherwise the oldest business, which is the one this app was set up for.
+ */
+export async function homeBusinessId(db: PrismaClient, configured: string | undefined = process.env.GOOGLE_JOIN_BUSINESS_ID): Promise<string | null> {
+  if (configured) {
+    const b = await db.business.findUnique({ where: { id: configured }, select: { id: true } });
+    if (b) return b.id;
   }
+  const first = await db.business.findFirst({ orderBy: { createdAt: "asc" }, select: { id: true } });
+  return first?.id ?? null;
 }
 
-export type GoogleUser = { id: string; role: Role; businessId: string; created: boolean };
+const SELECT = { id: true, role: true, businessId: true, approved: true } as const;
 
 export async function findOrCreateGoogleUser(
   db: PrismaClient,
   profile: { email: string; name?: string | null },
-  timezone: string | null,
+  homeId?: string | null,
 ): Promise<GoogleUser> {
-  const existing = await db.user.findUnique({
-    where: { email: profile.email },
-    select: { id: true, role: true, businessId: true },
-  });
+  const existing = await db.user.findUnique({ where: { email: profile.email }, select: SELECT });
   if (existing) return { ...existing, created: false };
 
+  const businessId = homeId === undefined ? await homeBusinessId(db) : homeId;
+  if (!businessId) throw new Error("There is no business for Google sign-ins to join yet.");
+
   const name = (profile.name ?? "").trim() || profile.email.split("@")[0];
-  const businessName = businessNameFor(profile.name, profile.email);
   const passwordHash = await bcrypt.hash(randomBytes(32).toString("hex"), 10);
 
   try {
-    const made = await db.$transaction(async (tx) => {
-      const business = await tx.business.create({
-        data: { name: businessName, ...(validTimezone(timezone) ? { timezone } : {}) },
-      });
-      const location = await tx.location.create({
-        data: { businessId: business.id, name: businessName, kind: LocationKind.EVENT },
-      });
-      const user = await tx.user.create({
-        data: { businessId: business.id, email: profile.email, name: name.slice(0, 120), role: Role.OWNER, passwordHash, mustChangePassword: false },
-      });
-      await tx.userLocation.create({ data: { userId: user.id, locationId: location.id } });
-      return { id: user.id, role: user.role, businessId: business.id };
+    const user = await db.user.create({
+      data: {
+        businessId,
+        email: profile.email,
+        name: name.slice(0, 120),
+        // The lowest role, and not approved: no location either, so nothing to see
+        // even if some screen forgot to check.
+        role: Role.STAFF,
+        approved: false,
+        passwordHash,
+        mustChangePassword: false,
+      },
+      select: SELECT,
     });
-    return { ...made, created: true };
+    return { ...user, created: true };
   } catch (e) {
     // Two first sign-ins racing on the unique email: the other one won, use theirs.
-    const again = await db.user.findUnique({ where: { email: profile.email }, select: { id: true, role: true, businessId: true } });
+    const again = await db.user.findUnique({ where: { email: profile.email }, select: SELECT });
     if (again) return { ...again, created: false };
     throw e;
   }

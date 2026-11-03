@@ -27,21 +27,10 @@ function Inner({ label }: { label: string }) {
   );
 }
 
-/*
-  A quiet, outlined button under the form — the form's own button stays the
-  loud one. It remembers the browser's timezone in a short-lived cookie first,
-  because a business created by Google sign-in has no form to ask on, and every
-  business day in the app is derived from the timezone.
-*/
+/* A quiet, outlined button under the form — the form's own button stays the loud one. */
 export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
-  const rememberTimezone = () => {
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz) document.cookie = `gc_tz=${encodeURIComponent(tz)}; path=/; max-age=600; samesite=lax`;
-    } catch { /* the business gets the default and the owner is prompted to check it */ }
-  };
   return (
-    <form action={googleSignInAction} onSubmit={rememberTimezone}>
+    <form action={googleSignInAction}>
       <Inner label={label} />
     </form>
   );

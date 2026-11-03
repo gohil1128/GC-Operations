@@ -75,7 +75,7 @@ export async function getUserProfile(businessId: string, userId: string) {
 /** Every OTHER user in the business — the reassign target list. */
 export async function listOtherUsers(businessId: string, excludeUserId: string) {
   return prisma.user.findMany({
-    where: { businessId, id: { not: excludeUserId } },
+    where: { businessId, id: { not: excludeUserId }, approved: true },
     select: { id: true, name: true, email: true, role: true },
     orderBy: { name: "asc" },
   });

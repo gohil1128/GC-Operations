@@ -7,17 +7,19 @@ until you turn it on.
 ## What it does
 
 - A Google account whose email matches an existing user signs that user in.
-- An email nobody has used creates a new business with that person as its
-  **owner**, the same as the sign-up page: a business, its first location, the
-  owner, and their membership of the location. The business is named from their
-  first name ("Sam's business") and can be renamed in Settings. The browser's
-  timezone is passed along so the business days are right.
+- An email nobody has used **asks to join your business** as a waiting Staff member. They land on a
+  "Waiting for approval" screen and can see nothing: no pages, no exports, no data. The owner sees them
+  under **Settings → Users → "waiting to join"**, picks Staff or Manager, and presses **Approve** (they get
+  every location), or **Decline**, which removes them. Nobody becomes an Owner this way.
+- Which business they ask to join: the one set in `GOOGLE_JOIN_BUSINESS_ID` in Vercel, or if that is not set,
+  the oldest business, which is the one this app was set up for. Nobody gets a business of their own through
+  Google; a new business is made on the email-and-password sign-up page.
 - **Google must have verified the email address.** Otherwise the sign-in is
   refused with a message. Without this check anyone could register a Google
   identity under someone else's address and be signed in as them.
-- A Google-created user has no password they know. "Forgot password" still lets
+- A Google user has no password they know. "Forgot password" still lets
   them set one if they want to sign in the other way too.
-- Creating a business this way uses the same hourly limit as the sign-up page.
+- Asking to join uses the same hourly limit as the sign-up page.
 
 ## Setup (about 5 minutes, using the Google app you made for Gmail)
 

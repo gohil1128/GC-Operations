@@ -30,6 +30,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   */
   const me = await currentUser();
   if (!me) redirect("/login");
+  // Asked to join through Google and not yet approved by an owner.
+  if (!me.approved) redirect("/pending");
   if (me.mustChangePassword) redirect("/change-password");
 
   const scope = await getScope();

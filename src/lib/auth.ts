@@ -2,7 +2,7 @@ import { cache } from "react";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { Role } from "@prisma/client";
@@ -51,8 +51,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     ...authConfig.callbacks,
     /*
-      Google: verified email only, then find the user or make a business for
-      them. Returning a path sends the browser there with the reason, which the
+      Google: verified email only, then find the user, or record a request to join
+      the business (approved by an owner before they see anything). Returning a path sends the browser there with the reason, which the
       login page turns into a sentence.
     */
     async signIn({ account, profile }) {
@@ -62,19 +62,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       try {
         const exists = await prisma.user.findUnique({ where: { email }, select: { id: true } });
         if (!exists) {
-          // Making a business is the same act as signing up, so it shares that throttle.
+          // Asking to join creates a row, so it shares the sign-up throttle.
           const keys = signupKeys(clientIpFrom(await headers()));
           const limit = await checkSignupAllowed(keys);
           if (limit.locked) return "/login?error=GoogleRateLimited";
           await recordSignupAttempt(keys);
         }
-        const tz = (await cookies()).get("gc_tz")?.value ?? null;
-        const u = await findOrCreateGoogleUser(prisma, { email, name: profile?.name }, tz);
+        const u = await findOrCreateGoogleUser(prisma, { email, name: profile?.name });
         if (u.created) {
           await writeAudit({
             businessId: u.businessId, userId: u.id,
-            action: "business.signup", entityType: "Business", entityId: u.businessId,
-            diff: { method: "google" },
+            action: "user.join_request", entityType: "User", entityId: u.id,
+            diff: { method: "google", email },
           });
         }
         return true;
@@ -163,6 +162,7 @@ export const currentUser = cache(async () => {
       role: true,
       businessId: true,
       mustChangePassword: true,
+      approved: true,
     },
   });
 });
@@ -170,6 +170,10 @@ export const currentUser = cache(async () => {
 export async function requireUser() {
   const user = await currentUser();
   if (!user) throw new Error("UNAUTHORIZED");
+  // Signed in with Google and still waiting for an owner to approve them: the
+  // account exists, but every gate that goes through here treats it as having
+  // nothing. (The app layout sends them to /pending before they get this far.)
+  if (!user.approved) throw new Error("UNAUTHORIZED");
   return user;
 }
 

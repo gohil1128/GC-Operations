@@ -273,3 +273,46 @@ export async function updateUserRoleAction(
   revalidatePath("/settings/users");
   return { ok: true };
 }
+
+/*
+  Someone who signed in with Google asked to join this business. These two are
+  the owner's answer. Approving gives them the role chosen here (never OWNER by
+  this route: handing over ownership is a deliberate act, not a click on a
+  request from a stranger) and every location; declining removes them, and
+  since they never had access they have no records to untangle.
+*/
+export async function approveUserAction(userId: string, role: string): Promise<{ ok: true } | { error: string }> {
+  await requireOwner();
+  const scope = await getScope();
+  if (role !== "MANAGER" && role !== "STAFF") return { error: "Choose Manager or Staff." };
+  const user = await prisma.user.findFirst({ where: { id: userId, businessId: scope.businessId, approved: false } });
+  if (!user) return { error: "That request is no longer there." };
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { approved: true, role } });
+    const locations = await tx.location.findMany({ where: { businessId: scope.businessId }, select: { id: true } });
+    if (locations.length > 0) {
+      await tx.userLocation.createMany({ data: locations.map((l) => ({ userId, locationId: l.id })), skipDuplicates: true });
+    }
+  });
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "user.approve", entityType: "User", entityId: userId, diff: { email: user.email, role },
+  });
+  revalidatePath("/settings/users");
+  return { ok: true };
+}
+
+export async function declineUserAction(userId: string): Promise<{ ok: true } | { error: string }> {
+  await requireOwner();
+  const scope = await getScope();
+  const user = await prisma.user.findFirst({ where: { id: userId, businessId: scope.businessId, approved: false } });
+  if (!user) return { error: "That request is no longer there." };
+  await prisma.user.delete({ where: { id: userId } });
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "user.decline", entityType: "User", entityId: userId, diff: { email: user.email },
+  });
+  revalidatePath("/settings/users");
+  return { ok: true };
+}

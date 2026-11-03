@@ -166,6 +166,10 @@ model User {
   // An OPTIONAL personal PIN. Null = nothing is locked for this person, whatever
   // the list says. `lockedSections` is which sections THEY have chosen to put
   // behind it: "REPORTS" | "EVENTS" | "RECIPES". It only ever affects this user.
+  // False for someone who signed in with Google and asked to join this business:
+  // they exist, but see nothing and can do nothing until an owner approves them
+  // (Settings > Users). Everyone created any other way is approved from the start.
+  approved           Boolean  @default(true)
   sectionPinHash     String? // bcrypt hash of a 4-digit PIN
   lockedSections     String[] @default([])
   createdAt          DateTime @default(now())
