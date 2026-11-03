@@ -128,3 +128,56 @@ describe("days in a timezone", () => {
     expect(addDaysIso("2026-03-01", -1)).toBe("2026-02-28");
   });
 });
+
+describe("premix", () => {
+  const line = (name: string | undefined, unit: number, qty = 1, taxPct = 0.13) => ({
+    ...(name ? { name } : {}),
+    quantity: String(qty),
+    base_price_money: $(unit),
+    total_money: $(Math.round(unit * qty * (1 + taxPct))),
+    total_tax_money: $(Math.round(unit * qty * taxPct)),
+  });
+  const o = (lines: ReturnType<typeof line>[], over: Partial<SquareOrder> = {}) =>
+    order({ line_items: lines, tenders: [{ type: "CARD", amount_money: $(5000) }], total_tip_money: $(0), ...over });
+
+  it("files $14.99 and $15.99 lines under their own premix rows and category", () => {
+    const d = aggregateOrders([o([line("Original Masala", 1499), line("Rose", 1599, 2), line(undefined, 1499)])], TZ, "CAD").days.get("2026-10-04")!;
+    expect(d.items.get("Premix · Original Masala")).toMatchObject({ qty: 1, category: "Premix" });
+    expect(d.items.get("Premix · Rose")).toMatchObject({ qty: 2, category: "Premix" });
+    expect(d.items.get("Premix · Open amount $14.99")).toMatchObject({ qty: 1, category: "Premix" });
+    // Not merged into the generic open-amount row.
+    expect(d.items.has(CUSTOM_AMOUNT)).toBe(false);
+  });
+
+  it("keeps cups of the same flavour, and other open amounts, where they were", () => {
+    const d = aggregateOrders([o([line("Original Masala", 550), line(undefined, 800), line("Original Masala", 1499)])], TZ, "CAD").days.get("2026-10-04")!;
+    expect(d.items.get("Original Masala")).toMatchObject({ qty: 1 });
+    expect(d.items.get("Original Masala")!.category).toBeUndefined();
+    expect(d.items.get(CUSTOM_AMOUNT)).toMatchObject({ qty: 1 });
+    expect(d.items.get("Premix · Original Masala")).toMatchObject({ qty: 1 });
+  });
+
+  it("does not change the day's totals: premix is the same money, shown apart", () => {
+    const lines = [line("Original Masala", 550, 1, 0), line("Original Masala", 1499, 1, 0), line("Rose", 1599, 1, 0)];
+    const split = aggregateOrders([o(lines)], TZ, "CAD").days.get("2026-10-04")!;
+    const sum = [...split.items.values()].reduce((a, i) => a + i.netCents, 0);
+    expect(sum).toBe(split.netCents);
+    expect(split.netCents).toBe(550 + 1499 + 1599);
+  });
+
+  it("matches on the price before tax, so tax rates do not matter", () => {
+    const d = aggregateOrders([o([line("Cardamom", 1499, 1, 0.05), line("Cardamom", 1499, 1, 0.13)])], TZ, "CAD").days.get("2026-10-04")!;
+    expect(d.items.get("Premix · Cardamom")).toMatchObject({ qty: 2 });
+  });
+
+  it("nets a premix refund against the premix row", () => {
+    const sale = o([line("Rose", 1599)]);
+    const refund = order({
+      closed_at: "2026-10-04T20:00:00Z", line_items: [], tenders: [], total_tip_money: $(0),
+      returns: [{ return_line_items: [line("Rose", 1599)] }],
+    });
+    const d = aggregateOrders([sale, refund], TZ, "CAD").days.get("2026-10-04")!;
+    expect(d.items.has("Premix · Rose")).toBe(false); // sold and refunded the same day
+    expect(d.netCents).toBe(0);
+  });
+});

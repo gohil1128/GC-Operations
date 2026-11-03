@@ -132,6 +132,36 @@ describe("syncing sales", () => {
   });
 });
 
+describe("premix", () => {
+  const premixLine = (name: string | undefined, unit: number) => ({
+    ...(name ? { name } : {}), quantity: "1", base_price_money: $(unit), total_money: $(unit), total_tax_money: $(0),
+  });
+
+  it("files $14.99 / $15.99 lines as Premix rows without changing the day's sales", async () => {
+    const d = addDaysIso(today, -2);
+    const { deps } = fakeSquare([
+      sale(d),
+      sale(d, { line_items: [premixLine("Original Masala", 1499)], tenders: [{ type: "CARD", amount_money: $(1499) }], total_tip_money: $(0) }),
+      sale(d, { line_items: [premixLine(undefined, 1599)], tenders: [{ type: "CARD", amount_money: $(1599) }], total_tip_money: $(0) }),
+    ]);
+    await sync(deps);
+    const rows = await items(d);
+    expect(rows.filter((r) => r.category === "Premix").map((r) => r.itemName).sort()).toEqual(["Premix · Open amount $15.99", "Premix · Original Masala"]);
+    expect(rows.find((r) => r.itemName === "Masala Chai")!.category).toBe("Hot Chai");
+    // 500 for the cup + 1499 + 1599, and the item rows add up to the same.
+    expect((await dayRow(d))!.netSalesCents).toBe(500 + 1499 + 1599);
+    expect(rows.reduce((a, r) => a + r.netSalesCents, 0)).toBe(500 + 1499 + 1599);
+  });
+
+  it("keeps a category somebody chose for a premix row", async () => {
+    const d = addDaysIso(today, -2);
+    await db.salesItem.create({ data: { locationId: ids.locationId, businessDate: businessDayFromIso(d), itemName: "Premix · Rose", category: "Retail", qty: 0, netSalesCents: 0 } });
+    const { deps } = fakeSquare([sale(d, { line_items: [premixLine("Rose", 1599)], tenders: [{ type: "CARD", amount_money: $(1599) }], total_tip_money: $(0) })]);
+    await sync(deps);
+    expect((await items(d)).find((r) => r.itemName === "Premix · Rose")!.category).toBe("Retail");
+  });
+});
+
 describe("what it leaves alone", () => {
   it("never overwrites a day typed in by hand, and says which", async () => {
     const d = addDaysIso(today, -4);

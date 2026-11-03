@@ -1,5 +1,6 @@
 import { dayKeyInZone } from "@/lib/date";
 import type { Money, SquareLineItem, SquareOrder } from "./client";
+import { isPremixPrice, PREMIX_CATEGORY, premixItemName } from "./premix";
 
 /*
   Square orders -> one set of totals per business day.
@@ -31,6 +32,8 @@ export type ItemTotals = {
   /** Sales that included this item at least once. */
   txCount: number;
   variationIds: Set<string>;
+  /** Set on premix lines, which the sync files under that category. */
+  category?: string;
 };
 
 export type DayTotals = {
@@ -55,6 +58,19 @@ export function cents(m: Money): number {
 /** Square leaves a custom amount's line unnamed; its own reports call it this. */
 export const CUSTOM_AMOUNT = "Custom Amount";
 const itemName = (l: SquareLineItem) => (l.name ?? "").trim() || CUSTOM_AMOUNT;
+/** A line's unit price in cents, before tax and discounts. */
+function unitPriceCents(l: SquareLineItem): number {
+  const base = cents(l.base_price_money);
+  if (base > 0) return base;
+  const q = Number(l.quantity ?? "0");
+  const gross = cents(l.gross_sales_money);
+  return q > 0 && gross > 0 ? Math.round(gross / q) : 0;
+}
+/** The item row a line belongs to: premix lines get their own, everything else its name. */
+function rowKey(l: SquareLineItem): { name: string; premix: boolean } {
+  const unit = unitPriceCents(l);
+  return isPremixPrice(unit) ? { name: premixItemName(l.name, unit), premix: true } : { name: itemName(l), premix: false };
+}
 const qtyOf = (l: SquareLineItem) => {
   const n = Number(l.quantity ?? "0");
   return Number.isFinite(n) ? n : 0;
@@ -86,10 +102,10 @@ export function aggregateOrders(orders: SquareOrder[], timeZone: string, currenc
     }
     return d;
   };
-  const itemFor = (d: DayTotals, name: string): ItemTotals => {
+  const itemFor = (d: DayTotals, name: string, premix = false): ItemTotals => {
     let i = d.items.get(name);
     if (!i) {
-      i = { name, qty: 0, netCents: 0, taxCents: 0, txCount: 0, variationIds: new Set() };
+      i = { name, qty: 0, netCents: 0, taxCents: 0, txCount: 0, variationIds: new Set(), ...(premix ? { category: PREMIX_CATEGORY } : {}) };
       d.items.set(name, i);
     }
     return i;
@@ -109,7 +125,8 @@ export function aggregateOrders(orders: SquareOrder[], timeZone: string, currenc
     for (const l of lines) {
       const tax = cents(l.total_tax_money);
       const net = cents(l.total_money) - tax;
-      const i = itemFor(d, itemName(l));
+      const k = rowKey(l);
+      const i = itemFor(d, k.name, k.premix);
       i.qty += qtyOf(l);
       i.netCents += net;
       i.taxCents += tax;
@@ -123,7 +140,8 @@ export function aggregateOrders(orders: SquareOrder[], timeZone: string, currenc
       for (const l of r.return_line_items ?? []) {
         const tax = cents(l.total_tax_money);
         const net = cents(l.total_money) - tax;
-        const i = itemFor(d, itemName(l));
+        const k = rowKey(l);
+        const i = itemFor(d, k.name, k.premix);
         i.qty -= qtyOf(l);
         i.netCents -= net;
         i.taxCents -= tax;

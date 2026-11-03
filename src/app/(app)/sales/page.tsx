@@ -78,7 +78,8 @@ export default async function SalesPage({
     return s ? `/sales?${s}` : "/sales";
   };
 
-  const avgItemValue = data.totals.qty > 0 ? data.totals.netSalesCents / data.totals.qty : 0;
+  const premix = data.byCategory.find((c) => c.category === "Premix") ?? null;
+  const avgItemValue =data.totals.qty > 0 ? data.totals.netSalesCents / data.totals.qty : 0;
 
   return (
     <div>
@@ -117,6 +118,36 @@ export default async function SalesPage({
             value={data.totals.marginPct === null ? "—" : formatPercent(data.totals.marginPct)}
           />
         </StatTileRow>
+
+        {/* Premix is sold in bags ($14.99 / $15.99: Original Masala, Rose,
+            Cardamom, or rung through as an open amount), so it gets a card of
+            its own rather than disappearing into the cup totals. It is still
+            inside the totals above; this is the same money, shown apart. */}
+        {premix && (
+          <div className="bento flex flex-wrap items-center justify-between gap-x-6 gap-y-3 p-4 sm:p-5">
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold">Premix</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Bags sold separately from cups · {formatPercent(premix.sharePct)} of item sales
+              </p>
+            </div>
+            <div className="flex items-center gap-6">
+              <div>
+                <div className="text-2xs uppercase tracking-wider text-muted-foreground">Sales</div>
+                <div className="display-num text-[22px] font-medium">{formatMoney(premix.netSalesCents)}</div>
+              </div>
+              <div>
+                <div className="text-2xs uppercase tracking-wider text-muted-foreground">Bags</div>
+                <div className="display-num text-[22px] font-medium">{qtyFmt(premix.qty)}</div>
+              </div>
+              <Button asChild variant="soft" size="sm">
+                <Link href={category === "Premix" ? linkWith({ category: null }) : linkWith({ category: "Premix" })}>
+                  {category === "Premix" ? "Show all items" : "See premix items"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Says what the margin is actually over. A figure computed across only
             the costed items, presented without that, invites reading it as the

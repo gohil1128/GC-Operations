@@ -22,6 +22,12 @@ hand and compare one day against Square's own Sales Summary (steps at the end).
 - **What sold:** one row per item per day, so the item breakdown and recipe
   costing fill in by themselves. New items get the category they have in
   Square. A category you've set in the app is kept.
+- **Premix** is kept apart. Any line sold at $14.99 or $15.99 each (before tax) is filed as its own
+  "Premix · <name>" item, or "Premix · Open amount $14.99" for an unnamed open amount, under the
+  category **Premix**. The Sales page shows a Premix card and a Premix category. The day's totals are
+  unchanged: it is the same money shown separately. To change the prices, edit `PREMIX_PRICES_CENTS`
+  in `src/modules/square/premix.ts`. Any other item can be moved into Premix by hand in Settings →
+  Integrations → Items & categories.
 - **Refunds** count on the day they were made, the same as in Square's reports.
 - **Events:** a day nobody has tagged is tagged to the event whose dates cover
   it, if exactly one does. A tag you've chosen is never changed.

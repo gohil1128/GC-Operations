@@ -42,6 +42,9 @@ export type SquareLineItem = {
   quantity?: string | null;
   catalog_object_id?: string | null;
   item_type?: string | null;
+  /** The unit price, before tax and discounts. */
+  base_price_money?: Money;
+  gross_sales_money?: Money;
   total_money?: Money;
   total_tax_money?: Money;
 };

@@ -207,7 +207,9 @@ async function writeDay(
   const byName = new Map(before.map((i) => [i.itemName, i]));
   for (const i of d.items.values()) {
     const prior = byName.get(i.name);
-    const squareCategory = [...i.variationIds].map((v) => categories.get(v)).find(Boolean) ?? null;
+    // Premix is filed under its own category whatever Square calls the item; a
+    // category somebody chose by hand still wins (prior, below).
+    const squareCategory = i.category ?? [...i.variationIds].map((v) => categories.get(v)).find(Boolean) ?? null;
     const data = {
       category: prior?.category ?? squareCategory,
       qty: i.qty,
