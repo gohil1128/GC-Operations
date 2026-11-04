@@ -27,19 +27,19 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel — espresso radial with the brand logo as the hero.
+      {/* Brand panel — espresso radial with the ChaiMoon itself as the hero.
           Deliberately carries no live figures: this page is unauthenticated,
           so real season numbers here would be public. */}
       <div className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col"
         style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
       >
-        {/* Hero logo, centered both ways in the panel. */}
-        <div className="flex flex-1 items-center justify-center">
+        {/* Small secondary brand mark at the top of the panel. */}
+        <div className="relative flex justify-start">
           {!logoFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src="/logo.png" alt={APP_NAME}
-              className="w-[60%] h-auto"
+              className="h-16 w-auto"
               style={{ filter: "brightness(3.4) saturate(.4)" }}
               onError={() => setLogoFailed(true)}
             />
@@ -50,7 +50,12 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           )}
         </div>
 
-        {/* Tagline below the hero logo. */}
+        {/* The ChaiMoon itself, centered as the hero of the panel. */}
+        <div className="flex flex-1 items-center justify-center overflow-hidden">
+          <ChaiMoon variant="hero" />
+        </div>
+
+        {/* Tagline below the hero moon. */}
         <div className="relative">
           <p className="display-num text-[44px] font-medium leading-[1.05]">
             Every cup,<br />accounted for.
@@ -64,17 +69,18 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
       </div>
 
       {/* Form side */}
-      <main
-        className="relative flex items-start justify-center overflow-hidden px-6 pb-10 pt-[calc(var(--moon)*0.36+1rem)] sm:px-10 lg:items-center lg:p-10"
-        // The phone's moon is --moon wide and a third of it shows; start the form below that.
-        style={{ ["--moon" as string]: "min(118vw, 640px)" }}
-      >
-        <ChaiMoon variant="page" />
+      <main className="relative flex flex-col items-center overflow-hidden px-6 pb-10 pt-8 sm:px-10 lg:justify-center lg:p-10">
+        {/* The ChaiMoon itself as the hero above the form on a phone.
+            It sits in the normal flow and is fully visible, so the form
+            below it starts below the visible moon with no overlap. */}
+        <div className="flex w-full justify-center lg:hidden">
+          <ChaiMoon variant="hero" />
+        </div>
         <div className="relative z-10 w-full max-w-[380px]">
-          {/* Hero logo on small screens, where the brand panel is hidden. */}
+          {/* Small secondary brand mark on small screens, where the brand panel is hidden. */}
           {!logoFailed && (
             <div className="mb-6 flex justify-center lg:hidden">
-              <BrandLogo alt={APP_NAME} className="h-48 w-auto" />
+              <BrandLogo alt={APP_NAME} className="h-12 w-auto" />
             </div>
           )}
           <h1 className="display-num text-[30px] font-medium">Welcome back</h1>
