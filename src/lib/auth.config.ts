@@ -4,13 +4,8 @@ import type { Role } from "@prisma/client";
 // Edge-safe config used by middleware. Does NOT import bcrypt / Prisma.
 // The full provider with `authorize` lives in `@/lib/auth`.
 export const authConfig: NextAuthConfig = {
-  // Stated rather than inherited. This is the length sessions already ran to —
-  // @auth/core's default — but it was never written down anywhere, while the
-  // sign-in form offered a "Keep me signed in on this device" checkbox that
-  // was stripped from the payload before it reached signIn() and changed
-  // nothing either way. The checkbox is gone; the number lives here now, where
-  // it can actually be changed.
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  // Sessions now last 1 year (until the user signs out themselves, or 1 year idle).
+  session: { strategy: "jwt", maxAge: 365 * 24 * 60 * 60 },
   pages: { signIn: "/login" },
   trustHost: true,
   providers: [], // populated in @/lib/auth
