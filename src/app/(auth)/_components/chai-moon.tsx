@@ -19,14 +19,17 @@ export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" }) {
       aria-hidden
       className={
         hero
-          ? "pointer-events-none relative mx-auto aspect-square w-[min(118vw,640px)] lg:w-[min(90%,720px)]"
+          ? "pointer-events-none relative left-1/2 aspect-square w-[min(118vw,640px)] -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:w-[min(90%,720px)]"
           : panel
             ? "pointer-events-none absolute -right-[16%] top-[12%] aspect-square w-[76%]"
             : "pointer-events-none absolute left-1/2 aspect-square -translate-x-1/2 lg:hidden"
       }
       // On a phone only the lower third of the moon shows, curving in from the top
       // edge. --moon is its diameter; the page below it is pushed down to match.
-      // The hero variant is in the normal flow, so it needs no offset.
+      // The hero variant is in the normal flow and is centered with left-1/2
+      // plus -translate-x-1/2 on a phone, so its wider-than-the-screen diameter
+      // is clipped equally on both sides; on desktop that offset is cancelled
+      // and its flex wrapper centers it instead.
       style={hero || panel ? undefined : { width: "var(--moon)", top: "calc(var(--moon) * -0.64)" }}
     >
       {/* The glow it throws on the page around it. */}
