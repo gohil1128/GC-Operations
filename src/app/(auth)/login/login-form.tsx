@@ -27,29 +27,31 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel — espresso radial with the logo as a large watermark.
+      {/* Brand panel — espresso radial with the brand logo as the hero.
           Deliberately carries no live figures: this page is unauthenticated,
           so real season numbers here would be public. */}
       <div className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col"
         style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
       >
-        <ChaiMoon variant="panel" />
-        {!logoFailed ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/logo.png" alt={APP_NAME}
-            className="relative h-16 w-auto self-start"
-            style={{ filter: "brightness(3.4) saturate(.4)" }}
-            onError={() => setLogoFailed(true)}
-          />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand">
-            <UtensilsCrossed className="h-6 w-6" />
-          </div>
-        )}
+        {/* Hero logo, centered both ways in the panel. */}
+        <div className="flex flex-1 items-center justify-center">
+          {!logoFailed ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/logo.png" alt={APP_NAME}
+              className="w-[60%] h-auto"
+              style={{ filter: "brightness(3.4) saturate(.4)" }}
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand">
+              <UtensilsCrossed className="h-6 w-6" />
+            </div>
+          )}
+        </div>
 
-        {/* At the foot of the panel, clear of the moon above it. */}
-        <div className="relative mt-auto">
+        {/* Tagline below the hero logo. */}
+        <div className="relative">
           <p className="display-num text-[44px] font-medium leading-[1.05]">
             Every cup,<br />accounted for.
           </p>
@@ -69,11 +71,11 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
       >
         <ChaiMoon variant="page" />
         <div className="relative z-10 w-full max-w-[380px]">
-          {/* Logo shows here on small screens, where the brand panel is hidden. */}
+          {/* Hero logo on small screens, where the brand panel is hidden. */}
           {!logoFailed && (
-            <span className="mb-6 inline-block lg:hidden">
-              <BrandLogo alt={APP_NAME} className="h-14 w-auto" />
-            </span>
+            <div className="mb-6 flex justify-center lg:hidden">
+              <BrandLogo alt={APP_NAME} className="h-48 w-auto" />
+            </div>
           )}
           <h1 className="display-num text-[30px] font-medium">Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-muted-foreground">Sign in to your back-office</p>
