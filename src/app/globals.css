@@ -784,6 +784,11 @@
   .table-live tbody tr:nth-child(9) { animation-delay: 224ms; }
   .table-live tbody tr:nth-child(n+10) { animation-delay: 252ms; }
 
+  /* The chai moon on the sign-in pages turns once in two minutes. */
+  @keyframes moon-turn { to { transform: rotate(360deg); } }
+  .chai-moon-photo { animation: moon-turn 120s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .chai-moon-photo { animation: none; } }
+
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 

@@ -10,6 +10,7 @@ import { loginAction } from "@/modules/auth/actions";
 import { APP_NAME } from "@/lib/brand";
 import { BrandLogo } from "@/components/brand-logo";
 import { GoogleButton, OrDivider } from "../_components/google-button";
+import { ChaiMoon } from "../_components/chai-moon";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -29,23 +30,15 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
       {/* Brand panel — espresso radial with the logo as a large watermark.
           Deliberately carries no live figures: this page is unauthenticated,
           so real season numbers here would be public. */}
-      <div className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col lg:justify-between"
+      <div className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col"
         style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
       >
-        {!logoFailed && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/logo.png" alt=""
-            aria-hidden
-            className="pointer-events-none absolute -bottom-16 -right-16 h-[420px] w-auto opacity-[0.07]"
-            style={{ filter: "brightness(4)" }}
-          />
-        )}
+        <ChaiMoon variant="panel" />
         {!logoFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src="/logo.png" alt={APP_NAME}
-            className="h-16 w-auto self-start"
+            className="relative h-16 w-auto self-start"
             style={{ filter: "brightness(3.4) saturate(.4)" }}
             onError={() => setLogoFailed(true)}
           />
@@ -55,7 +48,8 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           </div>
         )}
 
-        <div className="relative">
+        {/* At the foot of the panel, clear of the moon above it. */}
+        <div className="relative mt-auto">
           <p className="display-num text-[44px] font-medium leading-[1.05]">
             Every cup,<br />accounted for.
           </p>
@@ -64,12 +58,17 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           </p>
         </div>
 
-        <div className="relative text-2xs opacity-50">{APP_NAME}</div>
+        <div className="relative mt-8 text-2xs opacity-50">{APP_NAME}</div>
       </div>
 
       {/* Form side */}
-      <main className="flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-[380px]">
+      <main
+        className="relative flex items-start justify-center overflow-hidden px-6 pb-10 pt-[calc(var(--moon)*0.36+1rem)] sm:px-10 lg:items-center lg:p-10"
+        // The phone's moon is --moon wide and a third of it shows; start the form below that.
+        style={{ ["--moon" as string]: "min(118vw, 640px)" }}
+      >
+        <ChaiMoon variant="page" />
+        <div className="relative z-10 w-full max-w-[380px]">
           {/* Logo shows here on small screens, where the brand panel is hidden. */}
           {!logoFailed && (
             <span className="mb-6 inline-block lg:hidden">
