@@ -72,8 +72,11 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
       <main className="relative flex flex-col items-center overflow-hidden px-6 pb-10 pt-8 sm:px-10 lg:justify-center lg:p-10">
         {/* The ChaiMoon itself as the hero above the form on a phone.
             It sits in the normal flow and is fully visible, so the form
-            below it starts below the visible moon with no overlap. */}
-        <div className="flex w-full justify-center lg:hidden">
+            below it starts below the visible moon with no overlap. The hero
+            centers itself (left-1/2, -translate-x-1/2), so this wrapper is a
+            plain block: its wider-than-the-screen diameter is clipped equally
+            on both sides. */}
+        <div className="w-full lg:hidden">
           <ChaiMoon variant="hero" />
         </div>
         <div className="relative z-10 w-full max-w-[380px]">
