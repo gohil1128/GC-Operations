@@ -2,25 +2,32 @@
   The chai moon: a close shot of the foam on a cup of chai, cut to a circle and
   lit like a moon rising behind the page. Decorative only (aria-hidden, no alt),
   and sits behind everything on the sign-in and sign-up pages.
-
-  Two sizes from one picture: "panel" is the big one in the brand panel on
-  desktop, "page" is the half-moon peeking over the top of the form on a phone.
-  The photograph turns very slowly (a full turn in two minutes) so the page is
-  alive without anything to look at; reduced motion stops it.
+  Three sizes from one picture: "panel" is the big one in the brand panel on
+  desktop, "page" is the half-moon peeking over the top of the form on a phone,
+  and "hero" is the massive, centered moon that is itself the hero of the login
+  page — about min(90%, 720px) wide on desktop and min(118vw, 640px) wide on a
+  phone, where most of it is visible. The panel and page styling is unchanged,
+  so the sign-up page is unaffected. The photograph turns very slowly (a full
+  turn in two minutes) so the page is alive without anything to look at;
+  reduced motion stops it.
 */
-export function ChaiMoon({ variant }: { variant: "panel" | "page" }) {
+export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" }) {
   const panel = variant === "panel";
+  const hero = variant === "hero";
   return (
     <div
       aria-hidden
       className={
-        panel
-          ? "pointer-events-none absolute -right-[16%] top-[12%] aspect-square w-[76%]"
-          : "pointer-events-none absolute left-1/2 aspect-square -translate-x-1/2 lg:hidden"
+        hero
+          ? "pointer-events-none relative mx-auto aspect-square w-[min(118vw,640px)] lg:w-[min(90%,720px)]"
+          : panel
+            ? "pointer-events-none absolute -right-[16%] top-[12%] aspect-square w-[76%]"
+            : "pointer-events-none absolute left-1/2 aspect-square -translate-x-1/2 lg:hidden"
       }
       // On a phone only the lower third of the moon shows, curving in from the top
       // edge. --moon is its diameter; the page below it is pushed down to match.
-      style={panel ? undefined : { width: "var(--moon)", top: "calc(var(--moon) * -0.64)" }}
+      // The hero variant is in the normal flow, so it needs no offset.
+      style={hero || panel ? undefined : { width: "var(--moon)", top: "calc(var(--moon) * -0.64)" }}
     >
       {/* The glow it throws on the page around it. */}
       <div className="absolute -inset-[12%] rounded-full bg-[radial-gradient(closest-side,rgba(236,150,40,0.34),rgba(236,150,40,0.10)_55%,transparent_72%)]" />
@@ -31,7 +38,7 @@ export function ChaiMoon({ variant }: { variant: "panel" | "page" }) {
             makes a round photograph read as a moon and not as a button. */}
         <div
           className={
-            panel
+            panel || hero
               ? "absolute inset-0 bg-[radial-gradient(circle_at_30%_28%,transparent_38%,rgba(14,18,10,0.55)_78%,rgba(14,18,10,0.86)_100%)]"
               : "absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,transparent_30%,rgba(14,18,10,0.5)_72%,rgba(14,18,10,0.85)_100%)]"
           }
