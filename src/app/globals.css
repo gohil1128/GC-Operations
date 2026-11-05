@@ -789,6 +789,63 @@
   .chai-moon-photo { animation: moon-turn 120s linear infinite; }
   @media (prefers-reduced-motion: reduce) { .chai-moon-photo { animation: none; } }
 
+  /*
+    The dock as glass, alive under your thumb.
+
+    Whatever scrolls beneath the bar shows through it, blurred and turned a
+    little more colourful, so a lime card passing under it lights the bar and a
+    photo tints it. Two things move with the scroll, both driven from
+    mobile-tab-bar.tsx writing two variables on the bar:
+      --boost  0..1, how fast the page is moving right now. The blur deepens and
+               the pill draws in a hair (about 2%) while you scroll, and
+               relaxes a moment after you stop.
+      --sheen  the scroll position in px. A soft highlight slides across the
+               glass as the page moves, the way light slides across a lens.
+    One backdrop layer the size of the bar, no stack of them. The tint is the
+    theme's own dock colour at --dock-a, high enough that the labels stay legible
+    over the brightest thing that can pass under them (a lime card).
+  */
+  .dock-glass {
+    --boost: 0;
+    --sheen: 0;
+    isolation: isolate;
+    background-color: hsl(var(--dock) / 0.94);
+    border: 1px solid hsl(var(--dock-rim) / 0.2);
+    box-shadow:
+      inset 0 1px 0 0 hsl(var(--dock-rim) / 0.4),
+      inset 0 -1px 0 0 hsl(96 25% 4% / 0.14),
+      0 14px 34px -14px hsl(96 25% 4% / 0.55);
+    transform: scale(calc(1 - var(--boost) * 0.02));
+    transform-origin: 50% 100%;
+  }
+  @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+    .dock-glass {
+      background-color: hsl(var(--dock) / var(--dock-a));
+      -webkit-backdrop-filter: blur(calc(18px + var(--boost) * 12px)) saturate(calc(1.6 + var(--boost) * 0.5));
+      backdrop-filter: blur(calc(18px + var(--boost) * 12px)) saturate(calc(1.6 + var(--boost) * 0.5));
+    }
+  }
+  .dock-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      linear-gradient(105deg, transparent 30%, hsl(var(--dock-rim) / 0.22) 48%, transparent 66%) 0 0 / 220% 100% no-repeat,
+      linear-gradient(180deg, hsl(var(--dock-rim) / 0.16) 0%, transparent 55%);
+    background-position-x: calc(var(--sheen) * -0.35px), 0;
+    opacity: calc(0.5 + var(--boost) * 0.5);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dock-glass { transform: none; }
+    .dock-glass::before { background-position-x: 0, 0; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .dock-glass { background-color: hsl(var(--card)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 

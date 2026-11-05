@@ -79,6 +79,10 @@ export function MobileTabBar({ role }: { role: Role }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [moreOpen]);
 
+  // The bar reacts to scrolling (see .dock-glass in globals.css).
+  const dockRef = React.useRef<HTMLElement | null>(null);
+  useDockScroll(dockRef);
+
   const hubs = hubsFor(role);
   const tabs = hubs.slice(0, 4);
   const moreItems = hubs.slice(4);
@@ -177,7 +181,8 @@ export function MobileTabBar({ role }: { role: Role }) {
       */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-[26px] border border-border-soft bg-card px-1.5 py-1.5 shadow-[0_10px_30px_-18px_hsl(var(--shadow-color)/0.55)] lg:hidden"
+        ref={dockRef}
+        className="dock-glass fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-[26px] px-1.5 py-1.5 lg:hidden"
       >
         <div className="grid auto-cols-fr grid-flow-col">
           {tabs.map((t) => (
@@ -216,7 +221,7 @@ function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: s
     <span
       className={cn(
         "grid h-7 w-12 place-items-center rounded-full transition-colors duration-200",
-        active ? "dock-pop bg-brand-muted text-brand-ink" : "text-muted-foreground",
+        active ? "dock-pop bg-brand-muted text-brand-ink" : "text-foreground/70",
       )}
     >
       <Icon className="h-5 w-5" aria-hidden />
@@ -226,7 +231,7 @@ function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: s
 
 function DockLabel({ active, children }: { active: boolean; children: React.ReactNode }) {
   return (
-    <span className={cn("max-w-full truncate text-[10.5px] leading-none", active ? "font-semibold text-foreground" : "font-medium text-muted-foreground")}>
+    <span className={cn("max-w-full truncate text-[10.5px] leading-none", active ? "font-semibold text-foreground" : "font-medium text-foreground/70")}>
       {children}
     </span>
   );
@@ -247,4 +252,47 @@ function DockItem({
       <DockLabel active={active}>{label}</DockLabel>
     </Link>
   );
+}
+
+
+/*
+  Writes --boost (how fast the page is moving, 0 to 1) and --sheen (scroll
+  position) onto the dock. Straight to the element's style from one passive
+  scroll listener and one animation frame, so scrolling costs no React renders.
+
+  The boost follows speed with a quick rise and a slower fall: 2.4 px/ms (a firm
+  flick) is full strength, and it eases back to nothing about 350ms after the
+  page stops. Off entirely for reduced motion.
+*/
+function useDockScroll(ref: React.RefObject<HTMLElement | null>) {
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let lastY = window.scrollY;
+    let lastT = performance.now();
+    let boost = 0;
+    let raf = 0;
+    const write = () => {
+      el.style.setProperty("--boost", boost.toFixed(3));
+      el.style.setProperty("--sheen", String(Math.round(window.scrollY)));
+    };
+    const tick = (t: number) => {
+      const dt = Math.max(1, t - lastT);
+      const y = window.scrollY;
+      const speed = Math.abs(y - lastY) / dt; // px per ms
+      lastY = y;
+      lastT = t;
+      const target = Math.min(1, speed / 2.4);
+      // Up fast, down slowly.
+      boost += (target - boost) * (target > boost ? 0.35 : 0.08);
+      if (boost < 0.004 && target === 0) boost = 0;
+      write();
+      raf = boost > 0 || target > 0 ? requestAnimationFrame(tick) : 0;
+    };
+    const onScroll = () => { if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(tick); } };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    write();
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, [ref]);
 }
