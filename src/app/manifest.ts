@@ -23,8 +23,8 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "any",
     // The dark base, because that is what the app opens into now. A cream
     // splash would flash bright for a moment before every launch.
-    background_color: "#161B12",
-    theme_color: "#283018",
+    background_color: "#170E09",
+    theme_color: "#2B1B12",
     categories: ["business", "productivity", "finance"],
     // Real square assets on the cream plate. Previously all three entries
     // pointed at one 300x290 transparent PNG, so the declared sizes were false

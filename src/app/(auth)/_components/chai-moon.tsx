@@ -56,8 +56,8 @@ export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" | "ba
         <div
           className={
             panel || hero || massive
-              ? "absolute inset-0 bg-[radial-gradient(circle_at_30%_28%,transparent_38%,rgba(14,18,10,0.55)_78%,rgba(14,18,10,0.86)_100%)]"
-              : "absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,transparent_30%,rgba(14,18,10,0.5)_72%,rgba(14,18,10,0.85)_100%)]"
+              ? "absolute inset-0 bg-[radial-gradient(circle_at_30%_28%,transparent_38%,rgba(23,14,9,0.55)_78%,rgba(23,14,9,0.86)_100%)]"
+              : "absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,transparent_30%,rgba(23,14,9,0.5)_72%,rgba(23,14,9,0.85)_100%)]"
           }
         />
         <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/10" />

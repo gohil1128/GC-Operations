@@ -50,7 +50,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div
         className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-espresso-foreground lg:m-5 lg:flex lg:flex-col"
-        style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
+        style={{ background: "radial-gradient(120% 120% at 0% 100%, #4A2F1D 0%, #2B1B12 55%, #170E09 100%)" }}
       >
         <ChaiMoon variant="panel" />
         {!logoFailed ? (

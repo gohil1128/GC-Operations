@@ -30,7 +30,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           figures: this page is unauthenticated, so real season numbers here would be public. */}
       <div
         className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-white lg:m-5 lg:flex lg:flex-col"
-        style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
+        style={{ background: "radial-gradient(120% 120% at 0% 100%, #4A2F1D 0%, #2B1B12 55%, #170E09 100%)" }}
       >
         <ChaiMoon variant="massive" />
         {!logoFailed ? (
@@ -56,21 +56,21 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
       {/* Form side */}
       <main className="relative flex flex-col items-center overflow-hidden px-6 pb-10 pt-8 sm:px-10 lg:justify-center lg:p-10">
         {/* Phone / installed app: the chai moon fills the screen behind the form. The scrim
-            over it is the app's own olive-black (the sign-in gradient's darkest colour),
+            over it is the app's own cocoa-black (the sign-in gradient's darkest colour),
             not plain black, so the moon stays warm and the page stays in the palette.
             Hidden on desktop, where the brand panel carries the moon. */}
         <div aria-hidden className="absolute inset-0 overflow-hidden lg:hidden">
           <ChaiMoon variant="background" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#161B12]/70 via-[#161B12]/55 to-[#161B12]/78" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#170E09]/70 via-[#170E09]/55 to-[#170E09]/78" />
         </div>
-        {/* In normal flow above the moon (relative, z-10). The colours are the app's: olive
-            fields, cream text, lime links and button. On desktop (lg) everything falls back
+        {/* In normal flow above the moon (relative, z-10). The colours are the app's: cocoa
+            fields, cream text, marigold links and button. On desktop (lg) everything falls back
             to the theme tokens exactly as the page was before the moon went full-screen. */}
         <div className="relative z-10 w-full max-w-[380px]">
           <div className="mb-6 flex justify-center lg:hidden">
             <BrandLogo alt={APP_NAME} className="h-12 w-auto" />
           </div>
-          <h1 className="display-num text-[30px] font-medium text-[#F6F5EE] lg:text-inherit">Welcome back</h1>
+          <h1 className="display-num text-[30px] font-medium text-[#FDF5EE] lg:text-inherit">Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-[#C9CBBF] lg:text-muted-foreground">Sign in to your back-office</p>
 
           <form action={formAction} className="mt-7 grid gap-3.5">
@@ -83,7 +83,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 autoComplete="email"
                 required
                 placeholder="you@example.com"
-                className="h-12 rounded-2xl border-[#4A5340] bg-[#2B3422]/80 px-4 text-sm text-[#F6F5EE] backdrop-blur-md placeholder:text-[#A9ACA2] lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none lg:placeholder:text-muted-foreground"
+                className="h-12 rounded-2xl border-[#5A4030] bg-[#3A2619]/80 px-4 text-sm text-[#FDF5EE] backdrop-blur-md placeholder:text-[#C9B5A6] lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none lg:placeholder:text-muted-foreground"
               />
             </div>
             <div className="grid gap-1.5">
@@ -97,7 +97,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 type="password"
                 autoComplete="current-password"
                 required
-                className="h-12 rounded-2xl border-[#4A5340] bg-[#2B3422]/80 px-4 text-sm text-[#F6F5EE] backdrop-blur-md lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none"
+                className="h-12 rounded-2xl border-[#5A4030] bg-[#3A2619]/80 px-4 text-sm text-[#FDF5EE] backdrop-blur-md lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none"
               />
             </div>
 

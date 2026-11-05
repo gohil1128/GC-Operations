@@ -3,7 +3,7 @@
 
   Very dark colours — the old espresso default most events still carry —
   vanish on a dark card and read as a hole on a light one, so those fall back
-  to the brand lime. Anything unparseable does too.
+  to the brand marigold. Anything unparseable does too.
 */
 export function markerColor(color: string | null | undefined): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(color ?? "");

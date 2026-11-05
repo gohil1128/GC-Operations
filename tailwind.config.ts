@@ -20,6 +20,13 @@ const config: Config = {
     container: { center: true, padding: "1rem", screens: { "2xl": "1400px" } },
     extend: {
       colors: {
+        // Brand colour system: 100-900 scales, 500 is the brand anchor.
+        ...Object.fromEntries(
+          ["marigold", "coral", "cocoa", "cream", "ivory", "peach", "sun"].map((n) => [
+            n,
+            Object.fromEntries([100, 200, 300, 400, 500, 600, 700, 800, 900].map((k) => [k, `hsl(var(--${n}-${k}))`])),
+          ]),
+        ),
         border: "hsl(var(--border))",
         "border-soft": "hsl(var(--border-soft))",
         "page-top": "hsl(var(--page-top))",
