@@ -65,7 +65,7 @@ export function MobileRow({
       {badges && <div className="mt-2 flex flex-wrap items-center gap-1.5">{badges}</div>}
 
       {children && (
-        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3">{children}</dl>
+        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border-soft pt-3">{children}</dl>
       )}
     </>
   );

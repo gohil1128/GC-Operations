@@ -37,7 +37,7 @@ export function PageHeader({
            max-w-[1400px] column with px-4/6/8, and 35 route files already do it,
            so the header follows that instead — a header indented differently
            from the figures under it is worse than a few px off a mock. */
-        "mx-auto flex max-w-[1400px] flex-col gap-4 border-b border-border-soft px-4 pb-5 pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:px-6 lg:px-8",
+        "mx-auto flex max-w-[1400px] flex-col gap-4 px-4 pb-5 pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:px-6 lg:px-8",
         className,
       )}
     >

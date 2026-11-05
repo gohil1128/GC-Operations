@@ -253,7 +253,7 @@ export default async function CashPage() {
             them is that anyone can see what left the drawer without having to
             open each day's entry one at a time. */}
         <div className="bento">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border-soft px-4 py-3 sm:px-5">
             <h2 className="text-sm font-semibold">
               Payouts
               <span className="ml-2 text-2xs font-normal text-muted-foreground">
@@ -283,7 +283,7 @@ export default async function CashPage() {
             exact.
           */}
           {position.paidOutByKind.length > 1 && (
-            <div className="flex flex-wrap gap-x-5 gap-y-1.5 border-b border-border px-4 py-2.5 text-2xs text-muted-foreground sm:px-5">
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5 border-b border-border-soft px-4 py-2.5 text-2xs text-muted-foreground sm:px-5">
               {position.paidOutByKind.map((k) => (
                 <span key={k.kind}>
                   {payoutKindLabel(k.kind)}{" "}

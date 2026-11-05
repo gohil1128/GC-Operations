@@ -290,7 +290,7 @@ export default async function SalesPage({
 
         {/* ── Items ──────────────────────────────────────────────────── */}
         <div className="bento">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-4 py-3 sm:px-5">
             <h2 className="text-sm font-semibold">
               {category ? `${category} items` : "Every item"}
               <span className="ml-2 text-2xs font-normal text-muted-foreground">

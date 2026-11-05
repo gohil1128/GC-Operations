@@ -214,7 +214,7 @@ export default async function DashboardPage({
         a plain page instead — which on the tablet this is read on at a stall
         is most of a screen of numbers recovered.
       */}
-      <header className="flex flex-col gap-4 border-b border-border-soft pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+      <header className="flex flex-col gap-4 pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <div className="min-w-0">
           <h1 className="font-display text-[26px] font-semibold tracking-[-0.02em]">
             Good {partOfDay}, {firstName}
