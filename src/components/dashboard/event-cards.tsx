@@ -90,7 +90,7 @@ export function EventCards({ events, highlightId }: { events: EventCard[]; highl
                         />
                       )}
                     </span>
-                    <span className="min-w-0 truncate text-[13.5px] font-semibold" title={e.name}>
+                    <span className="min-w-0 line-clamp-2 break-words text-[13.5px] font-semibold leading-tight" title={e.name}>
                       {e.name}
                     </span>
                   </div>

@@ -71,7 +71,7 @@ export function BusinessForm({ initial }: Props) {
           id="biz-tz"
           name="timezone"
           defaultValue={initial.timezone}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          className="select-native h-10"
         >
           {TIMEZONES.map((tz) => (
             <option key={tz} value={tz}>

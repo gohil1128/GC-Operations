@@ -99,7 +99,7 @@ export function SquareSalesSummaryImporter({
   const selectedEvent = events.find((e) => e.id === eventId);
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-3">
+    <form onSubmit={onSubmit} className="grid min-w-0 gap-3 [&>*]:min-w-0">
       <div className="grid gap-1.5">
         <Label htmlFor="ss-file">Sales Summary CSV file</Label>
         <input

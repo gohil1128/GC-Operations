@@ -31,14 +31,14 @@ export function LocationsManager({
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm truncate">{l.name}</span>
+                <div className="flex flex-wrap items-center gap-x-2">
+                  <span className="font-medium text-sm leading-tight break-words">{l.name}</span>
                   {l.id === activeLocationId && <Check className="h-3 w-3 text-success shrink-0" aria-label="Active" />}
                 </div>
-                <div className="text-2xs text-muted-foreground truncate">{l.address ?? "—"}</div>
+                <div className="text-2xs text-muted-foreground truncate">{l.kind} · {l.address ?? "—"}</div>
               </div>
             </div>
-            <Badge variant="muted">{l.kind}</Badge>
+            <Badge variant="muted" className="hidden shrink-0 sm:inline-flex">{l.kind}</Badge>
             <EditLocationButton location={l} />
             <DeleteButton
               action={() => deleteLocationAction(l.id)}

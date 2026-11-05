@@ -102,11 +102,12 @@ export function HeroCard({
               <span
                 key={d.businessDate.toISOString()}
                 className={cn(
-                  "min-w-0 flex-1 truncate text-center text-[11px]",
+                  "min-w-0 flex-1 text-center text-[11px]",
                   i === last ? "font-semibold text-foreground" : "text-muted-foreground",
                 )}
               >
-                {fmtDate(d.businessDate, "EEE d")}
+                <span className="block leading-tight">{fmtDate(d.businessDate, "EEE")}</span>
+                <span className="block leading-tight">{fmtDate(d.businessDate, "d")}</span>
               </span>
             ))}
           </div>
@@ -127,11 +128,11 @@ export function HeroCard({
             <Link
               href="/cash/new"
               className={cn(
-                "lg-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-highlight px-4 text-[15px] font-semibold text-highlight-foreground",
+                "lg-press inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-highlight px-3 text-[15px] font-semibold text-highlight-foreground",
                 !canLogInvoice && "col-span-2",
               )}
             >
-              <Wallet className="h-[18px] w-[18px]" aria-hidden />
+              <Wallet className="h-[18px] w-[18px] shrink-0" aria-hidden />
               Close drawer
             </Link>
           )}
@@ -139,11 +140,11 @@ export function HeroCard({
             <Link
               href="/purchasing/invoices/new"
               className={cn(
-                "lg-press inline-flex h-12 items-center justify-center gap-2 rounded-full bg-foreground px-4 text-[15px] font-semibold text-background",
+                "lg-press inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-foreground px-3 text-[15px] font-semibold text-background",
                 !canCloseDrawer && "col-span-2",
               )}
             >
-              <FileText className="h-[18px] w-[18px]" aria-hidden />
+              <FileText className="h-[18px] w-[18px] shrink-0" aria-hidden />
               Log invoice
             </Link>
           )}

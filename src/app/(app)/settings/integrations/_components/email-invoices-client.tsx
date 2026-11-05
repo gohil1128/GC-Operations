@@ -95,7 +95,7 @@ export function ReviewActions({
             id={`sup-${id}`}
             value={supplierId}
             onChange={(e) => setSupplierId(e.target.value)}
-            className="h-11 min-w-0 max-w-full rounded-full border border-input bg-card px-4 text-sm"
+            className="select-native h-11"
           >
             <option value="">Which supplier is this?</option>
             {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}

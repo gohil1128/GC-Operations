@@ -182,7 +182,7 @@ export function MobileTabBar({ role }: { role: Role }) {
       <nav
         aria-label="Primary"
         ref={dockRef}
-        className="dock-glass fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-[26px] px-1.5 py-1.5 lg:hidden"
+        className="dock-glass fixed bottom-[calc(12px+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-md rounded-[26px] px-1.5 py-1.5 lg:hidden"
       >
         <div className="grid auto-cols-fr grid-flow-col">
           {tabs.map((t) => (
@@ -214,7 +214,7 @@ export function MobileTabBar({ role }: { role: Role }) {
   );
 }
 
-const dockSlot = "lg-press flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] px-1";
+const dockSlot = "lg-press flex min-h-[calc(34px+var(--lbl,1)*18px)] min-w-0 flex-col items-center justify-center rounded-[20px] px-1";
 
 function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>; active: boolean }) {
   return (
@@ -231,7 +231,7 @@ function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: s
 
 function DockLabel({ active, children }: { active: boolean; children: React.ReactNode }) {
   return (
-    <span className={cn("max-w-full truncate text-[10.5px] leading-none", active ? "font-semibold text-foreground" : "font-medium text-foreground/70")}>
+    <span className={cn("dock-label max-w-full truncate text-[10.5px] leading-none", active ? "font-semibold text-foreground" : "font-medium text-foreground/70")}>
       {children}
     </span>
   );
@@ -283,7 +283,7 @@ function useDockScroll(ref: React.RefObject<HTMLElement | null>) {
       const speed = Math.abs(y - lastY) / dt; // px per ms
       lastY = y;
       lastT = t;
-      const target = Math.min(1, speed / 2.4);
+      const target = Math.min(1, speed / 1.8);
       // Up fast, down slowly.
       boost += (target - boost) * (target > boost ? 0.35 : 0.08);
       if (boost < 0.004 && target === 0) boost = 0;

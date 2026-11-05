@@ -341,7 +341,7 @@ export function SwipePager({
               tabIndex={on ? 0 : -1}
               onClick={() => setActive(i)}
               className={cn(
-                "relative z-10 flex min-h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-medium transition-colors",
+                "relative z-10 flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-full px-1 text-[13px] font-medium transition-colors",
                 on ? (board ? "text-board-ink" : "text-foreground") : board ? "text-board-dim" : "text-muted-foreground",
                 // While a swipe moves the pill, the label it is over is the lit one, not the selected tab's.
                 board
@@ -351,7 +351,7 @@ export function SwipePager({
             >
               <span className="truncate">{t.label}</span>
               {t.count !== undefined && (
-                <span className={cn("num rounded-full px-1.5 text-[11px] leading-[18px]", board ? "bg-board-ink/10" : "bg-muted")}>{t.count}</span>
+                <span className={cn("num shrink-0 rounded-full px-1 text-[11px] leading-[18px]", board ? "bg-board-ink/10" : "bg-muted")}>{t.count}</span>
               )}
             </button>
           );

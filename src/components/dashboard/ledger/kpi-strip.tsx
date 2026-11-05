@@ -59,10 +59,10 @@ export function KpiStrip({ items, className }: { items: Kpi[]; className?: strin
               <Icon className="h-[18px] w-[18px] text-foreground" aria-hidden />
             </span>
             <div className="min-w-0">
-              <div className="truncate text-[11.5px] text-muted-foreground sm:text-[12.5px]">{k.label}</div>
+              <div className="line-clamp-2 leading-tight text-[11.5px] text-muted-foreground sm:text-[12.5px]">{k.label}</div>
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span
-                  className="display-num truncate text-[19px] font-medium tabular-nums tracking-[-0.02em] sm:text-2xl"
+                  className="display-num truncate text-[clamp(15px,4.7vw,19px)] font-medium tabular-nums tracking-[-0.02em] sm:text-2xl"
                   title={k.value}
                 >
                   {k.value}

@@ -60,7 +60,7 @@ export function SquareHistory() {
           id="square-history"
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
-          className="h-9 rounded-full border border-input bg-card px-4 text-sm"
+          className="select-native h-10"
         >
           {HISTORY.map((h) => <option key={h.days} value={h.days}>{h.label}</option>)}
         </select>

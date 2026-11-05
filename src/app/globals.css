@@ -828,8 +828,19 @@
       inset 0 1px 0 0 hsl(var(--dock-rim) / 0.4),
       inset 0 -1px 0 0 hsl(96 25% 4% / 0.14),
       0 14px 34px -14px hsl(96 25% 4% / 0.55);
-    transform: scale(calc(1 - var(--boost) * 0.02));
-    transform-origin: 50% 100%;
+    /* Finger speed reshapes the bar, as in the reference: it lines up with the
+       16px page gutter at rest, draws in from both sides and lets go of its
+       labels as the page speeds up, then opens back out once you stop. */
+    --lbl: calc(1 - var(--boost));
+    left: calc(16px + var(--boost) * 30px);
+    right: calc(16px + var(--boost) * 30px);
+  }
+  .dock-glass .dock-label {
+    display: block;
+    max-height: calc(var(--lbl) * 13px);
+    margin-top: calc(var(--lbl) * 4px);
+    opacity: clamp(0, calc(var(--lbl) * 1.7 - 0.35), 1);
+    transform: translateY(calc((1 - var(--lbl)) * -3px));
   }
   @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
     .dock-glass {
@@ -852,12 +863,35 @@
     opacity: calc(0.5 + var(--boost) * 0.5);
   }
   @media (prefers-reduced-motion: reduce) {
-    .dock-glass { transform: none; }
+    .dock-glass { left: 16px; right: 16px; }
     .dock-glass::before { background-position-x: 0, 0; }
   }
   @media (prefers-reduced-transparency: reduce) {
     .dock-glass { background-color: hsl(var(--card)); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
+
+  /* Native <select>: same pill as the Radix trigger, with room for its chevron
+     so a long option never runs under the arrow. */
+  .select-native {
+    min-width: 0; max-width: 100%;
+    appearance: none; -webkit-appearance: none;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--input));
+    background-color: hsl(var(--card));
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px;
+    padding: 0 2.25rem 0 1rem;
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    text-overflow: ellipsis;
+  }
+
+  /* A file input has an intrinsic width wider than a small phone; unchecked it
+     stretches its form and the whole page scrolls sideways. */
+  input[type="file"] { width: 100%; min-width: 0; max-width: 100%; }
+  label { max-width: 100%; }
 
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }

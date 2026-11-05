@@ -45,7 +45,7 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
               id={`role-${r.id}`}
               value={roles[r.id] ?? "STAFF"}
               onChange={(e) => setRoles((m) => ({ ...m, [r.id]: e.target.value as "STAFF" | "MANAGER" }))}
-              className="h-10 rounded-full border border-warning-border bg-card px-3 text-sm text-foreground"
+              className="select-native h-10 border-warning-border"
             >
               <option value="STAFF">Staff</option>
               <option value="MANAGER">Manager</option>
