@@ -13,17 +13,22 @@
   turns very slowly (a full turn in two minutes) so the page is alive without
   anything to look at; reduced motion stops it.
 */
-export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" | "background" }) {
+export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" | "background" | "massive" }) {
   const panel = variant === "panel";
   const hero = variant === "hero";
   const background = variant === "background";
+  // "massive": the desktop login panel's moon — a huge circle that fills the lower
+  // two thirds of the panel, cropped by its right and bottom edges.
+  const massive = variant === "massive";
   return (
     <div
       aria-hidden
       className={
-        background
-          ? "pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[180vmax] -translate-x-1/2 -translate-y-1/2"
-          : hero
+        massive
+          ? "pointer-events-none absolute -right-[62%] top-[41%] aspect-square w-[185%]"
+          : background
+            ? "pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[180vmax] -translate-x-1/2 -translate-y-1/2"
+            : hero
             ? "pointer-events-none relative left-1/2 aspect-square w-[min(118vw,640px)] -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:w-[min(90%,720px)]"
             : panel
               ? "pointer-events-none absolute -right-[16%] top-[12%] aspect-square w-[76%]"
@@ -39,7 +44,7 @@ export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" | "ba
       // -translate-x-1/2 and -translate-y-1/2) at 180vmax, so it fills the whole
       // phone screen behind the login form; its wrapper clips the overflow and
       // hides it on desktop (lg:hidden).
-      style={hero || panel || background ? undefined : { width: "var(--moon)", top: "calc(var(--moon) * -0.64)" }}
+      style={hero || panel || background || massive ? undefined : { width: "var(--moon)", top: "calc(var(--moon) * -0.64)" }}
     >
       {/* The glow it throws on the page around it. */}
       <div className="absolute -inset-[12%] rounded-full bg-[radial-gradient(closest-side,rgba(236,150,40,0.34),rgba(236,150,40,0.10)_55%,transparent_72%)]" />
@@ -50,7 +55,7 @@ export function ChaiMoon({ variant }: { variant: "panel" | "page" | "hero" | "ba
             makes a round photograph read as a moon and not as a button. */}
         <div
           className={
-            panel || hero
+            panel || hero || massive
               ? "absolute inset-0 bg-[radial-gradient(circle_at_30%_28%,transparent_38%,rgba(14,18,10,0.55)_78%,rgba(14,18,10,0.86)_100%)]"
               : "absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,transparent_30%,rgba(14,18,10,0.5)_72%,rgba(14,18,10,0.85)_100%)]"
           }

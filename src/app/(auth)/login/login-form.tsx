@@ -24,28 +24,24 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
   const [logoFailed, setLogoFailed] = React.useState(false);
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel — dark, with logo, the ChaiMoon itself as the hero, and the warm tagline. Deliberately carries no live figures: this page is unauthenticated, so real season numbers here would be public. */}
+      {/* Brand panel (desktop): the chai moon, massive, filling the lower part of the panel.
+          The headline sits up under the logo, on the dark of the panel, and the footer is a
+          small chip so nothing is set over the bright foam. Deliberately carries no live
+          figures: this page is unauthenticated, so real season numbers here would be public. */}
       <div
-        className="relative hidden w-full max-w-[680px] overflow-hidden rounded-bento p-10 text-white lg:m-5 lg:flex lg:flex-col lg:justify-between"
+        className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-white lg:m-5 lg:flex lg:flex-col"
         style={{ background: "radial-gradient(120% 120% at 0% 100%, #3A4628 0%, #283018 50%, #161B12 100%)" }}
       >
-        {/* Small secondary brand mark at the top of the panel. */}
-        <div className="relative flex justify-start">
-          {!logoFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src="/logo.png" alt={APP_NAME} className="h-16 w-auto" style={{ filter: "brightness(3.4) saturate(.4)" }} onError={() => setLogoFailed(true)} />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand">
-              <UtensilsCrossed className="h-6 w-6" />
-            </div>
-          )}
-        </div>
-        {/* The ChaiMoon itself, centered as the hero of the panel. */}
-        <div className="flex flex-1 items-center justify-center overflow-hidden">
-          <ChaiMoon variant="hero" />
-        </div>
-        {/* Tagline below the hero moon. */}
-        <div className="relative">
+        <ChaiMoon variant="massive" />
+        {!logoFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/logo.png" alt={APP_NAME} className="relative h-16 w-auto self-start" style={{ filter: "brightness(3.4) saturate(.4)" }} onError={() => setLogoFailed(true)} />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand">
+            <UtensilsCrossed className="h-6 w-6" />
+          </div>
+        )}
+        <div className="relative mt-10">
           <p className="display-num text-[44px] font-medium leading-[1.05]">
             Every cup,
             <br />
@@ -55,8 +51,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
             Sales, invoices, cash and labor for every event — in one warm back-office.
           </p>
         </div>
-        {/* Small footer with brand name. */}
-        <div className="relative mt-8 text-2xs opacity-50">{APP_NAME}</div>
+        <div className="relative mt-auto w-fit rounded-full bg-black/35 px-3 py-1 text-2xs text-white/80 backdrop-blur">{APP_NAME}</div>
       </div>
       {/* Form side */}
       <main className="relative flex flex-col items-center overflow-hidden px-6 pb-10 pt-8 sm:px-10 lg:justify-center lg:p-10">
