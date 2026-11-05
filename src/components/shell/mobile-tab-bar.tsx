@@ -18,6 +18,19 @@ export function MobileTabBar({ role }: { role: Role }) {
   // Close the sheet on navigation.
   React.useEffect(() => { setMoreOpen(false); }, [pathname]);
 
+  // After a swipe the new screen arrives from the side the finger was heading.
+  React.useEffect(() => {
+    let dir: string | null = null;
+    try { dir = sessionStorage.getItem("gc-swipe"); sessionStorage.removeItem("gc-swipe"); } catch {}
+    const m = document.getElementById("main");
+    if (m) { m.style.transition = ""; m.style.transform = ""; m.style.opacity = ""; }
+    if (!dir || !m || typeof m.animate !== "function") return;
+    m.animate(
+      [{ transform: `translateX(${dir === "l" ? 44 : -44}px)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
+      { duration: 340, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    );
+  }, [pathname]);
+
   // Lock the page while the sheet is open, otherwise a swipe on the dim overlay
   // scrolls the content behind it. Preserving/restoring scrollTop avoids the
   // jump-to-top that a bare `overflow:hidden` causes on iOS.
@@ -112,29 +125,74 @@ export function MobileTabBar({ role }: { role: Role }) {
       }
       return false;
     };
+    const main = () => document.getElementById("main");
+    const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const neighbour = (dx: number) => {
+      const c = swipeRef.current;
+      const i = c.swipeTabs.findIndex((x) => x.href === c.pathname);
+      return i < 0 ? undefined : c.swipeTabs[i + (dx < 0 ? 1 : -1)];
+    };
+    let following = false;
+    const settle = () => {
+      const m = main();
+      if (!m) return;
+      m.style.transition = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms";
+      m.style.transform = "";
+      m.style.opacity = "";
+      window.setTimeout(() => { m.style.transition = ""; }, 300);
+    };
     const onStart = (e: TouchEvent) => {
       const c = swipeRef.current;
+      following = false;
       s = e.touches.length === 1 && !c.moreOpen && window.innerWidth < 1024 && !blocked(e.target)
         ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), ok: true }
         : null;
     };
+    // The page follows the finger a little (with resistance) once the gesture
+    // is clearly sideways and there is a screen to go to, so it feels pulled.
+    const onMove = (e: TouchEvent) => {
+      if (!s?.ok || reduce()) return;
+      const t = e.touches[0];
+      const dx = t.clientX - s.x, dy = t.clientY - s.y;
+      const m = main();
+      if (!m || Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 2.2 || !neighbour(dx)) return;
+      following = true;
+      const pull = Math.sign(dx) * Math.min(64, Math.abs(dx) * 0.38);
+      m.style.transition = "none";
+      m.style.transform = `translateX(${pull}px)`;
+      m.style.opacity = String(1 - Math.min(0.35, Math.abs(pull) / 180));
+    };
     const onEnd = (e: TouchEvent) => {
       const st = s; s = null;
+      const wasFollowing = following; following = false;
       if (!st?.ok) return;
-      const c = swipeRef.current;
       const t = e.changedTouches[0];
       const dx = t.clientX - st.x, dy = t.clientY - st.y;
-      if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2.2 || Date.now() - st.t > 800) return;
-      if (window.getSelection()?.toString()) return;
-      // Only from a dock tab's own top-level page, never a detail page.
-      const i = c.swipeTabs.findIndex((x) => x.href === c.pathname);
-      if (i < 0) return;
-      const next = c.swipeTabs[i + (dx < 0 ? 1 : -1)];
-      if (next) c.router.push(next.href);
+      const next = neighbour(dx);
+      const fast = Math.abs(dx) / Math.max(1, Date.now() - st.t) > 0.5; // a flick counts at a shorter distance
+      const far = Math.abs(dx) >= (fast ? 45 : 80);
+      const ok = far && Math.abs(dx) >= Math.abs(dy) * 2.2 && Date.now() - st.t <= 800 && !window.getSelection()?.toString();
+      if (!ok || !next) { if (wasFollowing) settle(); return; }
+      const c = swipeRef.current;
+      const m = main();
+      if (m && !reduce()) {
+        // Carry on out the way it was going, then arrive from the other side (see below).
+        m.style.transition = "transform 150ms cubic-bezier(0.4, 0, 1, 1), opacity 150ms";
+        m.style.transform = `translateX(${dx < 0 ? -48 : 48}px)`;
+        m.style.opacity = "0";
+        try { sessionStorage.setItem("gc-swipe", dx < 0 ? "l" : "r"); } catch {}
+      }
+      c.router.push(next.href);
     };
     document.addEventListener("touchstart", onStart, { passive: true });
+    document.addEventListener("touchmove", onMove, { passive: true });
     document.addEventListener("touchend", onEnd, { passive: true });
-    return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchend", onEnd); };
+    document.addEventListener("touchcancel", () => { s = null; if (following) { following = false; settle(); } }, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onStart);
+      document.removeEventListener("touchmove", onMove);
+      document.removeEventListener("touchend", onEnd);
+    };
   }, []);
 
   return (
@@ -324,22 +382,30 @@ function useDockScroll(ref: React.RefObject<HTMLElement | null>) {
     let target = 0;   // where the scroll says the bar should be
     let shown = 0;    // where it is drawn, eased toward target
     let raf = 0;
+    let glow = 0;     // icon glow: rises with scroll speed, fades after you stop
     const write = () => {
+      el.style.setProperty("--glow", glow.toFixed(3));
       el.style.setProperty("--boost", clamp(shown / 0.55).toFixed(3));
       el.style.setProperty("--gone", clamp((shown - 0.55) / 0.45).toFixed(3));
       el.style.setProperty("--sheen", String(Math.round(window.scrollY)));
     };
+    let glowTarget = 0;
+    let lastMove = 0;
     const frame = () => {
       shown += (target - shown) * 0.28;
       if (Math.abs(target - shown) < 0.002) shown = target;
+      if (performance.now() - lastMove > 90) glowTarget = 0; // finger/page has stopped
+      glow += (glowTarget - glow) * (glowTarget > glow ? 0.3 : 0.07);
+      if (glow < 0.004 && glowTarget === 0) glow = 0;
       write();
-      raf = shown !== target ? requestAnimationFrame(frame) : 0;
+      raf = shown !== target || glow > 0 || glowTarget > 0 ? requestAnimationFrame(frame) : 0;
     };
     const onScroll = () => {
       const now = performance.now();
       const y = Math.max(0, window.scrollY); // ignore the rubber-band above the top
       const dy = y - lastY;
       const dt = Math.max(1, now - lastT);
+      if (dy !== 0) { glowTarget = clamp(Math.abs(dy) / dt / 1.0); lastMove = now; }
       lastY = y;
       lastT = now;
       if (y <= 4) target = 0;

@@ -842,6 +842,12 @@
     pointer-events: auto;
   }
   .dock-glass[style*="--gone: 1"], .dock-glass[style*="--gone:1"] { pointer-events: none; }
+  /* Scroll glow, on the icons only: a soft marigold halo that rises with scroll
+     speed and fades after you stop. */
+  .dock-glass svg {
+    filter: drop-shadow(0 0 calc(var(--glow, 0) * 7px) hsl(var(--dock-active) / calc(var(--glow, 0) * 0.85)))
+            drop-shadow(0 0 calc(var(--glow, 0) * 2px) hsl(var(--dock-active) / calc(var(--glow, 0) * 0.6)));
+  }
   .dock-glass .dock-label {
     display: block;
     max-height: calc(var(--lbl) * 13px);
@@ -871,6 +877,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .dock-glass { left: 16px; right: 16px; opacity: 1; transform: none; }
+    .dock-glass svg { filter: none; }
     .dock-glass::before { background-position-x: 0, 0; }
   }
   @media (prefers-reduced-transparency: reduce) {
