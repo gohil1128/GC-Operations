@@ -221,7 +221,7 @@ function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: s
     <span
       className={cn(
         "grid h-7 w-12 place-items-center rounded-full transition-colors duration-200",
-        active ? "dock-pop bg-brand-muted text-brand-ink" : "text-foreground/70",
+        active ? "dock-pop bg-dock-active text-dock-active-ink" : "text-foreground/70",
       )}
     >
       <Icon className="h-5 w-5" aria-hidden />
