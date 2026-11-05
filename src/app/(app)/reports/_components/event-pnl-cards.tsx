@@ -61,8 +61,8 @@ function PnlCard({ column: c, hero = false }: { column: PnlColumn; hero?: boolea
   const spentPct = hasSales ? Math.min(100, Math.max(0, (costs / c.netSalesCents) * 100)) : 0;
 
   /*
-    The hero card is lime, so nothing inside it can use the usual red/green for
-    profit and loss — red on lime fails contrast and green on lime is invisible.
+    The hero card is marigold, so nothing inside it can use the usual red/green for
+    profit and loss — red on marigold fails contrast and green on marigold is invisible.
     It says the same thing in ink, with the sign and the word, which is also
     what a colour-blind reader needs everywhere else.
   */

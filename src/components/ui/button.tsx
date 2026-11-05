@@ -16,7 +16,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Lime with olive ink: the reference's primary action. It was bg-espresso,
+        // Marigold with dark-brown ink: the primary action. It was bg-espresso,
         // which stopped meaning "primary" when the palette went olive — it
         // computes to a flat grey-green in dark, a fill with no accent at all,
         // on every Save, Create and Sign in button in the app.

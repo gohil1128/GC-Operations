@@ -14,13 +14,13 @@ import { STATUS_LABELS, type EventStatus } from "@/modules/events/status";
   event statuses the app already computes, and a ticket is one event.
 
   Its ground follows the theme (globals.css, --board-*), so in light mode it
-  is a white card on the canvas and in dark mode an olive one.
+  is a cream card on the canvas and in dark mode a dark-brown one.
 */
 
 /*
   The event's colour as a small round dot. Very dark colours — the old
   espresso default most events still carry — vanish on the dark board and
-  read as a hole on the light one, so those fall back to the brand lime.
+  read as a hole on the light one, so those fall back to the brand marigold.
 */
 function markerColor(color: string | null): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(color ?? "");

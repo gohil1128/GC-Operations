@@ -54,7 +54,7 @@ export const viewport: Viewport = {
   /* One value, the dark base. The app opens dark regardless of the OS setting
      now, so keying the status bar off prefers-color-scheme would paint a cream
      bar over a near-black page for everyone whose phone is in light mode. */
-  themeColor: "#283018",
+  themeColor: "#2B1B12",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
