@@ -299,41 +299,58 @@ function DockItem({
 
 
 /*
-  Writes --boost (how fast the page is moving, 0 to 1) and --sheen (scroll
-  position) onto the dock. Straight to the element's style from one passive
-  scroll listener and one animation frame, so scrolling costs no React renders.
+  The dock follows how far, and which way, you have scrolled. One state `s`
+  (0 = full bar, 1 = gone) that moves with the page and then STAYS where it is:
 
-  The boost follows speed with a quick rise and a slower fall: 2.4 px/ms (a firm
-  flick) is full strength, and it eases back to nothing about 350ms after the
-  page stops. Off entirely for reduced motion.
+    down  s grows with the distance scrolled, faster the quicker the finger
+          moves, so a flick makes it vanish and a slow drag only shrinks it
+    up    s falls back gradually, in proportion to the distance scrolled
+    still s is not touched, so a bar you left half-shrunk keeps that shape
+
+  The first ~55% of s draws the bar in and drops its labels (--boost); the rest
+  fades, sinks and shrinks it away (--gone). Written straight to the element
+  from one passive listener and an eased animation frame, so scrolling costs
+  no React renders. Back at the very top it is always whole. Off for reduced
+  motion.
 */
 function useDockScroll(ref: React.RefObject<HTMLElement | null>) {
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let lastY = window.scrollY;
+    const clamp = (v: number) => Math.min(1, Math.max(0, v));
+    let lastY = Math.max(0, window.scrollY);
     let lastT = performance.now();
-    let boost = 0;
+    let target = 0;   // where the scroll says the bar should be
+    let shown = 0;    // where it is drawn, eased toward target
     let raf = 0;
     const write = () => {
-      el.style.setProperty("--boost", boost.toFixed(3));
+      el.style.setProperty("--boost", clamp(shown / 0.55).toFixed(3));
+      el.style.setProperty("--gone", clamp((shown - 0.55) / 0.45).toFixed(3));
       el.style.setProperty("--sheen", String(Math.round(window.scrollY)));
     };
-    const tick = (t: number) => {
-      const dt = Math.max(1, t - lastT);
-      const y = window.scrollY;
-      const speed = Math.abs(y - lastY) / dt; // px per ms
-      lastY = y;
-      lastT = t;
-      const target = Math.min(1, speed / 1.8);
-      // Up fast, down slowly.
-      boost += (target - boost) * (target > boost ? 0.35 : 0.08);
-      if (boost < 0.004 && target === 0) boost = 0;
+    const frame = () => {
+      shown += (target - shown) * 0.28;
+      if (Math.abs(target - shown) < 0.002) shown = target;
       write();
-      raf = boost > 0 || target > 0 ? requestAnimationFrame(tick) : 0;
+      raf = shown !== target ? requestAnimationFrame(frame) : 0;
     };
-    const onScroll = () => { if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(tick); } };
+    const onScroll = () => {
+      const now = performance.now();
+      const y = Math.max(0, window.scrollY); // ignore the rubber-band above the top
+      const dy = y - lastY;
+      const dt = Math.max(1, now - lastT);
+      lastY = y;
+      lastT = now;
+      if (y <= 4) target = 0;
+      else if (dy > 0) {
+        const speed = dy / dt; // px per ms
+        target = clamp(target + (dy / 900) * (1 + Math.max(0, speed - 0.4) * 4));
+      } else if (dy < 0) {
+        target = clamp(target + dy / 380);
+      }
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     write();
     return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };

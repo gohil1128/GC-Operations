@@ -832,9 +832,16 @@
        16px page gutter at rest, draws in from both sides and lets go of its
        labels as the page speeds up, then opens back out once you stop. */
     --lbl: calc(1 - var(--boost));
+    --gone: 0;
     left: calc(16px + var(--boost) * 30px);
     right: calc(16px + var(--boost) * 30px);
+    /* Past the shrink, it sinks, fades and scales away; coming back up reverses it. */
+    opacity: calc(1 - var(--gone));
+    transform: translateY(calc(var(--gone) * 26px)) scale(calc(1 - var(--gone) * 0.14));
+    transform-origin: 50% 100%;
+    pointer-events: auto;
   }
+  .dock-glass[style*="--gone: 1"], .dock-glass[style*="--gone:1"] { pointer-events: none; }
   .dock-glass .dock-label {
     display: block;
     max-height: calc(var(--lbl) * 13px);
@@ -863,7 +870,7 @@
     opacity: calc(0.5 + var(--boost) * 0.5);
   }
   @media (prefers-reduced-motion: reduce) {
-    .dock-glass { left: 16px; right: 16px; }
+    .dock-glass { left: 16px; right: 16px; opacity: 1; transform: none; }
     .dock-glass::before { background-position-x: 0, 0; }
   }
   @media (prefers-reduced-transparency: reduce) {
