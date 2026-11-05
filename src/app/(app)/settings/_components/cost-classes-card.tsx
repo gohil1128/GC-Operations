@@ -1,4 +1,5 @@
 "use client";
+import { ToggleTile } from "@/components/toggle-tile";
 import * as React from "react";
 import { Scale } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,21 +68,16 @@ export function CostClassesCard({ opex }: { opex: string[] }) {
           them. Tick the bills that belong to the product; leave the rest, and they are counted
           below the gross-profit line as a cost of being open.
         </p>
-        <fieldset className="space-y-2.5">
+        <fieldset className="grid gap-2">
           <legend className="sr-only">Invoice categories counted as cost of goods</legend>
           {CLASSIFIABLE_INVOICE_CATEGORIES.map((c) => (
-            <label key={c} className="touch-target flex items-center gap-2.5 text-sm">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-[hsl(var(--espresso))]"
-                checked={!off.includes(c)}
-                onChange={() => toggle(c)}
-              />
-              <span className="font-medium">{c}</span>
-              <span className="ml-auto text-2xs text-muted-foreground">
-                {off.includes(c) ? "Operating expense" : "Cost of goods"}
-              </span>
-            </label>
+            <ToggleTile
+              key={c}
+              checked={!off.includes(c)}
+              onChange={() => toggle(c)}
+              title={c}
+              detail={off.includes(c) ? "Operating expense" : "Cost of goods"}
+            />
           ))}
         </fieldset>
         <p className="mt-3 border-t pt-3 text-2xs leading-relaxed text-muted-foreground">

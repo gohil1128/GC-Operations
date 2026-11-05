@@ -111,7 +111,42 @@ export function ImportedDataManager({
             </Button>
           </div>
 
-          <div className="rounded-xl border overflow-hidden lg:max-h-[min(60vh,420px)] lg:overflow-y-auto lg:overscroll-contain">
+          {/* Phone: one card per day, so a date never wraps in a squeezed column. */}
+          <div className="grid max-h-[min(70vh,560px)] gap-2 overflow-y-auto overscroll-contain lg:hidden">
+            {days.map((d) => (
+              <div key={d.iso} className="flex items-center gap-3 rounded-2xl border border-border-soft bg-muted/40 p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                    <span className="text-sm font-semibold">{d.label}</span>
+                    <span className="num text-sm font-semibold">{money(d.netSalesDollars)}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-muted-foreground">
+                    {d.event ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-2 py-0.5 text-foreground">
+                        <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: d.event.color ?? "hsl(var(--muted-foreground))" }} />
+                        {d.event.name}
+                      </span>
+                    ) : (
+                      <span>No event</span>
+                    )}
+                    <span>{d.guestCount} txns{d.itemCount > 0 ? ` · ${d.itemCount} items` : ""}</span>
+                  </div>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 shrink-0 rounded-full bg-card"
+                  disabled={busy !== null}
+                  onClick={() => setConfirm({ kind: "day", iso: d.iso, label: d.label })}
+                  aria-label={`Delete ${d.label}`}
+                >
+                  {busy === `day:${d.iso}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />}
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden rounded-xl border overflow-hidden lg:block lg:max-h-[min(60vh,420px)] lg:overflow-y-auto lg:overscroll-contain">
             <Table>
               <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>

@@ -33,12 +33,12 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
         {requests.length === 1 ? "1 person is waiting to join" : `${requests.length} people are waiting to join`}
       </h2>
       <p className="mt-0.5 text-xs opacity-90">They signed in with Google and can see nothing until you approve them.</p>
-      <ul className="mt-3 divide-y divide-warning-border">
+      <ul className="mt-3 grid gap-2">
         {requests.map((r) => (
-          <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+          <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-warning-border bg-card/70 p-3 text-foreground">
             <div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
-              <p className="truncate text-sm font-medium">{r.name}</p>
-              <p className="truncate text-xs opacity-80">{r.email}</p>
+              <p className="break-words text-sm font-semibold leading-snug">{r.name}</p>
+              <p className="break-all text-xs text-muted-foreground">{r.email}</p>
             </div>
             <label className="sr-only" htmlFor={`role-${r.id}`}>Role for {r.name}</label>
             <select

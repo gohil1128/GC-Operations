@@ -175,9 +175,9 @@ export async function EmailInvoicesCard({
             {overview.activity.length > 0 && (
               <section aria-labelledby="mail-activity">
                 <h3 id="mail-activity" className="text-sm font-semibold">Recently</h3>
-                <ul className="mt-2 divide-y divide-border-soft text-sm">
+                <ul className="mt-2 grid gap-2 text-sm">
                   {overview.activity.map((a) => (
-                    <li key={a.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2.5">
+                    <li key={a.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 rounded-2xl border border-border-soft bg-muted/40 px-3.5 py-2.5">
                       <span className="min-w-0 break-words">
                         {a.status === "LOGGED" && a.invoiceId ? (
                           <Link href={`/purchasing/invoices/${a.invoiceId}`} className="font-medium underline-offset-2 hover:underline">

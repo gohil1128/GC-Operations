@@ -1,4 +1,5 @@
 "use client";
+import { ToggleTile } from "@/components/toggle-tile";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Unlock, Trash2 } from "lucide-react";
@@ -81,18 +82,10 @@ export function SectionLockCard({
         screen, and nobody else is affected. Entering it opens them all for 60 minutes.
       </p>
 
-      <fieldset disabled={!hasPin || pending} className="space-y-2 disabled:opacity-50">
+      <fieldset disabled={!hasPin || pending} className="grid gap-2 disabled:opacity-50">
         <legend className="sr-only">Sections to lock</legend>
         {SECTIONS.map((s) => (
-          <label key={s.key} className="touch-target flex items-center gap-2.5 text-sm">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-[hsl(var(--espresso))]"
-              checked={sel.includes(s.key)}
-              onChange={() => toggle(s.key)}
-            />
-            {s.label}
-          </label>
+          <ToggleTile key={s.key} checked={sel.includes(s.key)} onChange={() => toggle(s.key)} title={s.label} />
         ))}
         {!hasPin && (
           <p className="text-2xs text-muted-foreground">Set your own PIN first to choose sections.</p>

@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle } from "lucide-react";
@@ -16,6 +17,7 @@ type Props = {
   variant?: "ghost" | "outline" | "destructive" | "danger";
   children?: React.ReactNode;
   refreshAfter?: boolean;
+  className?: string;
 };
 
 export function DeleteButton({
@@ -25,6 +27,7 @@ export function DeleteButton({
   confirmText,
   successMessage,
   size = "icon-sm",
+  className,
   variant = "ghost",
   children,
   refreshAfter = true,
@@ -52,7 +55,7 @@ export function DeleteButton({
         size={size}
         variant={variant}
         aria-label={`Delete ${itemLabel}`}
-        className={variant === "ghost" ? "text-muted-foreground hover:text-destructive" : ""}
+        className={cn(variant === "ghost" ? "text-muted-foreground hover:text-destructive" : "", className)}
       >
         {children ?? <Trash2 />}
       </Button>

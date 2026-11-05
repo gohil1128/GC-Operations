@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MapPin, Check } from "lucide-react";
+import { Plus, MapPin, Check, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,25 +27,34 @@ export function LocationsManager({
     <div className="space-y-3">
       <div className="space-y-2">
         {locations.map((l) => (
-          <div key={l.id} className="flex items-center justify-between rounded-md border p-2 gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-x-2">
-                  <span className="font-medium text-sm leading-tight break-words">{l.name}</span>
-                  {l.id === activeLocationId && <Check className="h-3 w-3 text-success shrink-0" aria-label="Active" />}
-                </div>
-                <div className="text-2xs text-muted-foreground truncate">{l.kind} · {l.address ?? "—"}</div>
+          <div key={l.id} className="flex items-start gap-3 rounded-2xl border border-border-soft bg-muted/40 p-3">
+            <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-muted text-brand-ink">
+              <MapPin className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="text-sm font-semibold leading-snug break-words">{l.name}</span>
+                {l.id === activeLocationId && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success-muted px-2 py-0.5 text-2xs font-medium text-success">
+                    <Check className="h-3 w-3" aria-hidden /> Active
+                  </span>
+                )}
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <Badge variant="muted" className="text-2xs">{l.kind}</Badge>
+                {l.address && <span className="text-2xs text-muted-foreground break-words">{l.address}</span>}
               </div>
             </div>
-            <Badge variant="muted" className="hidden shrink-0 sm:inline-flex">{l.kind}</Badge>
-            <EditLocationButton location={l} />
-            <DeleteButton
-              action={() => deleteLocationAction(l.id)}
-              itemLabel="location"
-              itemName={l.name}
-              confirmText={`This will permanently delete "${l.name}" and ALL data tied to it (sales, shifts, cash closes, counts, POs). Anything not tied to a location — like ingredients, recipes, suppliers, employees — stays.`}
-            />
+            <div className="flex shrink-0 items-center gap-1">
+              <EditLocationButton location={l} />
+              <DeleteButton
+                action={() => deleteLocationAction(l.id)}
+                itemLabel="location"
+                className="h-9 w-9 rounded-full bg-card"
+                itemName={l.name}
+                confirmText={`This will permanently delete "${l.name}" and ALL data tied to it (sales, shifts, cash closes, counts, POs). Anything not tied to a location — like ingredients, recipes, suppliers, employees — stays.`}
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -120,7 +129,7 @@ function EditLocationButton({ location }: { location: Loc }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" className="text-2xs h-7 px-2">Edit</Button>
+        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-card" aria-label={`Edit ${location.name}`}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Edit location</DialogTitle></DialogHeader>

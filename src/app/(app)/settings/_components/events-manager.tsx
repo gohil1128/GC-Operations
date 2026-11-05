@@ -2,7 +2,8 @@
 import * as React from "react";
 import { formatMoney } from "@/lib/money";
 import { useRouter } from "next/navigation";
-import { Plus, Calendar, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Calendar, Trash2, AlertTriangle, Loader2, Pencil } from "lucide-react";
+import { markerColor } from "@/lib/event-color";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,18 @@ type Ev = {
 
 // Shared formatter so thousands separators match the rest of the app.
 const money = (cents: number) => formatMoney(cents);
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+// "2026-10-24" → "Oct 24, 2026"; a span → "Oct 24 – Oct 25, 2026" (year only once when shared).
+function formatRange(start: string, end: string) {
+  const [sy, sm, sd] = start.split("-").map(Number);
+  const [ey, em, ed] = end.split("-").map(Number);
+  if (!sy || !ey) return `${start} → ${end}`;
+  const a = `${MONTHS[sm - 1]} ${sd}`;
+  const b = `${MONTHS[em - 1]} ${ed}`;
+  if (start === end) return `${a}, ${sy}`;
+  return sy === ey ? `${a} – ${b}, ${sy}` : `${a}, ${sy} – ${b}, ${ey}`;
+}
 
 // Presets for a new event's colour. The colour shows up all over the app — the
 // chart legend, the P&L column, the invoice dot — so the first one is the
@@ -41,30 +54,35 @@ export function EventsManager({ events }: { events: Ev[] }) {
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        {events.map((e) => (
-          <div key={e.id} className="flex items-center justify-between rounded-md border p-2 gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+        {events.map((e) => {
+          const c = markerColor(e.color);
+          return (
+            <div key={e.id} className="flex items-start gap-3 rounded-2xl border border-border-soft bg-muted/40 p-3">
               <span
-                className="h-3 w-3 rounded-full shrink-0 ring-1 ring-inset ring-foreground/25"
-                style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }}
-              />
-              <div className="min-w-0">
-                <div className="font-medium text-sm truncate">{e.name}</div>
-                <div className="text-2xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                  <span>{e.startDate} → {e.endDate}</span>
-                  {e.feeCents > 0 && (
-                    <Badge variant="brand" className="text-2xs h-4 px-1.5">
-                      Fee {money(e.feeCents)}
-                    </Badge>
-                  )}
+                aria-hidden
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-base font-semibold text-foreground ring-1 ring-inset"
+                style={{ backgroundColor: `color-mix(in srgb, ${c} 24%, transparent)`, boxShadow: `inset 0 0 0 1.5px ${c}` }}
+              >
+                {e.name.trim().charAt(0).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold leading-snug break-words">{e.name}</div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-0.5 text-2xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" aria-hidden />
+                    {formatRange(e.startDate, e.endDate)}
+                  </span>
+                  {e.feeCents > 0 && <Badge variant="brand" className="text-2xs">Fee {money(e.feeCents)}</Badge>}
+                  {!e.isActive && <Badge variant="muted" className="text-2xs">Inactive</Badge>}
                 </div>
               </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <EditEventButton event={e} />
+                <TwoStepDeleteEventButton event={e} />
+              </div>
             </div>
-            {!e.isActive && <Badge variant="muted">Inactive</Badge>}
-            <EditEventButton event={e} />
-            <TwoStepDeleteEventButton event={e} />
-          </div>
-        ))}
+          );
+        })}
         {events.length === 0 && (
           <div className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
             <Calendar className="h-4 w-4 mx-auto mb-1 opacity-50" />
@@ -191,7 +209,7 @@ function TwoStepDeleteEventButton({ event }: { event: Ev }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label={`Delete ${event.name}`}>
+        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-card" aria-label={`Delete ${event.name}`}>
           <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DialogTrigger>
@@ -260,7 +278,7 @@ function EditEventButton({ event }: { event: Ev }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" className="text-2xs h-7 px-2">Edit</Button>
+        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-card" aria-label={`Edit ${event.name}`}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Edit event</DialogTitle></DialogHeader>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { setHiddenOverviewCardsAction } from "@/modules/admin/actions";
 import { OVERVIEW_CARDS } from "@/modules/dashboard/cards";
 import { toast } from "@/components/ui/use-toast";
+import { ToggleTile } from "@/components/toggle-tile";
 
 /*
   Which cards this business wants on its Overview.
@@ -72,21 +73,10 @@ export function OverviewCardsCard({ hidden }: { hidden: string[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <fieldset className="space-y-2.5">
+        <fieldset className="grid gap-2">
           <legend className="sr-only">Cards to show on the Overview</legend>
           {OVERVIEW_CARDS.map((c) => (
-            <label key={c.key} className="touch-target flex items-start gap-2.5 text-sm">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 accent-[hsl(var(--espresso))]"
-                checked={!off.includes(c.key)}
-                onChange={() => toggle(c.key)}
-              />
-              <span>
-                <span className="font-medium">{c.label}</span>
-                <span className="block text-2xs text-muted-foreground">{c.blurb}</span>
-              </span>
-            </label>
+            <ToggleTile key={c.key} checked={!off.includes(c.key)} onChange={() => toggle(c.key)} title={c.label} detail={c.blurb} />
           ))}
         </fieldset>
         <p className="mt-3 border-t pt-3 text-2xs text-muted-foreground">
