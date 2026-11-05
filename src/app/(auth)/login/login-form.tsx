@@ -63,13 +63,15 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
         {/* Mobile only: ChaiMoon as a full-screen background behind the form.
             The "background" variant is a giant 180vmax circle centered in this
             clipped wrapper, so it fills the whole phone screen, keeping its
-            foam photo, glow, and slow rotation. A soft dark overlay (black/25
-            with a gentle top-to-bottom gradient) sits over the moon so the
-            form stays readable without hiding the moon. Hidden on desktop
-            (lg:hidden), so the brand panel and the desktop form are unchanged. */}
+            foam photo, glow, and slow rotation. A stronger dark gradient scrim
+            (black/45 at the top, via black/30 in the middle, to black/55 at the
+            bottom) sits between the moon and the form content, so the mobile
+            text sits on a darkened moon without hiding the moon entirely.
+            Hidden on desktop (lg:hidden), so the brand panel and the desktop
+            form are unchanged. */}
         <div aria-hidden className="absolute inset-0 overflow-hidden lg:hidden">
           <ChaiMoon variant="background" />
-          <div className="absolute inset-0 bg-black/25 bg-gradient-to-b from-black/40 via-black/25 to-black/45" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/55" />
         </div>
         {/* Everything below sits above the moon background (relative, z-10),
             in normal flow with no overlap: logo, heading, form, and links. */}
@@ -77,8 +79,8 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           <div className="mb-6 flex justify-center lg:hidden">
             <BrandLogo alt={APP_NAME} className="h-12 w-auto drop-shadow-[0_1px_6px_rgba(255,255,255,0.7)]" />
           </div>
-          <h1 className="display-num text-[30px] font-medium leading-tight [text-shadow:0_1px_10px_rgba(255,255,255,0.65)] lg:[text-shadow:none]">Welcome back</h1>
-          <p className="mt-1.5 text-[13px] text-muted-foreground [text-shadow:0_1px_8px_rgba(255,255,255,0.6)] lg:[text-shadow:none]">Sign in to your back-office</p>
+          <h1 className="display-num text-[30px] font-medium leading-tight text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.65)] lg:text-inherit lg:[text-shadow:none]">Welcome back</h1>
+          <p className="mt-1.5 text-[13px] text-white/85 [text-shadow:0_1px_8px_rgba(0,0,0,0.65)] lg:text-muted-foreground lg:[text-shadow:none]">Sign in to your back-office</p>
           <form action={formAction} className="mt-7 grid gap-3.5">
             {notice ? (
               <div role="status" className="rounded-xl bg-white/10 px-4 py-3 text-center text-sm text-white">
@@ -92,10 +94,10 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
             ) : null}
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="email" className="text-muted-foreground [text-shadow:0_1px_8px_rgba(255,255,255,0.6)] lg:[text-shadow:none]">
+                <Label htmlFor="email" className="text-white/95 [text-shadow:0_1px_8px_rgba(0,0,0,0.65)] lg:text-muted-foreground lg:[text-shadow:none]">
                   Email
                 </Label>
-                <Link href="/forgot-password" className="text-xs font-medium text-brand-ink hover:underline">
+                <Link href="/forgot-password" className="text-xs font-medium text-highlight [text-shadow:0_1px_6px_rgba(0,0,0,0.65)] hover:underline lg:text-brand-ink lg:[text-shadow:none]">
                   Forgot?
                 </Link>
               </div>
@@ -106,11 +108,11 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 autoComplete="email"
                 required
                 placeholder="you@example.com"
-                className="h-12 rounded-2xl border-white/60 bg-white/80 px-4 text-sm shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-md lg:border-input lg:bg-card lg:shadow-none lg:backdrop-blur-none"
+                className="h-12 rounded-2xl border-white/60 bg-white/80 px-4 text-sm shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-md placeholder:text-zinc-600 lg:border-input lg:bg-card lg:shadow-none lg:backdrop-blur-none lg:placeholder:text-muted-foreground"
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="password" className="text-muted-foreground [text-shadow:0_1px_8px_rgba(255,255,255,0.6)] lg:[text-shadow:none]">
+              <Label htmlFor="password" className="text-white/95 [text-shadow:0_1px_8px_rgba(0,0,0,0.65)] lg:text-muted-foreground lg:[text-shadow:none]">
                 Password
               </Label>
               <Input
@@ -126,13 +128,18 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           </form>
           {googleEnabled ? (
             <>
-              <OrDivider />
+              {/* Login-only mobile override for the shared divider: the shared
+                  OrDivider component itself is untouched, so the sign-up page
+                  and desktop colours are unchanged. */}
+              <div className="[&>div]:text-white/80 [&>div]:[text-shadow:0_1px_6px_rgba(0,0,0,0.6)] [&>div>span]:bg-white/50 lg:[&>div]:text-muted-foreground lg:[&>div]:[text-shadow:none] lg:[&>div>span]:bg-border">
+                <OrDivider />
+              </div>
               <GoogleButton />
             </>
           ) : null}
-          <p className="mt-8 text-center text-sm [text-shadow:0_1px_8px_rgba(255,255,255,0.6)] lg:[text-shadow:none]">
+          <p className="mt-8 text-center text-sm text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.65)] lg:text-inherit lg:[text-shadow:none]">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-medium text-brand-ink hover:underline">
+            <Link href="/signup" className="font-medium text-highlight [text-shadow:0_1px_6px_rgba(0,0,0,0.65)] hover:underline lg:text-brand-ink lg:[text-shadow:none]">
               Create an account
             </Link>
           </p>
