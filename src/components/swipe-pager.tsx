@@ -310,7 +310,7 @@ export function SwipePager({
   const board = tone === "board";
   const n = tabs.length;
   return (
-    <div className={className}>
+    <div className={className} data-pager>
       <div
         role="tablist"
         aria-label="Sections"

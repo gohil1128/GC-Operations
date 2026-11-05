@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
@@ -93,6 +93,49 @@ export function MobileTabBar({ role }: { role: Role }) {
   const isActive = (key: string) => current?.hub === key;
   const isCurrent = (href: string) => current?.href === href;
   const moreActive = moreItems.some((m) => isActive(m.key));
+
+  // Swipe sideways anywhere on a main screen to move to the next or previous
+  // dock tab (Home, Events, Reports, Invoices).
+  const router = useRouter();
+  const swipeTabs = tabs.map((t) => ({ key: t.key, href: t.href }));
+  const swipeRef = React.useRef({ pathname, moreOpen, swipeTabs, router });
+  swipeRef.current = { pathname, moreOpen, swipeTabs, router };
+  React.useEffect(() => {
+    let s: { x: number; y: number; t: number; ok: boolean } | null = null;
+    const blocked = (el: EventTarget | null) => {
+      if (!(el instanceof Element)) return true;
+      if (el.closest("input, textarea, select, [contenteditable=true], [data-no-swipe], [data-pager], [role=dialog], [role=listbox], [role=menu], table, nav, .more-sheet")) return true;
+      // Anything the finger is on that itself scrolls sideways keeps the gesture.
+      for (let n: Element | null = el; n && n !== document.body; n = n.parentElement) {
+        const ox = getComputedStyle(n).overflowX;
+        if ((ox === "auto" || ox === "scroll") && n.scrollWidth > n.clientWidth + 1) return true;
+      }
+      return false;
+    };
+    const onStart = (e: TouchEvent) => {
+      const c = swipeRef.current;
+      s = e.touches.length === 1 && !c.moreOpen && window.innerWidth < 1024 && !blocked(e.target)
+        ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), ok: true }
+        : null;
+    };
+    const onEnd = (e: TouchEvent) => {
+      const st = s; s = null;
+      if (!st?.ok) return;
+      const c = swipeRef.current;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - st.x, dy = t.clientY - st.y;
+      if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2.2 || Date.now() - st.t > 800) return;
+      if (window.getSelection()?.toString()) return;
+      // Only from a dock tab's own top-level page, never a detail page.
+      const i = c.swipeTabs.findIndex((x) => x.href === c.pathname);
+      if (i < 0) return;
+      const next = c.swipeTabs[i + (dx < 0 ? 1 : -1)];
+      if (next) c.router.push(next.href);
+    };
+    document.addEventListener("touchstart", onStart, { passive: true });
+    document.addEventListener("touchend", onEnd, { passive: true });
+    return () => { document.removeEventListener("touchstart", onStart); document.removeEventListener("touchend", onEnd); };
+  }, []);
 
   return (
     <>
