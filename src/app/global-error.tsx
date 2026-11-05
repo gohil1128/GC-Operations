@@ -25,7 +25,7 @@ export default function GlobalError({
           minHeight: "100vh",
           display: "grid",
           placeItems: "center",
-          background: "linear-gradient(180deg,#283018 0%,#161B12 60%)",
+          background: "linear-gradient(180deg,#2B1B12 0%,#1D120B 60%)",
           color: "#FCFCFB",
           fontFamily: "ui-sans-serif, system-ui, sans-serif",
           padding: "24px",
@@ -36,14 +36,14 @@ export default function GlobalError({
             maxWidth: 420,
             width: "100%",
             textAlign: "center",
-            background: "#2B3422",
-            border: "1px solid #3A4430",
+            background: "#2B1B12",
+            border: "1px solid #4A3223",
             borderRadius: 24,
             padding: 40,
           }}
         >
           {/* On a cream plate, as in the app: the logo is brown, and brown on this
-              olive would disappear. */}
+              dark brown would disappear. */}
           <span style={{ display: "inline-block", background: "#F7F9F8", borderRadius: 12, padding: "4px 10px", marginBottom: 24 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt={APP_NAME} style={{ height: 44, width: "auto", display: "block" }} />
@@ -59,7 +59,7 @@ export default function GlobalError({
             <button
               onClick={reset}
               style={{
-                background: "#C2EF00", color: "#1F251B", border: 0, borderRadius: 999,
+                background: "#F2A93C", color: "#2B1B12", border: 0, borderRadius: 999,
                 padding: "10px 18px", fontSize: 14, fontWeight: 500, cursor: "pointer",
               }}
             >
