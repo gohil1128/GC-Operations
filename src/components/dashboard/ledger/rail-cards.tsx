@@ -25,7 +25,7 @@ export function TopItemsCard({
 }) {
   const top = items.slice(0, 5);
   const max = top[0]?.netSalesCents ?? 0;
-  // Lime for the leaders, then neutral steps that fade with rank. The old ramp
+  // Marigold for the leaders, then neutral steps that fade with rank. The old ramp
   // dropped into amber below the top two, but amber is this app's CAUTION
   // colour, and a bar that merely sold less should not look like a warning.
   const tone = ["bg-highlight", "bg-highlight", "bg-foreground/60", "bg-foreground/45", "bg-foreground/30"];

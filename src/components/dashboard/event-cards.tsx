@@ -10,7 +10,7 @@ import { formatMoneyHeadline, formatPercent } from "@/lib/money";
   question both ask is the same: which ones are carrying the rest. So each
   card is one event's net sales with its margin in a chip, and one card is
   picked out — the event the page is scoped to, or the top earner when it is
-  not scoped — in highlight, as the reference picks out one holding in lime.
+  not scoped — in highlight, as the reference picks out one holding in marigold.
 
   Margins come from the P&L columns the statement below is built from, so a
   card and the statement can never disagree, and they are absent (not
@@ -82,7 +82,7 @@ export function EventCards({ events, highlightId }: { events: EventCard[]; highl
                           was a dark line on a dark card: nothing to see. A dot
                           with its own hairline, sitting inside a card-coloured
                           halo, reads whatever the colour is. Skipped on the lit
-                          card, where lime is already the identity. */}
+                          card, where marigold is already the identity. */}
                       {e.color && !lit && (
                         <span
                           className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-card"

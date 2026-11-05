@@ -26,14 +26,14 @@ const money = (cents: number) => formatMoney(cents);
 // default for every event anybody creates, and it has to be seen on both
 // themes. The old default was espresso #3A2415, which is a brown-black dot on
 // a near-black page: almost every event had a colour nobody could see. The
-// lime leads now; every swatch is also drawn with a hairline ring, so even a
+// marigold leads now; every swatch is also drawn with a hairline ring, so even a
 // colour that happens to match the surface it sits on still reads.
 const PALETTE = [
-  "#9CC005", // lime — the brand's own
-  "#2F8F5B", // green
-  "#E8A33D", // amber
-  "#C4623A", // rust
-  "#3F8FB8", // blue
+  "#F2A93C", // marigold — the brand's own 500
+  "#FF7A66", // coral
+  "#FCE4CC", // peach
+  "#1F6B42", // true green — success green, kept only for distinction
+  "#D18A1F", // marigold 600
   "#8D9191", // grey
 ];
 
