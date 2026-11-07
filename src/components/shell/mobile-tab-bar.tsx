@@ -9,6 +9,60 @@ import { bestPage, hubsFor } from "./nav";
 
 /* The destinations live in ./nav.ts as hubs; this file only lays them out. */
 
+/*
+  The neighbour previews. Each is the neighbouring tab's own page, loaded in an
+  invisible same-origin frame and cropped to the area under the app header, so
+  that while you drag, the next screen is really there beside this one and moves
+  with your finger. Nothing in a frame can be tapped (pointer-events off), the
+  header, dock and sidebar are hidden inside it, and they are all thrown away
+  as soon as the real page has taken over.
+*/
+const previews = new Map<string, { wrap: HTMLDivElement; frame: HTMLIFrameElement }>();
+
+function removePreviews() {
+  previews.forEach((pv) => pv.wrap.remove());
+  previews.clear();
+}
+
+function ensurePreview(href: string) {
+  if (previews.has(href)) return;
+  const header = document.querySelector("header");
+  const top = Math.max(0, Math.round(header?.getBoundingClientRect().bottom ?? 0));
+  const wrap = document.createElement("div");
+  wrap.setAttribute("aria-hidden", "true");
+  Object.assign(wrap.style, {
+    position: "fixed", left: "0", top: `${top}px`, width: "100%", height: `calc(100dvh - ${top}px)`,
+    overflow: "hidden", zIndex: "5", pointerEvents: "none", visibility: "hidden",
+    background: "hsl(var(--background))", willChange: "transform", transform: "translateX(100%)",
+  } as Partial<CSSStyleDeclaration>);
+  const frame = document.createElement("iframe");
+  frame.tabIndex = -1;
+  frame.title = "";
+  Object.assign(frame.style, { border: "0", width: "100%", height: "100%", display: "block", background: "transparent" } as Partial<CSSStyleDeclaration>);
+  // A still picture of the page, not a second running copy of the app: fetch its
+  // server-rendered HTML, drop the app's own script files (keeping the tiny inline
+  // ones that swap streamed content into place), and show it in a srcdoc frame (which
+  // never goes through the site's anti-framing header). The real page replaces
+  // it the moment the swipe completes.
+  fetch(href, { credentials: "same-origin", headers: { accept: "text/html" } })
+    .then((r) => (r.ok ? r.text() : ""))
+    .then((html) => {
+      if (!html || !previews.has(href)) return;
+      const css = "<style>header,nav[aria-label=Primary],aside,a[href='#main']{display:none!important}html,body{overscroll-behavior:none}*{scrollbar-width:none}</style>";
+      frame.srcdoc = html.replace(/<script\b[^>]*\bsrc=[^>]*>[\s\S]*?<\/script>/gi, "").replace("</head>", `${css}</head>`);
+    })
+    .catch(() => {});
+  frame.addEventListener("load", () => {
+    try {
+      const root = frame.contentDocument?.documentElement;
+      if (root) root.className = document.documentElement.className; // light / dark
+    } catch { /* ignore */ }
+  });
+  wrap.appendChild(frame);
+  document.body.appendChild(wrap);
+  previews.set(href, { wrap, frame });
+}
+
 export function MobileTabBar({ role }: { role: Role }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = React.useState(false);
@@ -18,17 +72,13 @@ export function MobileTabBar({ role }: { role: Role }) {
   // Close the sheet on navigation.
   React.useEffect(() => { setMoreOpen(false); }, [pathname]);
 
-  // After a swipe the new screen arrives from the side the finger was heading.
+  // A finished swipe leaves the neighbour preview covering the page; once the real
+  // page is there, take the preview away and put the page back.
   React.useEffect(() => {
-    let dir: string | null = null;
-    try { dir = sessionStorage.getItem("gc-swipe"); sessionStorage.removeItem("gc-swipe"); } catch {}
     const m = document.getElementById("main");
-    if (m) { m.style.transition = ""; m.style.transform = ""; m.style.opacity = ""; }
-    if (!dir || !m || typeof m.animate !== "function") return;
-    m.animate(
-      [{ transform: `translateX(${dir === "l" ? 44 : -44}px)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
-      { duration: 340, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
-    );
+    if (m) { m.style.transition = ""; m.style.transform = ""; }
+    const t = window.setTimeout(() => removePreviews(), 60);
+    return () => window.clearTimeout(t);
   }, [pathname]);
 
   // Lock the page while the sheet is open, otherwise a swipe on the dim overlay
@@ -107,91 +157,114 @@ export function MobileTabBar({ role }: { role: Role }) {
   const isCurrent = (href: string) => current?.href === href;
   const moreActive = moreItems.some((m) => isActive(m.key));
 
-  // Swipe sideways anywhere on a main screen to move to the next or previous
-  // dock tab (Home, Events, Reports, Invoices).
+  // Swipe sideways anywhere on a main screen: the neighbouring tab slides in
+  // alongside, tracking the finger one to one, and settles on release.
   const router = useRouter();
   const swipeTabs = tabs.map((t) => ({ key: t.key, href: t.href }));
   const swipeRef = React.useRef({ pathname, moreOpen, swipeTabs, router });
   swipeRef.current = { pathname, moreOpen, swipeTabs, router };
   React.useEffect(() => {
-    let s: { x: number; y: number; t: number; ok: boolean } | null = null;
+    type Drag = { x: number; y: number; t: number; locked: boolean; px: number; pt: number; v: number };
+    let d: Drag | null = null;
+    let busy = false; // a release animation is running
+    const main = () => document.getElementById("main");
+    const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const blocked = (el: EventTarget | null) => {
       if (!(el instanceof Element)) return true;
       if (el.closest("input, textarea, select, [contenteditable=true], [data-no-swipe], [data-pager], [role=dialog], [role=listbox], [role=menu], table, nav, .more-sheet")) return true;
-      // Anything the finger is on that itself scrolls sideways keeps the gesture.
       for (let n: Element | null = el; n && n !== document.body; n = n.parentElement) {
         const ox = getComputedStyle(n).overflowX;
         if ((ox === "auto" || ox === "scroll") && n.scrollWidth > n.clientWidth + 1) return true;
       }
       return false;
     };
-    const main = () => document.getElementById("main");
-    const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const neighbour = (dx: number) => {
       const c = swipeRef.current;
       const i = c.swipeTabs.findIndex((x) => x.href === c.pathname);
       return i < 0 ? undefined : c.swipeTabs[i + (dx < 0 ? 1 : -1)];
     };
-    let following = false;
-    const settle = () => {
+    const W = () => window.innerWidth;
+    const place = (dx: number, next: { href: string } | undefined) => {
       const m = main();
-      if (!m) return;
-      m.style.transition = "transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms";
-      m.style.transform = "";
-      m.style.opacity = "";
-      window.setTimeout(() => { m.style.transition = ""; }, 300);
+      if (m) m.style.transform = `translateX(${next ? dx : dx * 0.22}px)`;
+      for (const [href, pv] of previews) {
+        const on = !!next && href === next.href;
+        pv.wrap.style.visibility = on ? "visible" : "hidden";
+        if (on) pv.wrap.style.transform = `translateX(${dx + (dx < 0 ? W() : -W())}px)`;
+      }
+    };
+    const animate = (on: boolean) => {
+      const ease = "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)";
+      const m = main();
+      if (m) m.style.transition = ease;
+      previews.forEach((pv) => { pv.wrap.style.transition = ease; });
+    };
+    const settle = (dx: number, next: { href: string } | undefined, commit: boolean) => {
+      busy = true;
+      animate(true);
+      const end = commit && next ? (dx < 0 ? -W() : W()) : 0;
+      place(end, commit ? next : undefined);
+      if (!commit) {
+        // put every preview back off-screen once the page has returned
+        window.setTimeout(() => { previews.forEach((pv) => { pv.wrap.style.visibility = "hidden"; pv.wrap.style.transition = ""; }); const m = main(); if (m) { m.style.transition = ""; m.style.transform = ""; } busy = false; }, 340);
+        return;
+      }
+      window.setTimeout(() => { swipeRef.current.router.push(next!.href); busy = false; }, 300);
+      // if the navigation is slow or fails, do not leave the preview up forever
+      window.setTimeout(() => { if (previews.size) removePreviews(); const m = main(); if (m) { m.style.transition = ""; m.style.transform = ""; } }, 4000);
     };
     const onStart = (e: TouchEvent) => {
       const c = swipeRef.current;
-      following = false;
-      s = e.touches.length === 1 && !c.moreOpen && window.innerWidth < 1024 && !blocked(e.target)
-        ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), ok: true }
-        : null;
+      d = null;
+      if (busy || e.touches.length !== 1 || c.moreOpen || window.innerWidth >= 1024) return;
+      const t0 = e.touches[0];
+      if (t0.clientX < 22 || t0.clientX > window.innerWidth - 22) return; // leave the browser's edge gestures alone
+      if (blocked(e.target)) return;
+      const i = c.swipeTabs.findIndex((x) => x.href === c.pathname);
+      if (i < 0) return;
+      // Get the neighbours loading while the finger is still down.
+      if (!reduce()) [c.swipeTabs[i - 1], c.swipeTabs[i + 1]].forEach((n) => n && ensurePreview(n.href));
+      d = { x: t0.clientX, y: t0.clientY, t: performance.now(), locked: false, px: t0.clientX, pt: performance.now(), v: 0 };
     };
-    // The page follows the finger a little (with resistance) once the gesture
-    // is clearly sideways and there is a screen to go to, so it feels pulled.
     const onMove = (e: TouchEvent) => {
-      if (!s?.ok || reduce()) return;
+      if (!d || busy) return;
       const t = e.touches[0];
-      const dx = t.clientX - s.x, dy = t.clientY - s.y;
-      const m = main();
-      if (!m || Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 2.2 || !neighbour(dx)) return;
-      following = true;
-      const pull = Math.sign(dx) * Math.min(64, Math.abs(dx) * 0.38);
-      m.style.transition = "none";
-      m.style.transform = `translateX(${pull}px)`;
-      m.style.opacity = String(1 - Math.min(0.35, Math.abs(pull) / 180));
+      const dx = t.clientX - d.x, dy = t.clientY - d.y;
+      if (!d.locked) {
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { d = null; return; } // it is a scroll
+        if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        d.locked = true;
+        const m = main(); if (m) m.style.transition = "none";
+        previews.forEach((pv) => { pv.wrap.style.transition = "none"; });
+      }
+      if (e.cancelable) e.preventDefault();
+      const now = performance.now();
+      if (now - d.pt > 16) { d.v = (t.clientX - d.px) / (now - d.pt); d.px = t.clientX; d.pt = now; }
+      if (reduce()) return;
+      place(dx, neighbour(dx));
     };
     const onEnd = (e: TouchEvent) => {
-      const st = s; s = null;
-      const wasFollowing = following; following = false;
-      if (!st?.ok) return;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - st.x, dy = t.clientY - st.y;
+      const st = d; d = null;
+      if (!st?.locked) return;
+      const dx = e.changedTouches[0].clientX - st.x;
       const next = neighbour(dx);
-      const fast = Math.abs(dx) / Math.max(1, Date.now() - st.t) > 0.5; // a flick counts at a shorter distance
-      const far = Math.abs(dx) >= (fast ? 45 : 80);
-      const ok = far && Math.abs(dx) >= Math.abs(dy) * 2.2 && Date.now() - st.t <= 800 && !window.getSelection()?.toString();
-      if (!ok || !next) { if (wasFollowing) settle(); return; }
-      const c = swipeRef.current;
-      const m = main();
-      if (m && !reduce()) {
-        // Carry on out the way it was going, then arrive from the other side (see below).
-        m.style.transition = "transform 150ms cubic-bezier(0.4, 0, 1, 1), opacity 150ms";
-        m.style.transform = `translateX(${dx < 0 ? -48 : 48}px)`;
-        m.style.opacity = "0";
-        try { sessionStorage.setItem("gc-swipe", dx < 0 ? "l" : "r"); } catch {}
-      }
-      c.router.push(next.href);
+      const far = Math.abs(dx) > W() * 0.33;
+      const flick = Math.abs(st.v) > 0.45 && Math.abs(dx) > 30 && Math.sign(st.v) === Math.sign(dx);
+      const commit = !!next && (far || flick);
+      if (reduce()) { if (commit) swipeRef.current.router.push(next!.href); return; }
+      settle(dx, next, commit);
     };
+    const onCancel = () => { const st = d; d = null; if (st?.locked && !busy) settle(0, undefined, false); };
     document.addEventListener("touchstart", onStart, { passive: true });
-    document.addEventListener("touchmove", onMove, { passive: true });
+    document.addEventListener("touchmove", onMove, { passive: false });
     document.addEventListener("touchend", onEnd, { passive: true });
-    document.addEventListener("touchcancel", () => { s = null; if (following) { following = false; settle(); } }, { passive: true });
+    document.addEventListener("touchcancel", onCancel, { passive: true });
     return () => {
       document.removeEventListener("touchstart", onStart);
       document.removeEventListener("touchmove", onMove);
       document.removeEventListener("touchend", onEnd);
+      document.removeEventListener("touchcancel", onCancel);
+      removePreviews();
     };
   }, []);
 
