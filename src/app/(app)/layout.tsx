@@ -12,6 +12,7 @@ import { LocationSwitcher } from "@/components/shell/location-switcher";
 import { EventSwitcher } from "@/components/shell/event-switcher";
 import { UserMenu } from "@/components/shell/user-menu";
 import { PageTransition } from "@/components/shell/page-transition";
+import { LaunchSplash } from "@/components/mobile-loader";
 import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
 import { Sidebar } from "@/components/shell/sidebar";
 import { HeaderHeightVar } from "@/components/shell/header-height";
@@ -111,6 +112,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
+      <LaunchSplash />
       <HeaderHeightVar />
       <MobileTabBar role={scope.role} />
     </div>
