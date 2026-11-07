@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { EventMark } from "@/components/event-mark";
 import Link from "next/link";
 import { AlertTriangle, Camera, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -9,7 +10,7 @@ import { Dismissible } from "@/components/dismissible";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
+import { TableOnDesktop } from "@/components/mobile-list";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteInvoiceAction } from "@/modules/invoices/actions";
 import { ReopenInvoiceButton } from "../_components/reopen-invoice-button";
@@ -144,12 +145,31 @@ export default async function InvoicesPage({
         actions={
           <>
             <ExportInvoicesButton count={sorted.length} />
-            <Button asChild variant="outline" size="sm"><Link href="/purchasing">All purchasing</Link></Button>
+            <Button asChild variant="outline" size="sm" className="max-sm:hidden"><Link href="/purchasing">All purchasing</Link></Button>
           </>
         }
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 space-y-4">
-        <StatTileRow>
+        {/* Phone: one slim line of figures. The four tiles are desktop only. */}
+        <div className="grid grid-cols-3 gap-2 lg:hidden">
+          <div className="min-w-0 rounded-2xl bg-card px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Total</div>
+            <div className="num truncate text-[15px] font-semibold">{formatMoney(totalSpend)}</div>
+          </div>
+          <div className="min-w-0 rounded-2xl bg-card px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Open · {openInvoices.length}</div>
+            <div className="num truncate text-[15px] font-semibold">{formatMoney(openTotal)}</div>
+          </div>
+          <Link
+            href={untaggedCount > 0 ? "/purchasing/invoices?untagged=1" : "/purchasing/invoices"}
+            className={cn("min-w-0 rounded-2xl px-3 py-2", untaggedCount > 0 ? "bg-warning-muted text-warning-ink" : "bg-card")}
+          >
+            <div className="text-[11px] opacity-75">No event</div>
+            <div className="num text-[15px] font-semibold">{untaggedCount}</div>
+          </Link>
+        </div>
+
+        <StatTileRow className="hidden lg:grid">
           <StatTile
             label="Total · all invoices"
             value={formatMoney(totalSpend)}
@@ -346,81 +366,47 @@ export default async function InvoicesPage({
           </Table>
         </TableOnDesktop>
 
-        {/* Cards take no href: each row owns actions (photo, re-open, delete),
-            which cannot be nested inside a link — the supplier name is the link. */}
-        <MobileList>
-          {sorted.map((i) => (
-            <MobileRow
+        {/* Phone: a plain list, newest first on screen. Each row is one tap to the
+            invoice, where the photo, re-open and delete live. */}
+        <div className="overflow-hidden rounded-3xl bg-card lg:hidden">
+          {sorted.map((i, n) => (
+            <Link
               key={i.id}
-              title={
-                <>
-                  <Link href={`/purchasing/invoices/${i.id}`} className="hover:underline">
-                    {i.supplier.name}
-                  </Link>
-                  {i.mailMessage && (
-                      <Badge variant="muted" className="ml-2 align-middle" title="Logged from an email — check it against the attached document">
-                        Email
-                      </Badge>
-                    )}
-                </>
-              }
-              subtitle={fmtDate(i.invoiceDate)}
-              meta={formatMoney(i.totalCents)}
-              badges={
-                <>
-                  {i.closedAt ? <Badge variant="success">Closed</Badge> : <Badge variant="muted">Open</Badge>}
-                  {i.appliesToAllEvents ? (
-                    <Badge variant="brand">All events</Badge>
-                  ) : i.event ? (
-                    <Badge variant="muted">
-                      <EventMark name={i.event.name} size="xs" />
-                      {i.event.name}
-                    </Badge>
-                  ) : (
-                    <Badge variant="muted">No event</Badge>
-                  )}
-                  {i.category && <Badge variant="muted">{i.category}</Badge>}
-                </>
-              }
-              actions={
-                <>
-                    {i.hasImage && (
-                      <a
-                        href={`/api/purchasing/invoices/${i.id}/photo`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Open invoice photo"
-                        className="lg-press inline-flex h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-[13px] font-medium text-foreground hover:bg-muted/70"
-                      >
-                        <Camera className="h-3.5 w-3.5" /> Photo
-                      </a>
-                    )}
-                    {i.closedAt && <ReopenInvoiceButton id={i.id} />}
-                    <DeleteButton
-                      action={deleteInvoiceAction.bind(null, i.id)}
-                      itemLabel="invoice"
-                      itemName={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
-                      confirmText={`This will delete the ${i.supplier.name} invoice from ${fmtDate(i.invoiceDate)} and REVERSE its inventory impact (subtract ${i._count.items} items' quantities from on-hand).`}
-                    />
-                </>
-              }
+              href={`/purchasing/invoices/${i.id}`}
+              className={cn("lg-press flex items-center gap-3 px-4 py-3", n > 0 && "border-t border-border-soft")}
             >
-              <MobileField label="Received" value={fmtDate(i.dateReceived)} />
-              <MobileField label="Items" value={i._count.items} />
-              <MobileField label="Subtotal" value={formatMoney(i.subtotalCents)} />
-              <MobileField label="Created by" value={i.createdBy.name} />
-            </MobileRow>
+              {i.event && !i.appliesToAllEvents ? (
+                <EventMark name={i.event.name} size="md" />
+              ) : (
+                <span aria-hidden className="grid h-8 min-w-8 shrink-0 place-items-center rounded-[10px] bg-muted text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold leading-tight">{i.supplier.name}</span>
+                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                  {fmtDate(i.invoiceDate)}
+                  {i.appliesToAllEvents ? " · All events" : i.event ? ` · ${i.event.name}` : " · No event"}
+                  {i.category ? ` · ${i.category}` : ""}
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className={cn("num block text-[15px] font-semibold", isBelowSubtotal(i) && "text-warning")}>{formatMoney(i.totalCents)}</span>
+                <span className={cn("block text-[11px]", i.closedAt ? "text-muted-foreground" : "font-medium text-brand-ink")}>
+                  {i.closedAt ? "Closed" : "Open"}{i.mailMessage ? " · Email" : ""}
+                </span>
+              </span>
+            </Link>
           ))}
           {sorted.length === 0 && (
-            <MobileEmpty>
-              <FileText className="h-6 w-6 mx-auto mb-2 opacity-40" />
+            <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+              <FileText className="mx-auto mb-2 h-6 w-6 opacity-40" />
               {activeFilterCount > 0
-                ? "No invoices match the current filters. Adjust filters above."
-                : <>No invoices yet. Use <Link href="/purchasing" className="underline">Purchasing → New invoice</Link> to create one.</>
-              }
-            </MobileEmpty>
+                ? "No invoices match the current filters."
+                : <>No invoices yet. Use <Link href="/purchasing" className="underline">Purchasing → New invoice</Link> to create one.</>}
+            </div>
           )}
-        </MobileList>
+        </div>
       </div>
     </div>
   );

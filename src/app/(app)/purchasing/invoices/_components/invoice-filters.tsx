@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { X } from "lucide-react";
+import { X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -58,10 +58,25 @@ export function InvoiceFilters({
     (from ? 1 : 0) +
     (to ? 1 : 0);
 
-  // Two columns on a phone, with Supplier across both; every field the same
-  // height and top-aligned, so labels line up whatever sits beside them.
+  // On a phone the filters sit behind one button so the invoices are the first
+  // thing on screen; from md up they are always open.
+  const [open, setOpen] = React.useState(false);
   return (
-    <form onSubmit={apply} className="bento grid grid-cols-2 items-start gap-x-3 gap-y-3 p-4 [&>div]:min-w-0 md:grid-cols-5">
+    <div>
+    <button
+      type="button"
+      onClick={() => setOpen((v) => !v)}
+      aria-expanded={open}
+      className="lg-press flex h-11 w-full items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium md:hidden"
+    >
+      <SlidersHorizontal className="h-4 w-4 text-muted-foreground" aria-hidden />
+      Filters
+      {activeCount > 0 && <span className="num rounded-full bg-highlight px-2 text-xs font-semibold text-highlight-foreground">{activeCount}</span>}
+      <ChevronDown className={`ml-auto h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+    </button>
+    {/* Two columns on a phone, with Supplier across both; every field the same
+        height and top-aligned, so labels line up whatever sits beside them. */}
+    <form onSubmit={apply} className={`bento grid-cols-2 items-start gap-x-3 gap-y-3 p-4 [&>div]:min-w-0 md:grid md:grid-cols-5 ${open ? "mt-2 grid" : "hidden"}`}>
       <div className="col-span-2 grid gap-1.5 md:col-span-1">
         <Label className="text-xs">Supplier</Label>
         <Select value={supplierId} onValueChange={setSupplierId}>
@@ -96,12 +111,12 @@ export function InvoiceFilters({
       <div className="grid gap-1.5">
         <Label htmlFor="f-from" className="text-xs">From</Label>
         <Input id="f-from" type="date"
-             className="h-10 w-full min-w-0 max-w-full appearance-none [&::-webkit-date-and-time-value]:text-left" value={from} onChange={(e) => setFrom(e.target.value)} />
+             className="h-10 w-full min-w-0 max-w-full appearance-none px-3 text-[13px] [&::-webkit-date-and-time-value]:text-left [&::-webkit-calendar-picker-indicator]:ml-0" value={from} onChange={(e) => setFrom(e.target.value)} />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="f-to" className="text-xs">To</Label>
         <Input id="f-to" type="date"
-             className="h-10 w-full min-w-0 max-w-full appearance-none [&::-webkit-date-and-time-value]:text-left" value={to} onChange={(e) => setTo(e.target.value)} />
+             className="h-10 w-full min-w-0 max-w-full appearance-none px-3 text-[13px] [&::-webkit-date-and-time-value]:text-left [&::-webkit-calendar-picker-indicator]:ml-0" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
       <div className="col-span-2 flex justify-end gap-2 pt-1 md:col-span-5">
         {activeCount > 0 && (
@@ -112,5 +127,6 @@ export function InvoiceFilters({
         <Button type="submit" size="sm">Apply filters</Button>
       </div>
     </form>
+    </div>
   );
 }
