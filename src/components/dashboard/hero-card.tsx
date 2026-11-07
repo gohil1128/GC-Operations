@@ -21,6 +21,14 @@ import { CountUp } from "@/components/count-up";
   is the question the chart is actually asked: "how did last night go".
 */
 
+// $1.2k, $845, $12k: short enough to sit over a bar.
+function compact(cents: number) {
+  const d = cents / 100;
+  if (d >= 10000) return `$${Math.round(d / 1000)}k`;
+  if (d >= 1000) return `$${(d / 1000).toFixed(1)}k`;
+  return `$${Math.round(d)}`;
+}
+
 export type TradingDay = { businessDate: Date; netSalesCents: number };
 
 export function HeroCard({
@@ -40,6 +48,8 @@ export function HeroCard({
 }) {
   const max = Math.max(1, ...days.map((d) => d.netSalesCents));
   const last = days.length - 1;
+  const best = Math.max(0, ...days.map((d) => d.netSalesCents));
+  const avg = days.length ? Math.round(days.reduce((a, d) => a + d.netSalesCents, 0) / days.length) : 0;
 
   return (
     <section className="rounded-[28px] bg-card p-5 sm:p-6" aria-label="Sales at a glance">
@@ -78,24 +88,38 @@ export function HeroCard({
         <figure className="mt-6">
           {/* The bars are a picture of the list below, which is what a screen
               reader gets instead. */}
-          <div aria-hidden className="flex h-36 items-end justify-between gap-2 sm:gap-3">
-            {days.map((d, i) => (
-              <div key={d.businessDate.toISOString()} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
-                <div
-                  className={cn(
-                    "bar-grow w-full max-w-[28px] rounded-full",
-                    i === last ? "bg-highlight" : "bg-foreground/85",
-                  )}
-                  // Never fully flat: a night that took money should not draw
-                  // as the same nothing as a night that did not happen.
-                  // Staggered 30ms left to right, oldest night first.
-                  style={{
-                    height: `${Math.max(6, (d.netSalesCents / max) * 100)}%`,
-                    animationDelay: `${120 + i * 30}ms`,
-                  }}
-                />
-              </div>
-            ))}
+          <div aria-hidden className="relative">
+            {/* The average, as a dashed line across every column. */}
+            <div
+              className="pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-foreground/25"
+              style={{ bottom: `${(avg / max) * 146}px` }}
+            />
+            <div className="flex h-[168px] items-end justify-between gap-2 sm:gap-3">
+              {days.map((d, i) => (
+                <div key={d.businessDate.toISOString()} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+                  <span className={cn("num mb-1 text-[10.5px] font-semibold leading-none tabular-nums", i === last ? "text-foreground" : "text-muted-foreground")}>
+                    {compact(d.netSalesCents)}
+                  </span>
+                  {/* A faint track behind each bar gives the chart body even on a quiet night. */}
+                  <div className="relative flex h-[146px] w-full max-w-[30px] items-end overflow-hidden rounded-full bg-muted/70">
+                    <div
+                      className={cn(
+                        "bar-grow w-full rounded-full",
+                        i === last
+                          ? "bg-gradient-to-t from-highlight to-sun-400 shadow-[0_0_14px_-2px_hsl(var(--highlight)/0.7)]"
+                          : d.netSalesCents === best
+                            ? "bg-gradient-to-t from-foreground/85 to-foreground/60"
+                            : "bg-gradient-to-t from-foreground/80 to-foreground/45",
+                      )}
+                      // Never fully flat: a night that took money should not draw
+                      // as the same nothing as a night that did not happen.
+                      // Staggered 30ms left to right, oldest night first.
+                      style={{ height: `${Math.max(4, (d.netSalesCents / max) * 100)}%`, animationDelay: `${120 + i * 30}ms` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <div aria-hidden className="mt-2 flex justify-between gap-2 border-t border-dashed border-border pt-2 sm:gap-3">
             {days.map((d, i) => (
@@ -111,6 +135,9 @@ export function HeroCard({
               </span>
             ))}
           </div>
+          <p aria-hidden className="mt-2 flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground">
+            <span className="w-5 border-t border-dashed border-foreground/40" /> {days.length}-day average {compact(avg)}
+          </p>
           <figcaption className="sr-only">
             Net sales on the last {days.length} trading days:{" "}
             {days.map((d) => `${fmtDate(d.businessDate, "EEEE MMM d")} ${formatMoney(d.netSalesCents)}`).join("; ")}.
