@@ -10,7 +10,6 @@ import { loginAction } from "@/modules/auth/actions";
 import { APP_NAME } from "@/lib/brand";
 import { BrandLogo } from "@/components/brand-logo";
 import { GoogleButton, OrDivider } from "../_components/google-button";
-import { MobileLoader } from "@/components/mobile-loader";
 import { ChaiMoon } from "../_components/chai-moon";
 function Submit() {
   const { pending } = useFormStatus();
@@ -23,13 +22,8 @@ function Submit() {
 export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; notice?: string }) {
   const [state, formAction] = useFormState(loginAction, null as { error?: string } | null);
   const [logoFailed, setLogoFailed] = React.useState(false);
-  // The pending flag drops before a successful sign-in has finished navigating, so the
-  // loader is keyed to "submitted and nothing has come back yet" instead.
-  const [submitted, setSubmitted] = React.useState(false);
-  React.useEffect(() => { if (state?.error) setSubmitted(false); }, [state]);
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <MobileLoader slot="signin" active={submitted} overlay delay={250} />
       {/* Brand panel (desktop): the chai moon, massive, filling the lower part of the panel.
           The headline sits up under the logo, on the dark of the panel, and the footer is a
           small chip so nothing is set over the bright foam. Deliberately carries no live
@@ -79,7 +73,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           <h1 className="display-num text-[30px] font-medium text-[#FDF5EE] lg:text-inherit">Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-[#C9CBBF] lg:text-muted-foreground">Sign in to your back-office</p>
 
-          <form action={formAction} onSubmit={() => setSubmitted(true)} className="mt-7 grid gap-3.5">
+          <form action={formAction} className="mt-7 grid gap-3.5">
             <div className="grid gap-1.5">
               <Label htmlFor="email" className="text-xs text-[#C9CBBF] lg:text-muted-foreground">Email</Label>
               <Input
