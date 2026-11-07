@@ -73,16 +73,19 @@ export function OrderBoard({ events }: { events: BoardEvent[] }) {
             </span>
           </header>
 
-          <div className="flex flex-col gap-3">
-            {rows.map((e) => (
-              <Ticket key={e.id} event={e} />
-            ))}
-            {rows.length === 0 && (
-              <p className="rounded-[22px] border border-dashed border-board-ink/15 px-4 py-6 text-center text-xs text-board-dim">
-                Nothing here.
-              </p>
-            )}
-          </div>
+          {/* One line per event in one quiet list: tile, name and date, the
+              figure that matters, and a status dot. Tap for the event. */}
+          {rows.length > 0 ? (
+            <ul className="divide-y divide-board-ink/10 overflow-hidden rounded-[22px] bg-board-ink/5">
+              {rows.map((e) => (
+                <li key={e.id}><Ticket event={e} /></li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-[22px] border border-dashed border-board-ink/15 px-4 py-6 text-center text-xs text-board-dim">
+              Nothing here.
+            </p>
+          )}
         </section>
       ))}
     />
@@ -94,99 +97,35 @@ function Ticket({ event }: { event: BoardEvent }) {
   const profit = column?.profitCents ?? 0;
   const traded = (column?.txns ?? 0) > 0;
 
+  const tone =
+    status === "loss" ? "text-board-red" : status === "profit" ? "text-board-green" : status === "stocked" ? "text-board-amber" : "text-board-dim";
   return (
     <Link
       href={`/events/${event.id}`}
-      className={cn(
-        "block rounded-[22px] border p-4 transition-colors",
-        /*
-          The board's ticket tints: a loss is the late ticket, stocking up is
-          the one being worked on, a profitable event is ready to hand off.
-
-          Every opacity here is a multiple of five. Tailwind's scale steps in
-          fives and silently emits NOTHING for a value off it — these were /12
-          and /16, so a loss ticket rendered with no red at all and the hover
-          states did nothing. Confirmed by grepping the compiled stylesheet:
-          zero rules for each. tests/unit/tailwind-opacity.test.ts now fails the
-          build rather than letting it happen a third time.
-        */
-        status === "loss" && "border-board-red/45 bg-board-red/15 hover:bg-board-red/20",
-        status === "stocked" && "border-board-amber/40 bg-board-amber/10 hover:bg-board-amber/15",
-        status === "profit" && "border-board-green/40 bg-board-green/10 hover:bg-board-green/15",
-        (status === "upcoming" || status === "none") &&
-          "border-board-ink/15 bg-board-ink/5 hover:bg-board-ink/10",
-      )}
+      className="lg-press flex items-center gap-3 px-3.5 py-3 transition-colors hover:bg-board-ink/5"
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="flex min-w-0 items-center gap-2">
-          <EventMark name={event.name} size="sm" />
-          <span className="display-num truncate text-[17px] font-medium text-board-ink" title={event.name}>
-            {event.name}
-          </span>
+      <EventMark name={event.name} size="md" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[15px] font-medium leading-tight text-board-ink" title={event.name}>
+          {event.name}
         </span>
-        <span
-          className={cn(
-            "num shrink-0 rounded-full px-2 py-0.5 text-2xs font-semibold",
-            // /15 not /25 on the red: the tint lightens the ground under an
-            // already-light label, and at /25 "Lost money" measured 4.37:1.
-            status === "loss" && "bg-board-red/15 text-board-red",
-            status === "stocked" && "bg-board-amber/15 text-board-amber",
-            status === "profit" && "bg-board-green/15 text-board-green",
-            (status === "upcoming" || status === "none") && "bg-board-ink/10 text-board-dim",
-          )}
-        >
-          {STATUS_LABELS[status]}
+        <span className="mt-0.5 block truncate text-xs text-board-dim">
+          {fmtDate(event.startDate, "MMM d")}
+          {event.endDate.getTime() !== event.startDate.getTime() && <> – {fmtDate(event.endDate, "MMM d")}</>}
+          {!traded && event.ownSpendCents > 0 && <> · {formatMoney(event.ownSpendCents)} spent</>}
+          {event.feeCents > 0 && <> · fee {formatMoney(event.feeCents)}</>}
         </span>
-      </div>
-
-      <div className="mt-1.5 text-xs text-board-dim">
-        {fmtDate(event.startDate, "MMM d")}
-        {event.endDate.getTime() !== event.startDate.getTime() && (
-          <> – {fmtDate(event.endDate, "MMM d, yyyy")}</>
-        )}
-        {event.feeCents > 0 && <> · fee {formatMoney(event.feeCents)}</>}
-      </div>
-
-      {/* The ticket's lines. An event that has not traded shows what has gone
-          out on it instead of a profit that is really a cost allocation. */}
-      <dl className="mt-3 space-y-1 border-t border-board-ink/10 pt-3 text-[13px]">
+      </span>
+      <span className="shrink-0 text-right">
         {traded ? (
           <>
-            <Line label="Net sales" value={formatMoney(column?.netSalesCents ?? 0)} />
-            <Line
-              label="Profit"
-              value={formatMoney(profit, { signed: true })}
-              tone={profit < 0 ? "text-board-red" : profit > 0 ? "text-board-green" : undefined}
-              strong
-            />
-            <Line label="Margin" value={formatPercent(column?.marginPct ?? 0)} />
+            <span className={cn("num block text-[15px] font-semibold", tone)}>{formatMoney(profit, { signed: true })}</span>
+            <span className="num block text-[11px] text-board-dim">{formatPercent(column?.marginPct ?? 0)}</span>
           </>
         ) : (
-          <>
-            <Line label="Spent so far" value={formatMoney(event.ownSpendCents)} />
-            <Line label="Sold" value="Nothing yet" />
-          </>
+          <span className={cn("block text-xs font-medium", tone)}>{STATUS_LABELS[status]}</span>
         )}
-      </dl>
+      </span>
     </Link>
-  );
-}
-
-function Line({
-  label,
-  value,
-  tone,
-  strong,
-}: {
-  label: string;
-  value: string;
-  tone?: string;
-  strong?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-board-dim">{label}</dt>
-      <dd className={cn("num", strong && "font-semibold", tone ?? "text-board-ink")}>{value}</dd>
-    </div>
   );
 }
