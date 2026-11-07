@@ -1,3 +1,4 @@
+import { EventMark } from "@/components/event-mark";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatMoney, APP_LOCALE } from "@/lib/money";
@@ -180,11 +181,7 @@ export function UpcomingEventsCard({ events }: { events: UpcomingEvent[] }) {
               >
               <div className="flex items-center gap-2 text-xs font-semibold">
                 {i !== 0 && (
-                  <span
-                    aria-hidden
-                    className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
-                    style={{ background: e.color ?? "hsl(var(--ink-400))" }}
-                  />
+                  <EventMark name={e.name} size="xs" />
                 )}
                 <span className="truncate" title={e.name}>
                   {e.name}

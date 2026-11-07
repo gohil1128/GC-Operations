@@ -1,3 +1,4 @@
+import { EventMark } from "@/components/event-mark";
 import Link from "next/link";
 import { AlertTriangle, Camera, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { requireCapability } from "@/lib/scope";
@@ -269,7 +270,7 @@ export default async function InvoicesPage({
                       <Badge variant="brand">All events</Badge>
                     ) : i.event ? (
                       <span className="inline-flex items-center gap-1.5 text-xs">
-                        <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: i.event.color ?? "hsl(var(--muted-foreground))" }} />
+                        <EventMark name={i.event.name} size="xs" />
                         {i.event.name}
                       </span>
                     ) : (
@@ -372,7 +373,7 @@ export default async function InvoicesPage({
                     <Badge variant="brand">All events</Badge>
                   ) : i.event ? (
                     <Badge variant="muted">
-                      <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: i.event.color ?? "hsl(var(--muted-foreground))" }} />
+                      <EventMark name={i.event.name} size="xs" />
                       {i.event.name}
                     </Badge>
                   ) : (

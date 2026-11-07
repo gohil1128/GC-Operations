@@ -1,3 +1,4 @@
+import { EventMark } from "@/components/event-mark";
 import { cn } from "@/lib/utils";
 import { formatMoney, formatPercent } from "@/lib/money";
 import type { PnlColumn } from "@/modules/reports/queries";
@@ -85,11 +86,7 @@ function PnlCard({ column: c, hero = false }: { column: PnlColumn; hero?: boolea
       <header className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {!hero && (
-            <span
-              aria-hidden
-              className="h-3 w-3 shrink-0 rounded-full ring-1 ring-inset ring-foreground/25"
-              style={{ backgroundColor: c.color ?? "hsl(var(--muted-foreground))" }}
-            />
+            <EventMark name={c.name} size="md" />
           )}
           <h3 className={cn("min-w-0 truncate font-display font-semibold tracking-[-0.01em]", hero ? "text-xl" : "text-base")} title={c.name}>
             {hero ? "All events together" : c.name}

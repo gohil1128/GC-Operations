@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatMoney } from "@/lib/money";
 import { markerColor } from "@/lib/event-color";
+import { EventMark } from "@/components/event-mark";
 import { useSwipe } from "@/lib/use-swipe";
 
 /*
@@ -115,7 +116,7 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
             className="lg-press flex min-h-11 w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 text-left text-sm hover:bg-muted"
           >
             {slice.color ? (
-              <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: slice.color }} />
+              <EventMark name={slice.label} size="xs" />
             ) : (
               <Layers aria-hidden className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             )}
@@ -131,9 +132,9 @@ export function SpendExplorer({ suppliers, categories }: { suppliers: SpendTable
                 {i === 1 && <DropdownMenuSeparator />}
                 <DropdownMenuItem onSelect={() => setSliceId(s.id)} className="gap-2.5">
                   {s.color ? (
-                    <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                    <EventMark name={s.label} size="xs" />
                   ) : (
-                    <span aria-hidden className="h-2 w-2 shrink-0" />
+                    <span aria-hidden className="h-[18px] w-[18px] shrink-0" />
                   )}
                   <span className={cn("min-w-0 flex-1 truncate", on && "font-semibold")}>{s.id === "all" ? "All spend" : s.label}</span>
                   <span className="num shrink-0 text-xs text-muted-foreground">{formatMoney(s.total)}</span>

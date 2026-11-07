@@ -1,4 +1,5 @@
 "use client";
+import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import Link from "next/link";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
@@ -110,13 +111,9 @@ function Row({
         className="gap-2"
       >
         {color !== undefined ? (
-          <span
-            aria-hidden
-            className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
-            style={{ background: color ?? "hsl(var(--ink-400))" }}
-          />
+          <EventMark name={label} size="xs" />
         ) : (
-          <span aria-hidden className="h-2 w-2 shrink-0" />
+          <span aria-hidden className="h-[18px] w-[18px] shrink-0" />
         )}
         <span className={cn("min-w-0 flex-1 truncate", active && "font-semibold")}>{label}</span>
         {active && <Check className="h-3.5 w-3.5 shrink-0 text-brand-ink" aria-hidden />}

@@ -1,5 +1,5 @@
+import { EventMark } from "@/components/event-mark";
 import Link from "next/link";
-import { markerColor } from "@/lib/event-color";
 import { SwipePager } from "@/components/swipe-pager";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/date";
@@ -119,11 +119,7 @@ function Ticket({ event }: { event: BoardEvent }) {
     >
       <div className="flex items-start justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2">
-          <span
-            aria-hidden
-            className="h-2 w-2 shrink-0 rounded-full ring-2 ring-board-ink/10"
-            style={{ background: markerColor(event.color) }}
-          />
+          <EventMark name={event.name} size="sm" />
           <span className="display-num truncate text-[17px] font-medium text-board-ink" title={event.name}>
             {event.name}
           </span>

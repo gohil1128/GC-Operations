@@ -1,3 +1,4 @@
+import { EventMark } from "@/components/event-mark";
 import { requireCapability } from "@/lib/scope";
 import { listExpenses, EXPENSE_CATEGORIES } from "@/modules/expenses/queries";
 import { listVendors, getMonthlyFeePaymentStatus } from "@/modules/vendors/queries";
@@ -136,7 +137,7 @@ export default async function ExpensesPage({
                         )}
                         {e.event && (
                           <span className="inline-flex items-center gap-1.5 text-xs">
-                            <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.event.color ?? "hsl(var(--muted-foreground))" }} />
+                            <EventMark name={e.event.name} size="xs" />
                             {e.event.name}
                           </span>
                         )}
@@ -177,7 +178,7 @@ export default async function ExpensesPage({
                       {e.vendor && <Badge variant="brand">{e.vendor.name}</Badge>}
                       {e.event && (
                         <Badge variant="muted">
-                          <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.event.color ?? "hsl(var(--muted-foreground))" }} />
+                          <EventMark name={e.event.name} size="xs" />
                           {e.event.name}
                         </Badge>
                       )}

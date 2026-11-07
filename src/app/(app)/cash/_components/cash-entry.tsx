@@ -1,4 +1,5 @@
 "use client";
+import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Pencil, Plus, Trash2 } from "lucide-react";
@@ -188,7 +189,7 @@ export function CashEntry({
                         {events.map((e) => (
                           <SelectItem key={e.id} value={e.id}>
                             <span className="flex items-center gap-2">
-                              <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                              <EventMark name={e.name} size="xs" />
                               {e.name}
                             </span>
                           </SelectItem>

@@ -1,4 +1,5 @@
 "use client";
+import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
@@ -168,11 +169,7 @@ export function PnlStatement({ columns }: { columns: PnlColumn[] }) {
                     title={`Open ${c.name} — sales, items, invoices, labor and cash`}
                     className="flex items-center justify-end gap-1.5 rounded transition-colors hover:text-foreground"
                   >
-                    <span
-                      aria-hidden
-                      className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
-                      style={{ background: swatch(c, i) }}
-                    />
+                    <EventMark name={c.name} size="xs" />
                     <span className="truncate">{c.name}</span>
                   </Link>
                 </span>
@@ -311,11 +308,7 @@ export function PnlStatement({ columns }: { columns: PnlColumn[] }) {
                 <span className="truncate text-sm font-semibold">{c.name}</span>
               ) : (
                 <Link href={`/events/${encodeURIComponent(c.key)}`} className="flex min-w-0 items-center gap-2">
-                  <span
-                    aria-hidden
-                    className="h-2 w-2 shrink-0 rounded-[2px] ring-1 ring-inset ring-foreground/25"
-                    style={{ background: swatch(c, i) }}
-                  />
+                  <EventMark name={c.name} size="xs" />
                   <span className="truncate text-sm font-semibold" title={c.name}>
                     {c.name}
                   </span>

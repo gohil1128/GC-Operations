@@ -1,4 +1,5 @@
 "use client";
+import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { formatMoney } from "@/lib/money";
 import { useRouter } from "next/navigation";
@@ -112,7 +113,7 @@ export function CapitalSection({ assets, events }: { assets: Asset[]; events: Ev
                     <TableCell>
                       {a.event ? (
                         <span className="inline-flex items-center gap-1.5 text-xs">
-                          <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: a.event.color ?? "hsl(var(--muted-foreground))" }} />
+                          <EventMark name={a.event.name} size="xs" />
                           {a.event.name}
                         </span>
                       ) : <span className="text-xs text-muted-foreground">—</span>}
@@ -158,7 +159,7 @@ export function CapitalSection({ assets, events }: { assets: Asset[]; events: Ev
                       </Badge>
                       {a.event && (
                         <Badge variant="muted">
-                          <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: a.event.color ?? "hsl(var(--muted-foreground))" }} />
+                          <EventMark name={a.event.name} size="xs" />
                           {a.event.name}
                         </Badge>
                       )}
@@ -360,7 +361,7 @@ function AssetFields({ events, defaults }: { events: Event[]; defaults: Partial<
                 {events.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
                     <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                      <EventMark name={e.name} size="xs" />
                       {e.name}
                     </span>
                   </SelectItem>

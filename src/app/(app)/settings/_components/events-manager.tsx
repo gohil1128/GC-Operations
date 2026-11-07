@@ -1,9 +1,9 @@
 "use client";
+import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { formatMoney } from "@/lib/money";
 import { useRouter } from "next/navigation";
 import { Plus, Calendar, Trash2, AlertTriangle, Loader2, Pencil } from "lucide-react";
-import { markerColor } from "@/lib/event-color";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,16 +55,9 @@ export function EventsManager({ events }: { events: Ev[] }) {
     <div className="space-y-3">
       <div className="space-y-2">
         {events.map((e) => {
-          const c = markerColor(e.color);
           return (
             <div key={e.id} className="flex items-start gap-3 rounded-2xl border border-border-soft bg-muted/40 p-3">
-              <span
-                aria-hidden
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-base font-semibold text-foreground ring-1 ring-inset"
-                style={{ backgroundColor: `color-mix(in srgb, ${c} 24%, transparent)`, boxShadow: `inset 0 0 0 1.5px ${c}` }}
-              >
-                {e.name.trim().charAt(0).toUpperCase()}
-              </span>
+              <EventMark name={e.name} size="lg" className="h-11 w-11" />
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold leading-snug break-words">{e.name}</div>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">

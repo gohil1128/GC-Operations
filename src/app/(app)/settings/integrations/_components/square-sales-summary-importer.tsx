@@ -1,4 +1,5 @@
 "use client";
+import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { formatMoney } from "@/lib/money";
 import { useRouter } from "next/navigation";
@@ -141,7 +142,7 @@ export function SquareSalesSummaryImporter({
               {events.map((e) => (
                 <SelectItem key={e.id} value={e.id}>
                   <span className="inline-flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full ring-1 ring-inset ring-foreground/25" style={{ backgroundColor: e.color ?? "hsl(var(--muted-foreground))" }} />
+                    <EventMark name={e.name} size="xs" />
                     {e.name}
                   </span>
                 </SelectItem>
