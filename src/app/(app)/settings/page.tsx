@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Users, Plug } from "lucide-react";
 import { requireCapability } from "@/lib/scope";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/page-header";
@@ -15,6 +14,7 @@ import { GlassDensityCard } from "@/components/glass-density";
 import { SectionLockCard } from "./_components/section-lock-card";
 import { sectionLockSettings } from "@/modules/section-lock/actions";
 import { EventsManager } from "./_components/events-manager";
+import { SettingsNavigator } from "./_components/settings-navigator";
 import { Lock, Calendar } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -45,16 +45,15 @@ export default async function SettingsPage() {
       <PageHeader
         eyebrow="Settings · Business & events"
         title="Settings"
-        description="Business, locations, users, and integrations"
-        actions={
-          <>
-            <Button asChild variant="outline" size="sm"><Link href="/settings/users"><Users className="h-3.5 w-3.5" /> Users</Link></Button>
-            <Button asChild variant="outline" size="sm"><Link href="/settings/integrations"><Plug className="h-3.5 w-3.5" /> Integrations</Link></Button>
-          </>
-        }
+        description="Search, or pick a section"
       />
-      <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
+      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-4 pb-10 pt-5 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8">
+        {/* The navigator: first thing on a phone, a sticky column on desktop. */}
+        <div className="lg:sticky lg:top-[calc(var(--app-header-h,64px)+16px)] lg:max-h-[calc(100dvh-var(--app-header-h,64px)-32px)] lg:self-start lg:overflow-y-auto lg:pb-4 no-scrollbar">
+          <SettingsNavigator />
+        </div>
+      <div className="grid grid-cols-1 content-start gap-4 xl:grid-cols-2">
+        <Card id="business" data-settings-section>
           <CardHeader>
             <CardTitle>Business</CardTitle>
             <CardDescription>{business?.timezone} · {business?.currency} · created {business?.createdAt.toDateString() ?? "—"}</CardDescription>
@@ -79,7 +78,7 @@ export default async function SettingsPage() {
 
         <GlassDensityCard />
 
-        <Card>
+        <Card id="locations" data-settings-section>
           <CardHeader>
             <CardTitle>Locations</CardTitle>
             <CardDescription>Stores and event channels you operate</CardDescription>
@@ -93,7 +92,7 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="pin-lock" data-settings-section>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> My PIN lock</CardTitle>
             <CardDescription>Optional: hide P&amp;L, events or recipes on your own screen behind a 4-digit PIN</CardDescription>
@@ -103,7 +102,7 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="events" data-settings-section>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Events</CardTitle>
             <CardDescription>Tag sales and closes with an event for dashboard analysis</CardDescription>
@@ -121,7 +120,7 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 border-destructive/30">
+        <Card id="danger-zone" data-settings-section className="border-destructive/30 xl:col-span-2">
           <CardHeader>
             <CardTitle className="text-destructive">Danger zone</CardTitle>
             <CardDescription>
@@ -132,6 +131,7 @@ export default async function SettingsPage() {
             <DangerZone counts={counts} />
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

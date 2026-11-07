@@ -45,7 +45,7 @@ export async function EmailInvoicesCard({
   const note = flash ? FLASH[flash] : undefined;
 
   return (
-    <Card className="lg:col-span-2">
+    <Card id="email-invoices" data-settings-section className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <Mail className="h-4 w-4" aria-hidden /> Email invoices

@@ -89,7 +89,7 @@ export default async function IntegrationsPage({
 
         <EmailInvoicesCard businessId={scope.businessId} flash={mailFlash} canReview={can(scope.role, "purchasing")} />
 
-        <Card>
+        <Card id="sales-summary-csv" data-settings-section>
           <CardHeader>
             <CardTitle>
               Square Sales Summary CSV
@@ -108,7 +108,7 @@ export default async function IntegrationsPage({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="item-sales-csv" data-settings-section>
           <CardHeader>
             <CardTitle>
               Square Item Sales Summary CSV
@@ -125,7 +125,7 @@ export default async function IntegrationsPage({
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
+        <Card id="imported-data" data-settings-section className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Manage imported data <Badge variant="muted" className="ml-2">Delete</Badge></CardTitle>
             <CardDescription>
@@ -139,7 +139,7 @@ export default async function IntegrationsPage({
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
+        <Card id="items-categories" data-settings-section className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Items &amp; categories <Badge variant="brand" className="ml-2">Categorize</Badge></CardTitle>
             <CardDescription>

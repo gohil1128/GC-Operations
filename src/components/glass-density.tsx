@@ -65,7 +65,7 @@ export function GlassDensityCard() {
   };
 
   return (
-    <Card>
+    <Card id="transparency" data-settings-section>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Droplets className="h-4 w-4 text-muted-foreground" aria-hidden />

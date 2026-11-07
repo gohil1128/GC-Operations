@@ -62,7 +62,7 @@ export function OverviewCardsCard({ hidden }: { hidden: string[] }) {
   const shownCount = OVERVIEW_CARDS.length - off.length;
 
   return (
-    <Card>
+    <Card id="overview-cards" data-settings-section>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <LayoutDashboard className="h-4 w-4 text-muted-foreground" aria-hidden />

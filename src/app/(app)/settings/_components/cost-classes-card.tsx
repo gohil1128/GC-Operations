@@ -51,7 +51,7 @@ export function CostClassesCard({ opex }: { opex: string[] }) {
   const cogsCount = CLASSIFIABLE_INVOICE_CATEGORIES.length - off.length;
 
   return (
-    <Card>
+    <Card id="cost-of-goods" data-settings-section>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Scale className="h-4 w-4 text-muted-foreground" aria-hidden />

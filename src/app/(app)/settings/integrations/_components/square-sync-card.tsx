@@ -52,7 +52,7 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
   const today = conn ? todayIsoIn(conn.timezone) : null;
 
   return (
-    <Card className="lg:col-span-2">
+    <Card id="square" data-settings-section className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <Store className="h-4 w-4" aria-hidden /> Square sales

@@ -908,6 +908,16 @@
   input[type="file"] { width: 100%; min-width: 0; max-width: 100%; }
   label { max-width: 100%; }
 
+  /* Settings: a card jumped to from the navigator clears the sticky header and
+     glows once so the eye lands on it. */
+  [data-settings-section] { scroll-margin-top: calc(var(--app-header-h, 64px) + 16px); }
+  @keyframes settings-flash {
+    0%, 30% { box-shadow: 0 0 0 3px hsl(var(--highlight) / 0.85); }
+    100% { box-shadow: 0 0 0 3px hsl(var(--highlight) / 0); }
+  }
+  .settings-flash { animation: settings-flash 1.5s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .settings-flash { animation: none; outline: 3px solid hsl(var(--highlight)); } }
+
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
