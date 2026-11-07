@@ -1,3 +1,4 @@
+import { SettingsBack } from "../_components/settings-back";
 import { Download } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { requireCapability } from "@/lib/scope";
@@ -16,6 +17,7 @@ export default async function ExportsPage() {
   await requireCapability("settings");
   return (
     <div>
+      <div className="mx-auto max-w-[1400px] px-4 pt-4 sm:px-6 lg:px-8"><SettingsBack /></div>
       <PageHeader
         eyebrow="Settings · Data export"
         title="Data export"

@@ -1,3 +1,4 @@
+import { SettingsBack } from "../_components/settings-back";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -41,6 +42,7 @@ export default async function UsersPage() {
     .map((u) => ({ id: u.id, name: u.name, email: u.email, requestedAt: u.createdAt.toISOString() }));
   return (
     <div>
+      <div className="mx-auto max-w-[1400px] px-4 pt-4 sm:px-6 lg:px-8"><SettingsBack /></div>
       <PageHeader
         eyebrow="Settings · Team"
         title="Users"

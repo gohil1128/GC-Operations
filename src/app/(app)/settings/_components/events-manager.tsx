@@ -53,20 +53,17 @@ const PALETTE = [
 export function EventsManager({ events }: { events: Ev[] }) {
   return (
     <div className="space-y-3">
-      <div className="space-y-2">
+      <div className="divide-y divide-border-soft overflow-hidden rounded-2xl bg-muted/40">
         {events.map((e) => {
           return (
-            <div key={e.id} className="flex items-start gap-3 rounded-2xl border border-border-soft bg-muted/40 p-3">
-              <EventMark name={e.name} size="lg" className="h-11 w-11" />
+            <div key={e.id} className="flex items-center gap-3 py-2.5 pl-3 pr-1.5">
+              <EventMark name={e.name} size="md" />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold leading-snug break-words">{e.name}</div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-0.5 text-2xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" aria-hidden />
-                    {formatRange(e.startDate, e.endDate)}
-                  </span>
-                  {e.feeCents > 0 && <Badge variant="brand" className="text-2xs">Fee {money(e.feeCents)}</Badge>}
-                  {!e.isActive && <Badge variant="muted" className="text-2xs">Inactive</Badge>}
+                <div className="truncate text-sm font-medium leading-snug">{e.name}</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-2xs text-muted-foreground">
+                  <span>{formatRange(e.startDate, e.endDate)}</span>
+                  {e.feeCents > 0 && <span>· Fee {money(e.feeCents)}</span>}
+                  {!e.isActive && <span>· Inactive</span>}
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -202,7 +199,7 @@ function TwoStepDeleteEventButton({ event }: { event: Ev }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-card" aria-label={`Delete ${event.name}`}>
+        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full" aria-label={`Delete ${event.name}`}>
           <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DialogTrigger>
@@ -271,7 +268,7 @@ function EditEventButton({ event }: { event: Ev }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full bg-card" aria-label={`Edit ${event.name}`}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>
+        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full" aria-label={`Edit ${event.name}`}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Edit event</DialogTitle></DialogHeader>
