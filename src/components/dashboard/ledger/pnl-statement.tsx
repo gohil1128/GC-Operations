@@ -1,5 +1,6 @@
 "use client";
 import { EventMark } from "@/components/event-mark";
+import { PnlRow } from "@/components/pnl-row";
 import * as React from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowUp } from "lucide-react";
@@ -299,56 +300,49 @@ export function PnlStatement({ columns }: { columns: PnlColumn[] }) {
         </div>
       </div>
 
-      {/* ── Mobile: one card per event, plus the overall column ────────── */}
-      <div className="space-y-2.5 lg:hidden">
-        {[...baseEvents, overall].map((c, i) => (
-          <div key={c.key} className={cn("panel p-4", c.key === "overall" && "border-espresso")}>
-            <div className="flex items-center justify-between gap-3">
-              {c.key === "overall" ? (
-                <span className="truncate text-sm font-semibold">{c.name}</span>
-              ) : (
-                <Link href={`/events/${encodeURIComponent(c.key)}`} className="flex min-w-0 items-center gap-2">
-                  <EventMark name={c.name} size="xs" />
-                  <span className="truncate text-sm font-semibold" title={c.name}>
-                    {c.name}
+      {/* ── Mobile: one line per event; tap for its statement ────────── */}
+      <ul className="divide-y divide-border-soft overflow-hidden rounded-3xl bg-card lg:hidden">
+        {[overall, ...baseEvents].map((c) => (
+          <PnlRow
+            key={c.key}
+            summary={
+              <>
+                {c.key === "overall" ? (
+                  <span aria-hidden className="grid h-8 min-w-8 place-items-center rounded-[10px] bg-highlight px-1 text-[10px] font-bold text-highlight-foreground">ALL</span>
+                ) : (
+                  <EventMark name={c.name} size="md" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold leading-tight" title={c.name}>{c.name}</span>
+                  <span className="num mt-0.5 block truncate text-xs text-muted-foreground">
+                    {money(c.netSalesCents)} sales · {c.txns.toLocaleString()} txns
                   </span>
-                </Link>
-              )}
-              <span className="num shrink-0 text-sm text-muted-foreground">
-                {c.txns.toLocaleString()} txns
-              </span>
-            </div>
-            <dl className="num mt-3 space-y-1.5 text-[13px]">
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className={cn("num block text-[15px] font-semibold", signTone(c.profitCents))}>{formatMoney(c.profitCents, { signed: true })}</span>
+                  <span className="num block text-[11px] text-muted-foreground">{formatPercent(c.marginPct)}</span>
+                </span>
+              </>
+            }
+          >
+            <dl className="num space-y-1.5 text-[13px]">
               <MobileLine label="Net sales" value={money(c.netSalesCents)} strong />
-              {/* Lines with nothing recorded are dropped on phones, where four
-                  rows of em-dashes was most of the card's height. */}
               {c.cogsCents > 0 && <MobileLine label="Cost of goods" value={neg(c.cogsCents)} muted />}
-              {/* Only where there is a cost of goods to have taken off — on a
-                  card with none it would just repeat net sales. */}
-              {c.cogsCents > 0 && (
-                <MobileLine label="Gross profit" value={formatMoney(c.grossProfitCents)} strong />
-              )}
+              {c.cogsCents > 0 && <MobileLine label="Gross profit" value={formatMoney(c.grossProfitCents)} strong />}
               {c.laborCents > 0 && <MobileLine label="Labor" value={neg(c.laborCents)} muted />}
               {c.opexCents > 0 && <MobileLine label="Operating expenses" value={neg(c.opexCents)} muted />}
               {c.feeCents > 0 && <MobileLine label="Event fees" value={neg(c.feeCents)} muted />}
-              {c.cogsCents + c.laborCents + c.opexCents + c.feeCents === 0 && (
-                <MobileLine label="No costs recorded" value="" muted />
-              )}
+              {c.cogsCents + c.laborCents + c.opexCents + c.feeCents === 0 && <MobileLine label="No costs recorded" value="" muted />}
+              <MobileLine label="Tips (staff, not in profit)" value={money(c.tipsCents)} muted />
             </dl>
-            <div className="ledger-highlight mt-3 flex items-baseline justify-between rounded-lg px-3 py-2.5">
-              <dt className="text-[13px] font-bold">Profit</dt>
-              <dd className={cn("display-num text-base font-bold", signTone(c.profitCents))}>
-                {formatMoney(c.profitCents, { signed: true })}{" "}
-                <span className="text-xs font-medium">({formatPercent(c.marginPct)})</span>
-              </dd>
-            </div>
-            <div className="mt-2 flex items-baseline justify-between text-xs text-muted-foreground">
-              <span>Tips (staff, not in profit)</span>
-              <span className="num">{money(c.tipsCents)}</span>
-            </div>
-          </div>
+            {c.key !== "overall" && (
+              <Link href={`/events/${encodeURIComponent(c.key)}`} className="mt-2 inline-block text-xs font-medium text-brand-ink">
+                Open event →
+              </Link>
+            )}
+          </PnlRow>
         ))}
-      </div>
+      </ul>
     </>
   );
 }

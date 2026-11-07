@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { formatMoney, formatPercent } from "@/lib/money";
 import type { PnlColumn } from "@/modules/reports/queries";
 import { BreakdownToggle } from "./breakdown-toggle";
+import { PnlRow } from "@/components/pnl-row";
 import { CountUp } from "@/components/count-up";
 
 /*
@@ -35,13 +36,36 @@ export function EventPnlCards({ columns }: { columns: PnlColumn[] }) {
   return (
     <div className="space-y-3">
       {overall && <PnlCard column={overall} hero />}
+      {/* Every event as one line in one card: name, sales and margin, profit.
+          Tap a line for its full breakdown. */}
       {active.length > 0 && (
-        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {active.map((c) => (
-            <li key={c.key} className="min-w-0">
-              <PnlCard column={c} />
-            </li>
-          ))}
+        <ul className="divide-y divide-border-soft overflow-hidden rounded-3xl bg-card">
+          {active.map((c) => {
+            const loss = c.profitCents < 0;
+            const hasSales = c.netSalesCents > 0;
+            return (
+              <PnlRow
+                key={c.key}
+                summary={
+                  <>
+                    <EventMark name={c.name} size="md" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold leading-tight" title={c.name}>{c.name}</span>
+                      <span className="mt-0.5 block truncate text-xs tabular-nums text-muted-foreground">
+                        Sales {formatMoney(c.netSalesCents)}
+                        {hasSales && <> · {formatPercent(c.marginPct)} margin</>}
+                      </span>
+                    </span>
+                    <span className={cn("num shrink-0 text-[15px] font-semibold tabular-nums", loss ? "text-destructive" : "text-success")}>
+                      {formatMoney(c.profitCents, { signed: true })}
+                    </span>
+                  </>
+                }
+              >
+                <Breakdown c={c} />
+              </PnlRow>
+            );
+          })}
         </ul>
       )}
       {idle.length > 0 && (
@@ -54,96 +78,74 @@ export function EventPnlCards({ columns }: { columns: PnlColumn[] }) {
   );
 }
 
-function PnlCard({ column: c, hero = false }: { column: PnlColumn; hero?: boolean }) {
+/** The sales/costs bar and the ten-line statement, shared by the hero card and each row. */
+function Breakdown({ c, hero = false }: { c: PnlColumn; hero?: boolean }) {
   const costs = costsOf(c);
   const loss = c.profitCents < 0;
   const hasSales = c.netSalesCents > 0;
-  // Of every sales dollar: how much went to costs, and how much was kept.
   const spentPct = hasSales ? Math.min(100, Math.max(0, (costs / c.netSalesCents) * 100)) : 0;
-
-  /*
-    The hero card is lime, so nothing inside it can use the usual red/green for
-    profit and loss — red on lime fails contrast and green on lime is invisible.
-    It says the same thing in ink, with the sign and the word, which is also
-    what a colour-blind reader needs everywhere else.
-  */
   const sub = hero ? "text-highlight-foreground/80" : "text-muted-foreground";
   const line = hero ? "border-highlight-foreground/15" : "border-border-soft";
-
   const row = (label: string, value: React.ReactNode, opts: { strong?: boolean; faint?: boolean } = {}) => (
-    <div className={cn("flex items-baseline justify-between gap-4 border-b py-2.5 text-sm last:border-b-0", line)}>
+    <div className={cn("flex items-baseline justify-between gap-4 border-b py-2 text-[13px] last:border-b-0", line)}>
       <dt className={cn(opts.faint ? "text-xs" : "", opts.strong ? "font-semibold" : sub)}>{label}</dt>
       <dd className={cn("num text-right tabular-nums", opts.strong && "font-semibold", opts.faint && cn("text-xs", sub))}>{value}</dd>
     </div>
   );
   const minus = (cents: number) => (cents ? <>−{formatMoney(cents)}</> : "—");
-
   return (
-    <article
-      aria-label={c.key === "overall" ? "Overall profit and loss" : `${c.name} profit and loss`}
-      className={cn("rounded-3xl p-4 sm:p-5", hero ? "bg-highlight text-highlight-foreground" : "bg-card")}
-    >
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          {!hero && (
-            <EventMark name={c.name} size="md" />
-          )}
-          <h3 className={cn("min-w-0 truncate font-display font-semibold tracking-[-0.01em]", hero ? "text-xl" : "text-base")} title={c.name}>
-            {hero ? "All events together" : c.name}
-          </h3>
-        </div>
-        {hasSales && (
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold tabular-nums",
-              hero ? "bg-highlight-foreground/10" : loss ? "bg-destructive-muted text-destructive" : "bg-success-muted text-success",
-            )}
-          >
-            {loss ? "▼ " : "▲ "}
-            {formatPercent(c.marginPct)} margin
-          </span>
-        )}
-      </header>
-
-      <p className={cn("mt-4 text-xs", sub)}>{loss ? "Loss" : "Profit"}</p>
-      <p
-        className={cn(
-          "display-num -mt-0.5 text-[32px] font-medium leading-tight tracking-[-0.025em] tabular-nums",
-          !hero && (loss ? "text-destructive" : "text-success"),
-        )}
-      >
-        <CountUp value={formatMoney(c.profitCents, { signed: true })} />
-      </p>
-
+    <>
       {hasSales && (
-        <div className="mt-3">
-          {/* Purely a picture of the two figures printed under it. */}
-          <div aria-hidden className={cn("flex h-2 overflow-hidden rounded-full", hero ? "bg-highlight-foreground/15" : "bg-muted")}>
-            <div
-              className={cn(hero ? "bg-highlight-foreground/35" : loss ? "bg-destructive" : "bg-foreground/25")}
-              style={{ width: `${spentPct}%` }}
-            />
+        <div className="mb-1">
+          <div aria-hidden className={cn("flex h-1.5 overflow-hidden rounded-full", hero ? "bg-highlight-foreground/15" : "bg-muted")}>
+            <div className={cn(hero ? "bg-highlight-foreground/35" : loss ? "bg-destructive" : "bg-foreground/25")} style={{ width: `${spentPct}%` }} />
             {!loss && <div className={cn("flex-1", hero ? "bg-highlight-foreground" : "bg-brand-ink")} />}
           </div>
-          <p className={cn("mt-2 flex justify-between gap-3 text-xs tabular-nums", sub)}>
+          <p className={cn("mt-1.5 flex justify-between gap-3 text-[11px] tabular-nums", sub)}>
             <span>Sales {formatMoney(c.netSalesCents)}</span>
             <span>Costs {formatMoney(costs)}</span>
           </p>
         </div>
       )}
+      <dl>
+        {row("Transactions", c.txns.toLocaleString())}
+        {row("Net sales", formatMoney(c.netSalesCents), { strong: true })}
+        {row("Cost of goods", minus(c.cogsCents))}
+        {row("Gross profit", hasSales ? `${formatMoney(c.grossProfitCents)} (${formatPercent(c.grossMarginPct)})` : "—", { strong: true })}
+        {row("Labor", minus(c.laborCents))}
+        {row("Operating expenses", minus(c.opexCents))}
+        {row("Event fees", minus(c.feeCents))}
+        {row(loss ? "Loss" : "Profit", formatMoney(c.profitCents, { signed: true }), { strong: true })}
+        {row("Tips (staff, not in profit)", c.tipsCents ? formatMoney(c.tipsCents) : "—", { faint: true })}
+      </dl>
+    </>
+  );
+}
 
-      <BreakdownToggle className="mt-2">
-        <dl className="pb-1">
-          {row("Transactions", c.txns.toLocaleString())}
-          {row("Net sales", formatMoney(c.netSalesCents), { strong: true })}
-          {row("Cost of goods", minus(c.cogsCents))}
-          {row("Gross profit", hasSales ? `${formatMoney(c.grossProfitCents)} (${formatPercent(c.grossMarginPct)})` : "—", { strong: true })}
-          {row("Labor", minus(c.laborCents))}
-          {row("Operating expenses", minus(c.opexCents))}
-          {row("Event fees", minus(c.feeCents))}
-          {row(loss ? "Loss" : "Profit", formatMoney(c.profitCents, { signed: true }), { strong: true })}
-          {row("Tips (staff, not in profit)", c.tipsCents ? formatMoney(c.tipsCents) : "—", { faint: true })}
-        </dl>
+function PnlCard({ column: c, hero = false }: { column: PnlColumn; hero?: boolean }) {
+  const loss = c.profitCents < 0;
+  const hasSales = c.netSalesCents > 0;
+  const sub = hero ? "text-highlight-foreground/80" : "text-muted-foreground";
+  return (
+    <article
+      aria-label={c.key === "overall" ? "Overall profit and loss" : `${c.name} profit and loss`}
+      className={cn("rounded-3xl px-4 pb-1 pt-3.5", hero ? "bg-highlight text-highlight-foreground" : "bg-card")}
+    >
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className={cn("text-xs", sub)}>{hero ? "All events" : c.name} · {loss ? "loss" : "profit"}</p>
+          <p className={cn("display-num text-[26px] font-medium leading-tight tracking-[-0.025em] tabular-nums", !hero && (loss ? "text-destructive" : "text-success"))}>
+            <CountUp value={formatMoney(c.profitCents, { signed: true })} />
+          </p>
+        </div>
+        {hasSales && (
+          <span className={cn("mb-1 shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold tabular-nums", hero ? "bg-highlight-foreground/10" : loss ? "bg-destructive-muted text-destructive" : "bg-success-muted text-success")}>
+            {loss ? "▼ " : "▲ "}{formatPercent(c.marginPct)} margin
+          </span>
+        )}
+      </div>
+      <BreakdownToggle className="mt-1">
+        <Breakdown c={c} hero={hero} />
       </BreakdownToggle>
     </article>
   );

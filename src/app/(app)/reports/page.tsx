@@ -65,7 +65,7 @@ export default async function ReportsPage() {
           </>
         }
       />
-      <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 grid gap-4">
+      <div className="mx-auto grid max-w-[1400px] grid-cols-[minmax(0,1fr)] gap-4 px-4 pb-10 pt-5 sm:px-6 lg:px-8">
         {/* Profit and loss: one card per event, best first */}
         <section aria-labelledby="pnl-h" className="space-y-3">
           <div className="px-1">
