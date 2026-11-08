@@ -1,6 +1,4 @@
 "use client";
-import { cn } from "@/lib/utils";
-import { GLASS_CIRCLE } from "./glass-circle";
 import * as React from "react";
 import Link from "next/link";
 import { KeyRound, LogOut, Moon, Sun } from "lucide-react";
@@ -51,7 +49,7 @@ export function UserMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {trigger ?? (
-          <Button variant="ghost" size="sm" className={cn("gap-2 data-[state=open]:bg-accent", GLASS_CIRCLE)}>
+          <Button variant="ghost" size="sm" className="gap-2 data-[state=open]:bg-accent">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
               {name.slice(0, 1).toUpperCase()}
             </div>

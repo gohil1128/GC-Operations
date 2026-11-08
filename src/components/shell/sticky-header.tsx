@@ -42,7 +42,7 @@ export function StickyHeader({ children }: { children: React.ReactNode }) {
         className={cn(
           // No bar at all: once content is under it, a frosted fade (see
           // .header-fade in globals.css) blurs what scrolls beneath and melts
-          // away toward the page, and the controls float on it as glass circles.
+          // away toward the page instead of a solid bar.
           "header-fade sticky top-0 z-30 pt-safe",
         )}
       >

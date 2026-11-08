@@ -1,6 +1,4 @@
 "use client";
-import { cn } from "@/lib/utils";
-import { GLASS_CIRCLE } from "./glass-circle";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronsUpDown, MapPin } from "lucide-react";
@@ -37,7 +35,7 @@ export function LocationSwitcher({ active, options }: { active: Loc; options: Lo
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={pending} className={cn("gap-2 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent", GLASS_CIRCLE)}>
+        <Button variant="outline" size="sm" disabled={pending} className="gap-2 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent">
           <MapPin className="h-3.5 w-3.5" />
           <span className="hidden max-w-[130px] truncate font-medium sm:inline">{active.name}</span>
           <ChevronsUpDown className="hidden h-3.5 w-3.5 opacity-60 sm:block" />
