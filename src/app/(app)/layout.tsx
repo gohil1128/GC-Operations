@@ -12,6 +12,7 @@ import { LocationSwitcher } from "@/components/shell/location-switcher";
 import { EventSwitcher } from "@/components/shell/event-switcher";
 import { UserMenu } from "@/components/shell/user-menu";
 import { PageTransition } from "@/components/shell/page-transition";
+import { RouteProgress } from "@/components/shell/route-progress";
 import { ExportInterceptor } from "@/components/export-interceptor";
 import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
 import { Sidebar } from "@/components/shell/sidebar";
@@ -113,6 +114,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
 
       <ExportInterceptor />
+      <RouteProgress />
       <HeaderHeightVar />
       <MobileTabBar role={scope.role} />
     </div>

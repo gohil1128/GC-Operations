@@ -721,7 +721,9 @@
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-  .animate-page { animation: fade-in-up 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
+  /* The page itself only fades (the cards inside carry the movement, below),
+     so the same rise is not applied twice and the arrival stays under 400ms. */
+  .animate-page { animation: fade-in 180ms ease-out; }
   .animate-fade { animation: fade-in 0.3s ease-out; }
 
   /* The full-width chrome bands — the mobile tab bar and the sticky toolbars.
@@ -945,6 +947,67 @@
   }
   .dock-pop { animation: dock-pop 320ms cubic-bezier(0.34, 1.4, 0.64, 1); }
 
+  /* The tab you just tapped, before its page has arrived: half-lit, then the
+     full capsule (dock-pop) takes over when the page is there. */
+  .dock-pending { background-color: hsl(var(--dock-active) / 0.5); }
+
+  /* The hairline while the next page is on its way (components/shell/route-progress.tsx).
+     Starts at once, crawls toward the end and never reaches it, then runs out
+     and fades when the page lands. Transform and opacity only. */
+  .route-progress {
+    position: fixed;
+    inset: env(safe-area-inset-top, 0px) 0 auto 0;
+    height: 2px;
+    z-index: 70;
+    pointer-events: none;
+    background: hsl(var(--highlight));
+    transform-origin: left;
+    transform: scaleX(0);
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+  .route-progress[data-phase="run"] {
+    opacity: 1;
+    animation: route-progress-run 7s cubic-bezier(0.08, 0.7, 0.2, 1) forwards;
+  }
+  .route-progress[data-phase="done"] {
+    opacity: 0;
+    transform: scaleX(1);
+    transition: transform 140ms ease-out, opacity 260ms ease-out 140ms;
+  }
+  @keyframes route-progress-run {
+    from { transform: scaleX(0.04); }
+    to   { transform: scaleX(0.92); }
+  }
+
+  /* A section that folds open (components/fold.tsx). The height itself
+     animates (a grid row going from 0fr to 1fr), so what is below glides down
+     with it instead of jumping a full section in one frame and then fading its
+     contents in. While closed the element is `hidden`, so none of this costs
+     anything. The inner box needs min-height:0 or the row cannot shrink past
+     its content. */
+  .fold {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .fold[hidden] { display: none; }
+  .fold[data-open="true"] { grid-template-rows: 1fr; }
+  .fold > .fold-inner {
+    min-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+  }
+  .fold[data-open="true"] > .fold-inner {
+    opacity: 1;
+    transition: opacity 200ms ease-out 60ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .route-progress[data-phase="run"] { animation: none; transform: scaleX(0.6); }
+    .fold, .fold[data-open="true"], .fold > .fold-inner, .fold[data-open="true"] > .fold-inner { transition: none; }
+  }
+
   @keyframes reveal {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: none; }
@@ -952,20 +1015,23 @@
   .reveal:not([hidden]) { animation: reveal 220ms ease-out; }
 
   /* Page cascade: a screen is a header, then a column or grid of cards. Those
-     cards rise in, 45ms apart, capped at the eighth so a long list never
-     waits on itself. */
-  /* `backwards`, not `both`: it holds the start pose during the delay, then
+     cards rise in, 28ms apart, capped at the sixth, so the last one has
+     landed ~380ms after the tap (it was ~635ms, long enough to feel like the
+     page was loading). A short, small rise: it says "arrived", not "performed".
+     `backwards`, not `both`: it holds the start pose during the delay, then
      lets go, so a card's own transform is never overridden afterwards. */
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > * {
-    animation: arrive 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  @keyframes page-rise {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: none; }
   }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(2) { animation-delay: 45ms; }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(3) { animation-delay: 90ms; }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(4) { animation-delay: 135ms; }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(5) { animation-delay: 180ms; }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(6) { animation-delay: 225ms; }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(7) { animation-delay: 270ms; }
-  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(n+8) { animation-delay: 315ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > * {
+    animation: page-rise 240ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(2) { animation-delay: 28ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(3) { animation-delay: 56ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(4) { animation-delay: 84ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(5) { animation-delay: 112ms; }
+  .animate-page > div > :is(.grid, [class*="space-y-"]) > :nth-child(n+6) { animation-delay: 140ms; }
 
   @media (prefers-reduced-motion: reduce) {
     .more-sheet { transition: visibility 0ms; }
@@ -2017,6 +2083,7 @@
   /* A collapsed section is a screen convenience. On paper it must be open: a
      printed P&L with the breakdown folded away would be a list of headlines. */
   .print-show { display: block !important; }
+  .fold > .fold-inner { opacity: 1 !important; overflow: visible !important; }
 
   /* Chrome, not content. */
   nav,
