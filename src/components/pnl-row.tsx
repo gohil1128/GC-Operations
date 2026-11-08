@@ -2,6 +2,7 @@
 import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Fold } from "@/components/fold";
 
 /*
   One event as one line: the summary is the button, the breakdown folds out
@@ -23,9 +24,9 @@ export function PnlRow({ summary, children }: { summary: React.ReactNode; childr
         {summary}
         <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-180")} aria-hidden />
       </button>
-      <div id={id} hidden={!open} className="print-show reveal px-4 pb-3">
-        {children}
-      </div>
+      <Fold id={id} open={open}>
+        <div className="px-4 pb-3">{children}</div>
+      </Fold>
     </li>
   );
 }

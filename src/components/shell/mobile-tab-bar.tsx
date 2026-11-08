@@ -1,10 +1,11 @@
 "use client";
 import * as React from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
+import { markNavigation } from "@/lib/nav-kind";
 import { bestPage, hubsFor } from "./nav";
 
 /* The destinations live in ./nav.ts as hubs; this file only lays them out. */
@@ -22,6 +23,43 @@ const previews = new Map<string, { wrap: HTMLDivElement; frame: HTMLIFrameElemen
 function removePreviews() {
   previews.forEach((pv) => pv.wrap.remove());
   previews.clear();
+}
+
+/*
+  The handoff from a swiped-in preview to the real page.
+
+  The preview is a picture of the page you swiped to. It stays up until that
+  page has really arrived and been painted, and only then dissolves, so what
+  you see is the destination from the moment you let go to the moment you can
+  use it — never the old page, never an empty skeleton in between. (It used to
+  come down 60ms after the address changed, whether or not the page behind it
+  was ready, which is the flash of grey boxes between two screens of content.)
+
+  `from` is the path the swipe left. It is set when a swipe commits and cleared
+  when the handoff is done, so a null means no swipe is in flight.
+*/
+const handoff: { from: string | null; slideDone: boolean } = { from: null, slideDone: true };
+
+function resetMain() {
+  const m = document.getElementById("main");
+  if (m) { m.style.transition = ""; m.style.transform = ""; }
+}
+
+function fadeOutPreviews() {
+  const shown = [...previews.values()].filter((pv) => pv.wrap.style.visibility === "visible");
+  if (shown.length === 0) { removePreviews(); return; }
+  shown.forEach((pv) => { pv.wrap.style.transition = "opacity 150ms ease-out"; pv.wrap.style.opacity = "0"; });
+  window.setTimeout(removePreviews, 180);
+}
+
+/** Finish the handoff once the slide is over AND the new page has replaced the old one. */
+function finishHandoff(currentPath: string) {
+  if (handoff.from === null || !handoff.slideDone || currentPath === handoff.from) return;
+  handoff.from = null;
+  // Back to rest while the opaque preview hides it, then two frames for the new
+  // page to paint under the preview before the preview dissolves.
+  resetMain();
+  requestAnimationFrame(() => requestAnimationFrame(fadeOutPreviews));
 }
 
 function ensurePreview(href: string) {
@@ -72,11 +110,12 @@ export function MobileTabBar({ role }: { role: Role }) {
   // Close the sheet on navigation.
   React.useEffect(() => { setMoreOpen(false); }, [pathname]);
 
-  // A finished swipe leaves the neighbour preview covering the page; once the real
-  // page is there, take the preview away and put the page back.
+  // A finished swipe leaves the neighbour preview covering the page. Once the real
+  // page is there (and the slide is over), dissolve the preview. Any other
+  // navigation just clears away previews that were loaded for a swipe that never came.
   React.useEffect(() => {
-    const m = document.getElementById("main");
-    if (m) { m.style.transition = ""; m.style.transform = ""; }
+    if (handoff.from !== null) { finishHandoff(pathname); return; }
+    resetMain();
     const t = window.setTimeout(() => removePreviews(), 60);
     return () => window.clearTimeout(t);
   }, [pathname]);
@@ -209,14 +248,30 @@ export function MobileTabBar({ role }: { role: Role }) {
         window.setTimeout(() => { previews.forEach((pv) => { pv.wrap.style.visibility = "hidden"; pv.wrap.style.transition = ""; }); const m = main(); if (m) { m.style.transition = ""; m.style.transform = ""; } busy = false; }, 340);
         return;
       }
-      window.setTimeout(() => { swipeRef.current.router.push(next!.href); busy = false; }, 300);
+      // Start fetching the page while the slide is still finishing: by 200ms the
+      // eased slide is ~97% done, so the old page is already off-screen and
+      // nothing is visible if the new one lands early. (It used to wait for the
+      // whole slide AND 300ms more.)
+      handoff.from = swipeRef.current.pathname;
+      handoff.slideDone = false;
+      window.setTimeout(() => {
+        markNavigation("swipe"); // at the push, so the page's entrance is skipped when it lands
+        window.dispatchEvent(new CustomEvent("gc:navigating", { detail: next!.href }));
+        swipeRef.current.router.push(next!.href);
+      }, 200);
+      window.setTimeout(() => { handoff.slideDone = true; busy = false; finishHandoff(swipeRef.current.pathname); }, 340);
       // if the navigation is slow or fails, do not leave the preview up forever
-      window.setTimeout(() => { if (previews.size) removePreviews(); const m = main(); if (m) { m.style.transition = ""; m.style.transform = ""; } }, 4000);
+      window.setTimeout(() => {
+        if (handoff.from === null) return;
+        handoff.from = null; handoff.slideDone = true; busy = false;
+        resetMain();
+        fadeOutPreviews();
+      }, 6000);
     };
     const onStart = (e: TouchEvent) => {
       const c = swipeRef.current;
       d = null;
-      if (busy || e.touches.length !== 1 || c.moreOpen || window.innerWidth >= 1024) return;
+      if (busy || handoff.from !== null || e.touches.length !== 1 || c.moreOpen || window.innerWidth >= 1024) return;
       const t0 = e.touches[0];
       if (t0.clientX < 22 || t0.clientX > window.innerWidth - 22) return; // leave the browser's edge gestures alone
       if (blocked(e.target)) return;
@@ -251,7 +306,7 @@ export function MobileTabBar({ role }: { role: Role }) {
       const far = Math.abs(dx) > W() * 0.33;
       const flick = Math.abs(st.v) > 0.45 && Math.abs(dx) > 30 && Math.sign(st.v) === Math.sign(dx);
       const commit = !!next && (far || flick);
-      if (reduce()) { if (commit) swipeRef.current.router.push(next!.href); return; }
+      if (reduce()) { if (commit) { markNavigation("swipe"); swipeRef.current.router.push(next!.href); } return; }
       settle(dx, next, commit);
     };
     const onCancel = () => { const st = d; d = null; if (st?.locked && !busy) settle(0, undefined, false); };
@@ -391,11 +446,14 @@ export function MobileTabBar({ role }: { role: Role }) {
 const dockSlot = "lg-press flex min-h-[calc(34px+var(--lbl,1)*18px)] min-w-0 flex-col items-center justify-center rounded-[20px] px-1";
 
 function DockGlyph({ Icon, active }: { Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>; active: boolean }) {
+  // True from the tap until the next screen has arrived: the tab lights up at
+  // once, because the page you are on now stays until the new one is ready.
+  const { pending } = useLinkStatus();
   return (
     <span
       className={cn(
         "grid h-7 w-12 place-items-center rounded-full transition-colors duration-200",
-        active ? "dock-pop bg-dock-active text-dock-active-ink" : "text-foreground/70",
+        active ? "dock-pop bg-dock-active text-dock-active-ink" : pending ? "dock-pending text-foreground" : "text-foreground/70",
       )}
     >
       <Icon className="h-5 w-5" aria-hidden />
