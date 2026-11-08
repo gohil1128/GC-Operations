@@ -8,7 +8,7 @@ import { ConnectionSections } from "../integrations/_components/connection-secti
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Square "Sync now" and Gmail "Scan now" run here too
 
-const BUSINESS = new Set(["business", "overview-cards", "cost-of-goods", "transparency", "locations", "events", "pin-lock", "danger-zone", "ai"]);
+const BUSINESS = new Set(["business", "overview-cards", "cost-of-goods", "transparency", "locations", "events", "pin-lock", "danger-zone", "ai", "premix-cost"]);
 const CONNECTIONS = new Set(["square", "email-invoices", "sales-summary-csv", "item-sales-csv", "imported-data", "items-categories"]);
 
 // One setting on its own page, opened from the Settings list.

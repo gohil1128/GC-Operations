@@ -15,6 +15,7 @@ import { SectionLockCard } from "./section-lock-card";
 import { sectionLockSettings } from "@/modules/section-lock/actions";
 import { EventsManager } from "./events-manager";
 import { AiScanningCard } from "./ai-scanning-card";
+import { PremixCostCard } from "./premix-cost-card";
 import { Lock, Calendar } from "lucide-react";
 
 
@@ -69,6 +70,8 @@ export async function SettingsSection({ only }: { only: string }) {
         {show("cost-of-goods") && business && <CostClassesCard opex={business.opexInvoiceCategories} />}
 
         {show("transparency") && <GlassDensityCard />}
+
+        {show("premix-cost") && business && <PremixCostCard costCents={business.premixCostCents} />}
 
         {show("ai") && business && <AiScanningCard enabled={business.aiScanningEnabled} />}
 

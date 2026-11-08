@@ -71,6 +71,8 @@ export async function scanConnection(
   connectionId: string,
   trigger: "cron" | "manual",
   deps: ScanDeps,
+  /** Look back this many days from now instead of from where the last scan finished (a manual catch-up). */
+  opts: { sinceDays?: number } = {},
 ): Promise<ScanResult> {
   const { db, extractor } = deps;
   const now = deps.now ?? (() => new Date());
@@ -126,7 +128,9 @@ export async function scanConnection(
   }
 
   try {
-    const windowStart = new Date(connection.scannedThrough.getTime() - OVERLAP_HOURS * 3_600_000);
+    const windowStart = opts.sinceDays
+      ? new Date(startedAt.getTime() - opts.sinceDays * 86_400_000)
+      : new Date(connection.scannedThrough.getTime() - OVERLAP_HOURS * 3_600_000);
     // A connection left idle for weeks does not go back and read all of it.
     const floor = new Date(startedAt.getTime() - MAX_LOOKBACK_DAYS * 86_400_000);
     const ids = (await mail.listIds(buildScanQuery(windowStart > floor ? windowStart : floor), 500)).reverse();

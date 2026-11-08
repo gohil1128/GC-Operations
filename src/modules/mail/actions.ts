@@ -32,7 +32,8 @@ const refresh = () => {
 
 /* Owners connect and scan; anyone who can handle invoices can review them. */
 
-export async function scanNowAction(): Promise<Reply> {
+/** Scan now. With `days` (7 or 30) it also catches up that far back; emails already seen are skipped for free. */
+export async function scanNowAction(days?: number): Promise<Reply> {
   await requireCan("settings");
   const scope = await getScope();
   const conn = await prisma.mailConnection.findUnique({ where: { businessId: scope.businessId } });
@@ -45,7 +46,8 @@ export async function scanNowAction(): Promise<Reply> {
     return fail("It just scanned — give it a minute.");
   }
   try {
-    const r = await scanConnection(conn.id, "manual", productionDeps());
+    const sinceDays = days === 7 || days === 30 ? days : undefined;
+    const r = await scanConnection(conn.id, "manual", productionDeps(), { sinceDays });
     refresh();
     if (!r.ran) return fail(r.note ?? "Nothing ran.");
     if (r.error) return fail(`The scan hit a problem: ${r.error}`);

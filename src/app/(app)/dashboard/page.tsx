@@ -62,7 +62,7 @@ export default async function DashboardPage({
     getActiveEvent(scope.businessId),
     prisma.business.findUnique({
       where: { id: scope.businessId },
-      select: { timezone: true, hiddenOverviewCards: true },
+      select: { timezone: true, hiddenOverviewCards: true, premixCostCents: true },
     }),
   ]);
   const [range, eventOptions] = await Promise.all([
@@ -85,7 +85,7 @@ export default async function DashboardPage({
   // the page while leaving the same margins on the landing screen.
   const pnlLocked = await isSectionLocked(scope.userId, "REPORTS");
   // Premix ignores the event picker on purpose: it is every bag, everywhere.
-  const premix = isCardVisible(business?.hiddenOverviewCards, "premix") ? await getPremixSummary(scope.locationId) : null;
+  const premix = isCardVisible(business?.hiddenOverviewCards, "premix") ? await getPremixSummary(scope.locationId, business?.premixCostCents ?? 600) : null;
 
   const [data, pnl, invoiceTracking, dueInvoices, priorNetSales, upcoming, uncounted] =
     await Promise.all([

@@ -37,13 +37,33 @@ const Note = ({ reply }: { reply: Reply | null }) => (
   </p>
 );
 
+/* Scan now, with how far back to look: since the last scan, or a catch-up over the last week or month. */
 export function ScanNowButton() {
   const { pending, reply, run } = useAction();
+  const [range, setRange] = React.useState("0");
   return (
     <div className="flex flex-col items-start gap-1.5">
-      <Button size="sm" disabled={pending} onClick={() => run(scanNowAction)}>
-        {pending ? "Scanning…" : "Scan now"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="scan-range">How far back to scan</label>
+        <select
+          id="scan-range"
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+          className="select-native h-9"
+        >
+          <option value="0">Since last scan</option>
+          <option value="7">Last week</option>
+          <option value="30">Last month</option>
+        </select>
+        <Button size="sm" disabled={pending} onClick={() => run(() => scanNowAction(Number(range) || undefined))}>
+          {pending ? "Scanning…" : "Scan now"}
+        </Button>
+      </div>
+      {range !== "0" && (
+        <p className="text-2xs text-muted-foreground">
+          Emails already read are skipped. A big catch-up reads {40} at a time, so press again if it says there is more to do.
+        </p>
+      )}
       <Note reply={reply} />
     </div>
   );

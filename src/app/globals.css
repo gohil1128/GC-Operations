@@ -929,14 +929,30 @@
   .header-fade::before {
     content: "";
     position: absolute;
-    inset: 0 0 -20px 0;
+    /* Reaches up past the top of the screen so the status-bar area is covered too,
+       and well below the controls, so there is no edge anywhere: the blur and the
+       tint both ease to nothing over a long run. */
+    inset: -80px 0 -36px 0;
     z-index: -1;
     pointer-events: none;
-    background: linear-gradient(to bottom, hsl(var(--page-top) / 0.75) 0%, hsl(var(--page-top) / 0.45) 50%, hsl(var(--page-top) / 0) 100%);
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--page-top) / 0.78) 0%,
+      hsl(var(--page-top) / 0.72) 45%,
+      hsl(var(--page-top) / 0.5) 68%,
+      hsl(var(--page-top) / 0.22) 85%,
+      hsl(var(--page-top) / 0) 100%
+    );
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
-    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%, #000 45%, rgba(0,0,0,0.85) 58%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.25) 86%, transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%, #000 45%, rgba(0,0,0,0.85) 58%, rgba(0,0,0,0.55) 72%, rgba(0,0,0,0.25) 86%, transparent 100%
+    );
   }
   .header-fade { isolation: isolate; }
   @media (prefers-reduced-transparency: reduce) {

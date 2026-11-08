@@ -44,6 +44,8 @@ export function SquareSyncNow() {
 }
 
 const HISTORY = [
+  { days: 7, label: "Last week" },
+  { days: 30, label: "Last month" },
   { days: 90, label: "Last 3 months" },
   { days: 180, label: "Last 6 months" },
   { days: 365, label: "Last year" },
@@ -51,7 +53,7 @@ const HISTORY = [
 
 export function SquareHistory() {
   const { pending, reply, run } = useAction();
-  const [days, setDays] = React.useState(90);
+  const [days, setDays] = React.useState(30);
   return (
     <div className="flex flex-col items-start gap-1.5">
       <div className="flex flex-wrap items-center gap-2">

@@ -27,7 +27,7 @@ export const RECONCILE_TOLERANCE_CENTS = 3;
 export const INITIAL_LOOKBACK_DAYS = 7;
 
 /** However long the mailbox sat unscanned, never read back further than this. */
-export const MAX_LOOKBACK_DAYS = 28;
+export const MAX_LOOKBACK_DAYS = 35;
 
 /**
  * Each scan re-reads this much before where the last one finished. Mail can

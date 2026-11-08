@@ -243,3 +243,21 @@ export async function setAiScanningAction(enabled: unknown) {
   revalidatePath("/settings", "layout");
   return { ok: true as const };
 }
+
+/** What a bag of premix costs to make in house, in cents (0 to $100). */
+export async function setPremixCostAction(dollars: unknown) {
+  await requireOwner();
+  const scope = await getScope();
+  const n = z.number().finite().min(0).max(100).safeParse(dollars);
+  if (!n.success) return { error: "Enter a cost between $0 and $100." };
+  const cents = Math.round(n.data * 100);
+  await prisma.business.update({ where: { id: scope.businessId }, data: { premixCostCents: cents } });
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "business.premix.cost", entityType: "Business", entityId: scope.businessId,
+    diff: { premixCostCents: cents },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/settings", "layout");
+  return { ok: true as const };
+}

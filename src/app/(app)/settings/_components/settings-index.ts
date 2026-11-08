@@ -19,6 +19,7 @@ export const SETTINGS: SettingsEntry[] = [
   { id: "overview-cards", label: "Overview cards", hint: "What the Home screen shows", group: "Dashboard", href: "/settings/overview-cards", keywords: "home dashboard cards hide show widgets" },
   { id: "cost-of-goods", label: "Cost of goods", hint: "Which bills count against gross margin", group: "Dashboard", href: "/settings/cost-of-goods", keywords: "cogs gross margin categories opex operating expense invoice category" },
   { id: "transparency", label: "Transparency", hint: "How see-through panels are on this device", group: "Dashboard", href: "/settings/transparency", keywords: "glass blur frosted solid contrast appearance display" },
+  { id: "premix-cost", label: "Premix cost", hint: "What a bag costs to make", group: "Operations", href: "/settings/premix-cost", keywords: "premix bag cost make in house profit margin price" },
   { id: "locations", label: "Locations", hint: "Stores and event channels", group: "Operations", href: "/settings/locations", keywords: "location store cafe address channel" },
   { id: "events", label: "Events", hint: "Markets, dates and fees", group: "Operations", href: "/settings/events", keywords: "event market festival fee dates colour color" },
   { id: "pin-lock", label: "My PIN lock", hint: "Hide P&L, events or recipes on your screen", group: "Privacy", href: "/settings/pin-lock", keywords: "pin lock password privacy hide profit loss recipes" },

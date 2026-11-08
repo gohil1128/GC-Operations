@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Package } from "lucide-react";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, formatPercent } from "@/lib/money";
 import type { PremixSummary } from "@/modules/sales/premix";
 
 const qty = (n: number) => (Number.isInteger(n) ? n.toLocaleString() : n.toFixed(1));
@@ -38,12 +38,16 @@ export function PremixCard({ data }: { data: PremixSummary }) {
           <div className="display-num text-[22px] font-medium leading-tight tabular-nums">{qty(data.qty)}</div>
         </div>
         <div>
-          <div className="text-[11px] text-muted-foreground">Per bag</div>
-          <div className="display-num text-[22px] font-medium leading-tight tabular-nums">
-            {data.qty > 0 ? formatMoney(Math.round(data.netSalesCents / data.qty)) : "—"}
+          <div className="text-[11px] text-muted-foreground">Profit</div>
+          <div className={`display-num text-[22px] font-medium leading-tight tabular-nums ${data.profitCents < 0 ? "text-destructive" : "text-success"}`}>
+            {formatMoney(data.profitCents, { signed: true })}
           </div>
         </div>
       </div>
+      <p className="mt-1.5 text-xs text-muted-foreground">
+        {data.marginPct !== null && <>{formatPercent(data.marginPct)} margin · </>}
+        {formatMoney(data.unitCostCents)} a bag to make · {formatMoney(data.costCents)} total cost
+      </p>
 
       <ul className="mt-4 space-y-2.5">
         {top.map((f) => (
@@ -51,7 +55,7 @@ export function PremixCard({ data }: { data: PremixSummary }) {
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="min-w-0 truncate">{f.name}</span>
               <span className="num shrink-0 tabular-nums text-muted-foreground">
-                {qty(f.qty)} · <span className="font-semibold text-foreground">{formatMoney(f.netSalesCents)}</span>
+                {qty(f.qty)} · {formatMoney(f.netSalesCents)} · <span className={`font-semibold ${f.profitCents < 0 ? "text-destructive" : "text-success"}`}>{formatMoney(f.profitCents, { signed: true })}</span>
               </span>
             </div>
             <div aria-hidden className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
