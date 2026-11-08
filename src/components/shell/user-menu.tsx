@@ -49,8 +49,8 @@ export function UserMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {trigger ?? (
-          <Button variant="ghost" size="sm" className="gap-2 data-[state=open]:bg-accent">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+          <Button variant="ghost" size="sm" aria-label={`Account menu, ${name}`} className="gap-2 hdr-glass max-lg:h-11 max-sm:w-11 max-sm:px-0 data-[state=open]:bg-accent">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold max-sm:h-7 max-sm:w-7 max-sm:text-sm">
               {name.slice(0, 1).toUpperCase()}
             </div>
             <span className="hidden sm:inline">{name}</span>

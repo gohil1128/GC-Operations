@@ -51,11 +51,11 @@ export function EventSwitcher({ events, activeEventId }: { events: Ev[]; activeE
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={pending} className="gap-2 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent">
+        <Button variant="outline" size="sm" disabled={pending} className="gap-2 hdr-glass max-lg:h-11 max-sm:w-11 max-sm:px-0 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent">
           {active ? (
             <EventMark name={active.name} size="xs" />
           ) : (
-            <Calendar className="h-3.5 w-3.5" />
+            <Calendar className="h-3.5 w-3.5 max-sm:h-5 max-sm:w-5" />
           )}
           <span className="hidden max-w-[140px] truncate font-medium sm:inline">{active ? active.name : "All events"}</span>
           <ChevronsUpDown className="hidden h-3.5 w-3.5 opacity-60 sm:block" />

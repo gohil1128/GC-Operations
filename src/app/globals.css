@@ -2200,3 +2200,68 @@
     margin: 14mm;
   }
 }
+
+/*
+  ═══════════════════════════════════════════════════════════════════════════
+  The phone's top bar: a scroll edge and round glass controls.
+
+  Outside @layer on purpose, like the print rules: the controls are ordinary
+  Buttons whose own colours (bg-card, hover:bg-muted…) would otherwise win.
+  ═══════════════════════════════════════════════════════════════════════════
+*/
+
+/*
+  The veil behind the top strip (components/shell/sticky-header.tsx). One layer,
+  the strip's height plus 18px, tinted in the page's own top colour and blurred
+  behind, then masked so tint and blur are both full behind the clock and the
+  buttons and fade to nothing at the bottom edge. Content scrolling up under it
+  goes soft and quiet and is gone by the time it reaches the top, with no line
+  to cross.
+
+  Without backdrop-filter (older browsers) the tint alone fades the same way.
+*/
+.top-veil::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -18px 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, hsl(var(--page-top) / 0.96) 0%, hsl(var(--page-top) / 0.88) 55%, hsl(var(--page-top) / 0) 100%);
+}
+@supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  .top-veil::before {
+    background: hsl(var(--page-top) / 0.78);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 56%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 56%, transparent 100%);
+  }
+}
+
+/*
+  A round control in the top strip, below the desktop breakpoint: the same glass
+  as the dock (its tint, hairline and light edge), a little lifted off the page.
+  From lg up the controls keep their ordinary look.
+*/
+@media (max-width: 1023.98px) {
+  .hdr-glass {
+    background-color: hsl(var(--dock) / var(--dock-a));
+    border: 1px solid hsl(var(--shadow-color) / 0.12);
+    color: hsl(var(--foreground));
+    box-shadow: 0 8px 20px -10px hsl(var(--shadow-color) / 0.45), inset 0 1px 0 hsl(var(--dock-rim) / 0.55);
+  }
+  .hdr-glass:hover,
+  .hdr-glass[data-state="open"] {
+    background-color: hsl(var(--dock) / min(1, calc(var(--dock-a) + 0.14)));
+  }
+  .dark .hdr-glass {
+    border-color: hsl(var(--dock-rim) / 0.16);
+    box-shadow: 0 8px 20px -10px hsl(var(--shadow-color) / 0.7), inset 0 1px 0 hsl(var(--dock-rim) / 0.14);
+  }
+  @supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+    .hdr-glass {
+      -webkit-backdrop-filter: blur(16px) saturate(1.6);
+      backdrop-filter: blur(16px) saturate(1.6);
+    }
+  }
+}

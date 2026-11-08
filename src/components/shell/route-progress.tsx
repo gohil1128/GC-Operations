@@ -57,6 +57,9 @@ export function RouteProgress() {
   );
 
   React.useEffect(() => {
+    // The timers object is mutated in place, never replaced, so this is the
+    // same object the cleanup below needs.
+    const t = timers.current;
     // Bubble phase on document: by now Next's Link has had its say, and
     // anything that is not a real page change has already been filtered out.
     const onClick = (e: MouseEvent) => {
@@ -78,7 +81,6 @@ export function RouteProgress() {
     return () => {
       document.removeEventListener("click", onClick);
       window.removeEventListener("gc:navigating", onNavigating);
-      const t = timers.current;
       window.clearInterval(t.poll);
       window.clearTimeout(t.stop);
       window.clearTimeout(t.fade);

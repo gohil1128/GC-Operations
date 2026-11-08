@@ -9,9 +9,9 @@ import { BrandLogo } from "@/components/brand-logo";
 export function BrandBar({ businessName }: { businessName: string }) {
   const [logoFailed, setLogoFailed] = React.useState(false);
   return (
-    <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
+    <Link href="/dashboard" className="lg-press flex shrink-0 items-center justify-center gap-2">
       {!logoFailed ? (
-        <BrandLogo alt={businessName} className="h-10 w-auto sm:h-11" onError={() => setLogoFailed(true)} />
+        <BrandLogo alt={businessName} className="h-9 w-auto sm:h-10" onError={() => setLogoFailed(true)} />
       ) : (
         <>
           {/* brand-strong for the same reason as the rail avatar: white on the logo

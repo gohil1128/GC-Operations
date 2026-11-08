@@ -1,53 +1,22 @@
-"use client";
 import * as React from "react";
-import { cn } from "@/lib/utils";
 
 /*
-  The app's top strip: transparent at rest, solid once content passes under it.
+  The app's top strip, as a scroll edge.
 
-  It was always transparent, because it used to float over a photograph and
-  carry its own frosted pills. The photograph is gone, and a sticky header
-  with no background of its own just lets whatever scrolls up behind it show
-  through — on a phone the logo and the account button ended up drawn over the
-  filter chips, and in a standalone PWA the page text ran up under the clock
-  and signal bars, because the safe-area padding above the header was
-  transparent too.
+  Nothing is cut across the page. The strip carries a frosted veil that is
+  strongest at the top, behind the clock and the buttons, and fades to nothing
+  below them (.top-veil in globals.css), so text scrolling up under it blurs and
+  dissolves rather than meeting a hard line — the way the iOS bars do.
 
-  Solid all the time would fix that and cost the thing the reference gets
-  right: at the top of the screen the page is lit from above and the header
-  should be part of that light, not a bar cut across it. So it is clear at
-  rest and takes the page's own colour (--page-top, the same value the
-  gradient starts from) only once it is actually covering something.
+  At the top of a page there is nothing under it, and the veil is the page's own
+  top colour (--page-top, the value the page gradient starts from), so it cannot
+  be seen at all. It used to switch from clear to a solid bar when the page
+  moved under it, which needed an observer and a re-render and still ended in a
+  visible edge; the veil needs neither.
 
-  A 1px sentinel above it, watched by an IntersectionObserver, says when it has
-  left the viewport — no scroll listener, nothing running per frame.
+  The safe-area padding is inside the strip, so the veil also covers the status
+  bar of a standalone app, where page text used to run up under the clock.
 */
 export function StickyHeader({ children }: { children: React.ReactNode }) {
-  const sentinel = React.useRef<HTMLDivElement>(null);
-  const [stuck, setStuck] = React.useState(false);
-
-  React.useEffect(() => {
-    const el = sentinel.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting), { threshold: 0 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <>
-      <div ref={sentinel} aria-hidden className="pointer-events-none -mb-px h-px w-full" />
-      <header
-        data-stuck={stuck}
-        className={cn(
-          // No hairline: once solid, the header's own colour fades out below it, so
-          // content dissolves under it instead of being cut off by a line.
-          "sticky top-0 z-30 pt-safe transition-colors duration-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-gradient-to-b after:from-page-top after:to-transparent after:opacity-0 after:transition-opacity after:duration-150 data-[stuck=true]:after:opacity-100",
-          stuck ? "bg-page-top" : "bg-transparent",
-        )}
-      >
-        {children}
-      </header>
-    </>
-  );
+  return <header className="top-veil sticky top-0 z-30 pt-safe">{children}</header>;
 }
