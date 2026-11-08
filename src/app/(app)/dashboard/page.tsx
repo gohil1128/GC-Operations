@@ -26,6 +26,8 @@ import {
 } from "@/components/dashboard/ledger/rail-cards";
 import { HeroCard } from "@/components/dashboard/hero-card";
 import { EventCards, type EventCard } from "@/components/dashboard/event-cards";
+import { PremixCard } from "@/components/dashboard/premix-card";
+import { getPremixSummary } from "@/modules/sales/premix";
 import { ItemMixDonut } from "@/components/dashboard/bento/item-mix-donut";
 import { isCardVisible, type OverviewCardKey } from "@/modules/dashboard/cards";
 import { can } from "@/lib/permissions";
@@ -82,6 +84,8 @@ export default async function DashboardPage({
   // the profit figures live here as well, so gating only /reports would hide
   // the page while leaving the same margins on the landing screen.
   const pnlLocked = await isSectionLocked(scope.userId, "REPORTS");
+  // Premix ignores the event picker on purpose: it is every bag, everywhere.
+  const premix = isCardVisible(business?.hiddenOverviewCards, "premix") ? await getPremixSummary(scope.locationId) : null;
 
   const [data, pnl, invoiceTracking, dueInvoices, priorNetSales, upcoming, uncounted] =
     await Promise.all([
@@ -299,6 +303,12 @@ export default async function DashboardPage({
           <KpiStrip items={kpis.slice(1)} className="mt-0 grid-cols-3 gap-2.5 sm:gap-3 lg:grid-cols-1" />
         )}
       </div>
+
+      {show("premix") && premix && (
+        <div className="mt-4">
+          <PremixCard data={premix} />
+        </div>
+      )}
 
       {show("revenueByEvent") && (
         <div className="mt-8">

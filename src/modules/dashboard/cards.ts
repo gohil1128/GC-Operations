@@ -49,6 +49,11 @@ export const OVERVIEW_CARDS = [
     blurb: "One bar per event, with what it cost to earn.",
   },
   {
+    key: "premix",
+    label: "Premix",
+    blurb: "Premix bags sold across every event.",
+  },
+  {
     key: "itemMix",
     label: "Item mix",
     blurb: "The split of what sold, by category.",
