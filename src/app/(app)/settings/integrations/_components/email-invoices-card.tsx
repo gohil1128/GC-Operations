@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Mail, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +39,11 @@ const since = (d: Date | null) => {
 export async function EmailInvoicesCard({
   businessId, flash, canReview,
 }: { businessId: string; flash?: string; canReview: boolean }) {
-  const overview = await getMailOverview(businessId);
+  const [overview, biz] = await Promise.all([
+    getMailOverview(businessId),
+    prisma.business.findUnique({ where: { id: businessId }, select: { aiScanningEnabled: true } }),
+  ]);
+  const aiOff = biz?.aiScanningEnabled === false;
   const missing = missingConfig();
   // Connect only needs Google and the token key; the AI key is needed to scan.
   const cannotConnect = missingConnectConfig().length > 0;
@@ -67,6 +72,13 @@ export async function EmailInvoicesCard({
         {note && (
           <p role="status" className={`rounded-2xl px-4 py-3 text-sm ${note.ok ? "bg-success-muted text-success" : "bg-destructive-muted text-destructive"}`}>
             {note.text}
+          </p>
+        )}
+
+        {aiOff && (
+          <p role="status" className="rounded-2xl border border-warning-border bg-warning-muted px-4 py-3 text-sm text-warning-ink">
+            AI invoice reading is off, so nothing is being scanned.{" "}
+            <Link href="/settings/ai" className="font-semibold underline underline-offset-2">Turn it on</Link>
           </p>
         )}
 

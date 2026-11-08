@@ -14,7 +14,7 @@ import { GlassDensityCard } from "@/components/glass-density";
 import { SectionLockCard } from "./section-lock-card";
 import { sectionLockSettings } from "@/modules/section-lock/actions";
 import { EventsManager } from "./events-manager";
-import { SettingsNavigator } from "./settings-navigator";
+import { AiScanningCard } from "./ai-scanning-card";
 import { Lock, Calendar } from "lucide-react";
 
 
@@ -69,6 +69,8 @@ export async function SettingsSection({ only }: { only: string }) {
         {show("cost-of-goods") && business && <CostClassesCard opex={business.opexInvoiceCategories} />}
 
         {show("transparency") && <GlassDensityCard />}
+
+        {show("ai") && business && <AiScanningCard enabled={business.aiScanningEnabled} />}
 
       {show("locations") && (
         <Card id="locations" data-settings-section>

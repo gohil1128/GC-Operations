@@ -227,3 +227,19 @@ export async function updateBusinessAction(formData: FormData) {
   await writeAudit({ businessId: scope.businessId, userId: scope.userId, action: "business.update", entityType: "Business", entityId: scope.businessId, diff: { name: parsed.name, timezone: parsed.timezone } });
   revalidatePath("/", "layout");
 }
+
+/** Owner switch: may the app send emails to Anthropic's API to read invoices? */
+export async function setAiScanningAction(enabled: unknown) {
+  await requireOwner();
+  const scope = await getScope();
+  const on = z.boolean().safeParse(enabled);
+  if (!on.success) return { error: "Could not read that setting." };
+  await prisma.business.update({ where: { id: scope.businessId }, data: { aiScanningEnabled: on.data } });
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "business.ai.scanning", entityType: "Business", entityId: scope.businessId,
+    diff: { aiScanningEnabled: on.data },
+  });
+  revalidatePath("/settings", "layout");
+  return { ok: true as const };
+}

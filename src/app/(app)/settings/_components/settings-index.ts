@@ -23,6 +23,7 @@ export const SETTINGS: SettingsEntry[] = [
   { id: "events", label: "Events", hint: "Markets, dates and fees", group: "Operations", href: "/settings/events", keywords: "event market festival fee dates colour color" },
   { id: "pin-lock", label: "My PIN lock", hint: "Hide P&L, events or recipes on your screen", group: "Privacy", href: "/settings/pin-lock", keywords: "pin lock password privacy hide profit loss recipes" },
   { id: "team", label: "Team members", hint: "Invite people, roles and access", group: "Team", href: "/settings/users", keywords: "users team staff manager owner invite role access join requests approve google" },
+  { id: "ai", label: "AI invoice reading", hint: "Turn the Anthropic API on or off", group: "Connections", href: "/settings/ai", keywords: "ai anthropic claude api scan gmail email invoices read automatic off on toggle privacy" },
   { id: "square", label: "Square sales", hint: "Live sales sync", group: "Connections", href: "/settings/square", keywords: "square pos sales sync connect" },
   { id: "email-invoices", label: "Email invoices", hint: "Read supplier bills from Gmail", group: "Connections", href: "/settings/email-invoices", keywords: "gmail email invoices scan ai inbox" },
   { id: "sales-summary-csv", label: "Sales Summary CSV", hint: "Upload a day's Square summary", group: "Connections", href: "/settings/sales-summary-csv", keywords: "csv upload import square sales summary" },

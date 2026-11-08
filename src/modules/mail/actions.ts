@@ -37,6 +37,8 @@ export async function scanNowAction(): Promise<Reply> {
   const scope = await getScope();
   const conn = await prisma.mailConnection.findUnique({ where: { businessId: scope.businessId } });
   if (!conn) return fail("Connect Gmail first.");
+  const biz = await prisma.business.findUnique({ where: { id: scope.businessId }, select: { aiScanningEnabled: true } });
+  if (!biz?.aiScanningEnabled) return fail("AI invoice reading is off. Turn it on in Settings → AI invoice reading.");
   if (conn.status !== "ACTIVE") return fail("The connection needs to be reconnected.");
   // A button people can hold down is a bill; once a minute is plenty.
   if (conn.lastScanAt && Date.now() - conn.lastScanAt.getTime() < 60_000) {

@@ -48,7 +48,13 @@ export function productionDeps(): ScanDeps {
 /** Every active mailbox, one after another — they share one time budget's worth of patience. */
 export async function scanAll(trigger: "cron" | "manual"): Promise<ScanResult[]> {
   const deps = productionDeps();
-  const connections = await prisma.mailConnection.findMany({ where: { status: "ACTIVE" }, select: { id: true } });
+  // Businesses that have switched AI reading off are skipped before anything is
+  // fetched, so none of their email reaches Anthropic.
+  const off = await prisma.business.findMany({ where: { aiScanningEnabled: false }, select: { id: true } });
+  const connections = await prisma.mailConnection.findMany({
+    where: { status: "ACTIVE", businessId: { notIn: off.map((b) => b.id) } },
+    select: { id: true },
+  });
   const out: ScanResult[] = [];
   for (const c of connections) out.push(await scanConnection(c.id, trigger, deps));
   return out;

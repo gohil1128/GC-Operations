@@ -96,6 +96,10 @@ model Business {
   // a card added later shows up for everybody instead of being invisible until
   // each business goes and enables it. See src/modules/dashboard/cards.ts.
   hiddenOverviewCards   String[] @default([])
+  // Whether the app may send emails to Anthropic's API to read invoices out of
+  // them. Off stops every Gmail scan (scheduled and "Scan now") before any
+  // email is fetched or sent anywhere. Square sync does not use AI at all.
+  aiScanningEnabled     Boolean  @default(true)
   ebitdaMultiplier      Float    @default(4.0) // applied when EBITDA > 0
   revenueMultiplier     Float    @default(1.5) // fallback when EBITDA <= 0
   createdAt             DateTime @default(now())
