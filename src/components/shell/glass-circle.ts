@@ -4,4 +4,4 @@
   the Button's own size classes; desktop keeps the ordinary button.
 */
 export const GLASS_CIRCLE =
-  "max-lg:h-11 max-lg:min-w-11 max-lg:justify-center max-lg:rounded-full max-lg:border max-lg:border-[hsl(var(--glass-edge))] max-lg:bg-card/60 max-lg:px-0 max-lg:shadow-[0_6px_18px_-8px_hsl(var(--shadow-color)/0.35)] max-lg:backdrop-blur-xl";
+  "max-lg:h-10 max-lg:min-w-10 max-lg:justify-center max-lg:rounded-full max-lg:border max-lg:border-foreground/5 max-lg:bg-card/40 max-lg:px-0 max-lg:shadow-[0_2px_8px_-4px_hsl(var(--shadow-color)/0.18)] max-lg:backdrop-blur-md";
