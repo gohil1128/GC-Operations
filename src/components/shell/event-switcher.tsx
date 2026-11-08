@@ -1,4 +1,6 @@
 "use client";
+import { cn } from "@/lib/utils";
+import { GLASS_CIRCLE } from "./glass-circle";
 import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -51,7 +53,7 @@ export function EventSwitcher({ events, activeEventId }: { events: Ev[]; activeE
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={pending} className="gap-2 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent">
+        <Button variant="outline" size="sm" disabled={pending} className={cn("gap-2 data-[state=open]:border-foreground/20 data-[state=open]:bg-accent", GLASS_CIRCLE)}>
           {active ? (
             <EventMark name={active.name} size="xs" />
           ) : (

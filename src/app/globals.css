@@ -920,6 +920,28 @@
   .settings-flash { animation: settings-flash 1.5s ease-out; }
   @media (prefers-reduced-motion: reduce) { .settings-flash { animation: none; outline: 3px solid hsl(var(--highlight)); } }
 
+  /*
+    The top of the app, as in iOS: no bar. A frosted layer that blurs whatever
+    scrolls beneath and fades out toward the page, so content melts into the
+    status bar instead of being cut off. Present always (it is invisible over
+    the page's own colour at the top), so nothing pops in on scroll.
+  */
+  .header-fade::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 -28px 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, hsl(var(--page-top) / 0.92) 0%, hsl(var(--page-top) / 0.7) 55%, hsl(var(--page-top) / 0) 100%);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  }
+  .header-fade { isolation: isolate; }
+  @media (prefers-reduced-transparency: reduce) {
+    .header-fade::before { -webkit-backdrop-filter: none; backdrop-filter: none; background: hsl(var(--page-top)); }
+  }
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 

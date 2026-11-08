@@ -79,20 +79,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Content top strip: brand on the left (phone), switchers on the
             right. Clear at rest, solid once content scrolls under it. */}
         <StickyHeader>
-          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8">
-            {/* The logo lives in the sidebar on web, so show it here only on mobile. */}
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="lg:hidden">
-                <BrandBar businessName={business?.name ?? "Operations"} />
-              </div>
-              {/* The business name is the sidebar's logo at lg+, and the
-                  BrandBar's below it, so this strip no longer names it. */}
-            </div>
-            {/* No tray around these: with one location the tray held only the avatar
-                and read as an empty box. Each control carries its own edge. */}
-            <div className="flex shrink-0 items-center gap-1.5">
+          {/* Phone: switchers float on the left, the logo sits in the middle, the
+              account on the right, each a glass circle over the frosted fade.
+              Desktop: the logo is in the sidebar, the switchers sit on the right. */}
+          <div className="mx-auto grid w-full max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2.5 sm:px-6 sm:py-3 lg:flex lg:justify-end lg:px-8">
+            <div className="flex min-w-0 items-center gap-1.5 justify-self-start">
               <LocationSwitcher active={activeLocation} options={scope.availableLocations} />
               <EventSwitcher events={events} activeEventId={activeEvent?.id ?? null} />
+            </div>
+            <div className="justify-self-center lg:hidden">
+              <BrandBar businessName={business?.name ?? "Operations"} />
+            </div>
+            <div className="flex items-center justify-self-end">
               {/* lg:hidden — at desktop widths the sidebar's user card is
                   this same menu, and two triggers for one menu on one screen
                   is the duplication the sidebar was meant to end. */}

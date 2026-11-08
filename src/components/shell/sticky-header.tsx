@@ -40,10 +40,10 @@ export function StickyHeader({ children }: { children: React.ReactNode }) {
       <header
         data-stuck={stuck}
         className={cn(
-          // No hairline: once solid, the header's own colour fades out below it, so
-          // content dissolves under it instead of being cut off by a line.
-          "sticky top-0 z-30 pt-safe transition-colors duration-150 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-gradient-to-b after:from-page-top after:to-transparent after:opacity-0 after:transition-opacity after:duration-150 data-[stuck=true]:after:opacity-100",
-          stuck ? "bg-page-top" : "bg-transparent",
+          // No bar at all: once content is under it, a frosted fade (see
+          // .header-fade in globals.css) blurs what scrolls beneath and melts
+          // away toward the page, and the controls float on it as glass circles.
+          "header-fade sticky top-0 z-30 pt-safe",
         )}
       >
         {children}
