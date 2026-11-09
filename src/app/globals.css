@@ -955,6 +955,29 @@
     );
   }
   .header-fade { isolation: isolate; }
+  /*
+    A page's sticky toolbar (the period picker and CSV button on Sales) used to be
+    a solid frosted bar, which showed as a lighter band with hard edges under the
+    header. Now it has no surface of its own: a faint blur that eases in from
+    nothing and back out to nothing, so it reads as part of the same glass as the
+    header above it.
+  */
+  .toolbar-fade { isolation: isolate; }
+  .toolbar-fade::before {
+    content: "";
+    position: absolute;
+    inset: -14px 0 -22px 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, hsl(var(--page-top) / 0) 0%, hsl(var(--page-top) / 0.6) 30%, hsl(var(--page-top) / 0.5) 62%, hsl(var(--page-top) / 0) 100%);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 60%, rgba(0,0,0,0.4) 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 60%, rgba(0,0,0,0.4) 82%, transparent 100%);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .toolbar-fade::before { -webkit-backdrop-filter: none; backdrop-filter: none; background: hsl(var(--page-top)); }
+  }
   @media (prefers-reduced-transparency: reduce) {
     .header-fade::before { -webkit-backdrop-filter: none; backdrop-filter: none; background: hsl(var(--page-top)); }
   }

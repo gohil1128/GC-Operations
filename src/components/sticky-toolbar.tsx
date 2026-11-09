@@ -21,7 +21,7 @@ export function StickyToolbar({
   return (
     <div
       data-print="hide"
-      className={cn("sticky z-30 glass", className)}
+      className={cn("toolbar-fade sticky z-30", className)}
       style={{ top: "var(--app-header-h, 57px)" }}
     >
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
