@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { businessDayFromIso, fmtBusinessDate, fmtDate, todayIsoIn } from "@/lib/date";
 import { missingSquareConfig } from "@/modules/square/service";
 import type { SyncResult } from "@/modules/square/sync";
-import { SquareDisconnect, SquareHistory, SquareSyncNow, UseSquareForDays } from "./square-sync-client";
+import { SquareDisconnect, SquareHistory, SquareSyncNow, TagUntaggedDays, UseSquareForDays } from "./square-sync-client";
 
 /*
   Square sales, live.
@@ -49,6 +49,13 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
       })).map((d) => d.businessDate.toISOString().slice(0, 10))
     : [];
   const locations = (conn?.squareLocations ?? []) as { id: string; name: string }[];
+  // Synced days that no event covers (or covers twice): offered a tag right here.
+  const [untaggedCount, tagEvents] = conn
+    ? await Promise.all([
+        prisma.dailySales.count({ where: { locationId: conn.locationId, eventId: null } }),
+        prisma.event.findMany({ where: { businessId, isActive: true }, orderBy: { startDate: "desc" }, select: { id: true, name: true } }),
+      ])
+    : [0, []];
   const today = conn ? todayIsoIn(conn.timezone) : null;
 
   return (
@@ -111,6 +118,7 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
           </div>
         ) : (
           <>
+            <TagUntaggedDays count={untaggedCount} events={tagEvents} />
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-1 text-sm">
                 <p><span className="text-muted-foreground">Account:</span> <span className="font-medium">{conn.merchantName}</span></p>

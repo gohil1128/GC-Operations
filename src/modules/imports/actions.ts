@@ -114,3 +114,23 @@ export async function tagImportedDaysAction(isoDays: string[], eventId: string |
   for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
   return { days: sales.count };
 }
+
+/** Tag every synced/imported day that has no event yet (at this location) with one event. */
+export async function tagUntaggedDaysAction(eventId: string) {
+  await requireOwner();
+  const scope = await getScope();
+  const ev = await prisma.event.findFirst({ where: { id: eventId, businessId: scope.businessId } });
+  if (!ev) throw new Error("Event not found.");
+  const where = { locationId: scope.locationId, eventId: null };
+  const [sales, items] = await prisma.$transaction([
+    prisma.dailySales.updateMany({ where, data: { eventId } }),
+    prisma.salesItem.updateMany({ where, data: { eventId } }),
+  ]);
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "import.tag_untagged", entityType: "Event", entityId: eventId,
+    diff: { event: ev.name, days: sales.count, items: items.count },
+  });
+  for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
+  return { days: sales.count };
+}

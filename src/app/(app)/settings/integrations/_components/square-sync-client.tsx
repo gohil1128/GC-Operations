@@ -1,5 +1,8 @@
 "use client";
 import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { tagUntaggedDaysAction } from "@/modules/imports/actions";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -111,6 +114,44 @@ export function SquareDisconnect() {
         <Button size="sm" variant="outline" onClick={() => setSure(true)}>Disconnect</Button>
       )}
       <Note reply={reply} />
+    </div>
+  );
+}
+
+/* Days Square brought in with no event: pick one and tag them all, or go to Imported days for a range or one day at a time. */
+export function TagUntaggedDays({ count, events }: { count: number; events: { id: string; name: string }[] }) {
+  const router = useRouter();
+  const [eventId, setEventId] = React.useState(events[0]?.id ?? "");
+  const [pending, start] = React.useTransition();
+  if (count === 0 || events.length === 0) return null;
+  return (
+    <div className="rounded-2xl bg-warning-muted px-4 py-3 text-sm text-warning-ink">
+      <p className="font-semibold">{count} day{count === 1 ? "" : "s"} of sales {count === 1 ? "has" : "have"} no event</p>
+      <p className="mt-0.5 text-xs opacity-90">Square only tags a day itself when exactly one event covers it. Give them one here.</p>
+      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="tag-untagged-event">Event</label>
+        <select id="tag-untagged-event" value={eventId} onChange={(e) => setEventId(e.target.value)} className="select-native h-10 max-w-full">
+          {events.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+        </select>
+        <Button
+          size="sm"
+          disabled={pending || !eventId}
+          onClick={() =>
+            start(async () => {
+              try {
+                const r = await tagUntaggedDaysAction(eventId);
+                toast({ title: `Tagged ${r.days} day${r.days === 1 ? "" : "s"}` });
+                router.refresh();
+              } catch (e) {
+                toast({ title: "Couldn't tag", description: String((e as Error)?.message ?? e), variant: "destructive" });
+              }
+            })
+          }
+        >
+          {pending ? "Tagging…" : `Tag ${count} day${count === 1 ? "" : "s"}`}
+        </Button>
+        <Link href="/settings/imported-data" className="text-xs font-medium underline underline-offset-2">Pick days one by one</Link>
+      </div>
     </div>
   );
 }
