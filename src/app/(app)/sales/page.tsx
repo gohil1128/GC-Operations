@@ -11,9 +11,8 @@ import { StickyToolbar } from "@/components/sticky-toolbar";
 import { StatTile, StatTileRow } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TableOnDesktop, MobileList, MobileRow, MobileField, MobileEmpty } from "@/components/mobile-list";
-import { Badge } from "@/components/ui/badge";
-import { formatMoney, formatPercent } from "@/lib/money";
+import { TableOnDesktop } from "@/components/mobile-list";
+import { formatMoney, formatMoneyHeadline, formatPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -106,7 +105,48 @@ export default async function SalesPage({
       </StickyToolbar>
 
       <div className="mx-auto max-w-[1400px] space-y-5 px-4 pb-12 pt-5 sm:px-6 lg:px-8">
-        <StatTileRow>
+        {/* Phone: one slim line of figures, then the items. The big blocks below are desktop. */}
+        <div className="grid grid-cols-3 gap-2 lg:hidden">
+          <div className="min-w-0 rounded-2xl bg-card px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Net sales</div>
+            <div className="num truncate text-[15px] font-semibold">{formatMoney(data.totals.netSalesCents)}</div>
+          </div>
+          <div className="min-w-0 rounded-2xl bg-card px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Units</div>
+            <div className="num truncate text-[15px] font-semibold">{qtyFmt(data.totals.qty)}</div>
+          </div>
+          <div className="min-w-0 rounded-2xl bg-card px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Margin</div>
+            <div className="num truncate text-[15px] font-semibold">{data.totals.marginPct === null ? "—" : formatPercent(data.totals.marginPct)}</div>
+          </div>
+        </div>
+
+        {/* Phone: categories as filter chips (tap to filter the list, tap again to clear). */}
+        {data.byCategory.length > 0 && (
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 no-scrollbar lg:hidden" role="group" aria-label="Filter by category">
+            <Link
+              href={linkWith({ category: null })}
+              aria-pressed={!category}
+              className={cn("lg-press shrink-0 rounded-full px-3.5 py-2 text-[13px] font-medium", !category ? "bg-highlight text-highlight-foreground" : "bg-card")}
+            >
+              All
+            </Link>
+            {data.byCategory.map((c) => (
+              <Link
+                key={c.category}
+                href={linkWith({ category: category === c.category ? null : c.category })}
+                aria-pressed={category === c.category}
+                className={cn("lg-press flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-medium", category === c.category ? "bg-highlight text-highlight-foreground" : "bg-card")}
+              >
+                <span className={cn("h-2 w-2 rounded-[2px]", categoryStyle(c.category).dot)} />
+                {c.category}
+                <span className="num text-[11px] opacity-70">{formatMoneyHeadline(c.netSalesCents)}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <StatTileRow className="max-lg:hidden">
           <StatTile label="Net sales" value={formatMoney(data.totals.netSalesCents)} />
           <StatTile label="Units sold" value={qtyFmt(data.totals.qty)} />
           <StatTile
@@ -124,7 +164,7 @@ export default async function SalesPage({
             its own rather than disappearing into the cup totals. It is still
             inside the totals above; this is the same money, shown apart. */}
         {premix && (
-          <div className="bento flex flex-wrap items-center justify-between gap-x-6 gap-y-3 p-4 sm:p-5">
+          <div className="bento flex flex-wrap items-center justify-between gap-x-6 gap-y-3 p-4 sm:p-5 max-lg:hidden">
             <div className="min-w-0">
               <h2 className="text-sm font-semibold">Premix</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -153,7 +193,7 @@ export default async function SalesPage({
             the costed items, presented without that, invites reading it as the
             whole business. */}
         {data.totals.uncostedItemCount > 0 ? (
-          <p className="text-xs leading-relaxed text-muted-foreground">
+          <p className="text-xs leading-relaxed text-muted-foreground max-lg:hidden">
             {data.totals.costedItemCount > 0 ? (
               <>
                 Profit and margin cover the{" "}
@@ -206,7 +246,7 @@ export default async function SalesPage({
           </p>
         ) : (
           data.totals.itemCount > 0 && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground max-lg:hidden">
               Every item is costed from its recipe, so profit moves on its own as ingredient
               prices change.
             </p>
@@ -214,7 +254,7 @@ export default async function SalesPage({
         )}
 
         {/* ── Categories ─────────────────────────────────────────────── */}
-        <div className="bento p-4 sm:p-5">
+        <div className="bento p-4 sm:p-5 max-lg:hidden">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-sm font-semibold">By category</h2>
             {category && (
@@ -290,7 +330,7 @@ export default async function SalesPage({
 
         {/* ── Items ──────────────────────────────────────────────────── */}
         <div className="bento">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft px-4 py-3 sm:px-5 max-lg:border-0 max-lg:py-2">
             <h2 className="text-sm font-semibold">
               {category ? `${category} items` : "Every item"}
               <span className="ml-2 text-2xs font-normal text-muted-foreground">
@@ -377,29 +417,34 @@ export default async function SalesPage({
             </Table>
           </TableOnDesktop>
 
-          <MobileList>
+          <ul className="divide-y divide-border-soft lg:hidden">
             {data.items.map((i) => (
-              <MobileRow
-                key={i.itemName}
-                title={i.itemName}
-                subtitle={`${qtyFmt(i.qty)} units · ${i.sharePct.toFixed(1)}% of sales`}
-                badges={<Badge variant="muted">{i.category}</Badge>}
-              >
-                <MobileField label="Net sales" value={formatMoney(i.netSalesCents)} />
-                <MobileField
-                  label="Profit"
-                  value={
-                    i.profitCents === null
-                      ? "Not costed"
-                      : `${formatMoney(i.profitCents, { signed: true })}${i.marginPct !== null ? ` · ${formatPercent(i.marginPct)}` : ""}`
-                  }
-                />
-              </MobileRow>
+              <li key={i.itemName} className="flex items-center gap-3 px-4 py-2.5">
+                <span className={cn("h-8 w-1 shrink-0 rounded-full", categoryStyle(i.category).bar)} aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-medium leading-tight">{i.itemName}</span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                    {qtyFmt(i.qty)} units · {i.category}
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="num block text-[15px] font-semibold">{formatMoney(i.netSalesCents)}</span>
+                  <span className={cn("num block text-[11px]", i.profitCents !== null && i.profitCents < 0 ? "text-destructive" : "text-muted-foreground")}>
+                    {i.profitCents === null ? `${i.sharePct.toFixed(1)}%` : `${formatMoney(i.profitCents, { signed: true })} profit`}
+                  </span>
+                </span>
+              </li>
             ))}
             {data.items.length === 0 && (
-              <MobileEmpty>Nothing sold in this period{category ? ` in ${category}` : ""}.</MobileEmpty>
+              <li className="px-4 py-8 text-center text-xs text-muted-foreground">Nothing sold in this period{category ? ` in ${category}` : ""}.</li>
             )}
-          </MobileList>
+          </ul>
+          {data.totals.uncostedItemCount > 0 && (
+            <p className="px-4 pb-3 pt-2 text-[11px] text-muted-foreground lg:hidden">
+              {data.totals.uncostedItemCount} item{data.totals.uncostedItemCount === 1 ? "" : "s"} have no recipe, so no profit is shown.{" "}
+              <Link href="/recipes" className="text-brand-ink">Build recipes</Link>
+            </p>
+          )}
         </div>
       </div>
     </div>
