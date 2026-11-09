@@ -88,35 +88,40 @@ export function HeroCard({
           {/* The bars are a picture of the list below, which is what a screen
               reader gets instead. */}
           <div aria-hidden className="relative">
+            {/* Gridlines: quarter marks as hairlines across the plot, with the baseline solid. */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[146px]">
+              {[25, 50, 75, 100].map((g) => (
+                <div key={g} className="absolute inset-x-0 border-t border-foreground/[0.07]" style={{ bottom: `${g}%` }} />
+              ))}
+            </div>
             {/* The average, as a dashed line across every column. */}
             <div
-              className="pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-foreground/25"
+              className="pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-foreground/35"
               style={{ bottom: `${(avg / max) * 146}px` }}
             />
-            <div className="flex h-[168px] items-end justify-between gap-2 sm:gap-3">
+            <div className="flex h-[168px] items-end justify-between gap-2.5 sm:gap-3">
               {days.map((d, i) => (
                 <div key={d.businessDate.toISOString()} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
-                  <span className={cn("num mb-1 text-[10.5px] font-semibold leading-none tabular-nums", i === last ? "text-foreground" : "text-muted-foreground")}>
+                  <span className={cn("num mb-1.5 text-[10.5px] font-semibold leading-none tabular-nums", i === last ? "text-foreground" : "text-muted-foreground")}>
                     {compact(d.netSalesCents)}
                   </span>
-                  {/* A faint track behind each bar gives the chart body even on a quiet night. */}
-                  <div className="relative flex h-[146px] w-full max-w-[30px] items-end overflow-hidden rounded-full bg-muted/70">
-                    {/* Flat fills, no entrance: the bars are simply there with the page. */}
+                  <div className="relative flex h-[146px] w-full max-w-[34px] items-end">
+                    {/* Flat, square-topped columns: no pills, no track, no entrance. */}
                     <div
                       className={cn(
-                        "w-full rounded-full",
-                        i === last ? "bg-highlight" : d.netSalesCents === best ? "bg-foreground/75" : "bg-foreground/50",
+                        "w-full rounded-t-[3px]",
+                        i === last ? "bg-highlight" : "bg-foreground/70",
                       )}
                       // Never fully flat: a night that took money should not draw
                       // as the same nothing as a night that did not happen.
-                      style={{ height: `${Math.max(4, (d.netSalesCents / max) * 100)}%` }}
+                      style={{ height: `${Math.max(2, (d.netSalesCents / max) * 100)}%` }}
                     />
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          <div aria-hidden className="mt-2 flex justify-between gap-2 border-t border-dashed border-border pt-2 sm:gap-3">
+          <div aria-hidden className="flex justify-between gap-2.5 border-t border-foreground/25 pt-2 sm:gap-3">
             {days.map((d, i) => (
               <span
                 key={d.businessDate.toISOString()}
