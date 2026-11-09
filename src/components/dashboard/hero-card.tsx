@@ -3,7 +3,6 @@ import { ArrowUpRight, Wallet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/date";
 import { formatMoney } from "@/lib/money";
-import { CountUp } from "@/components/count-up";
 
 /*
   The Overview's hero: the reference's top slab, carrying this business's
@@ -60,7 +59,7 @@ export function HeroCard({
         <div className="min-w-0 flex-1">
           <div className="text-[12.5px] text-muted-foreground">{figureLabel}</div>
           <div className="display-num mt-0.5 truncate text-[34px] font-medium leading-tight tracking-[-0.025em] tabular-nums sm:text-[40px]">
-            <CountUp value={figure} />
+            {figure}
           </div>
           <div className="mt-1 text-xs text-muted-foreground">
             {delta ? (
@@ -102,19 +101,15 @@ export function HeroCard({
                   </span>
                   {/* A faint track behind each bar gives the chart body even on a quiet night. */}
                   <div className="relative flex h-[146px] w-full max-w-[30px] items-end overflow-hidden rounded-full bg-muted/70">
+                    {/* Flat fills, no entrance: the bars are simply there with the page. */}
                     <div
                       className={cn(
-                        "bar-grow w-full rounded-full",
-                        i === last
-                          ? "bg-gradient-to-t from-highlight to-sun-400 shadow-[0_0_14px_-2px_hsl(var(--highlight)/0.7)]"
-                          : d.netSalesCents === best
-                            ? "bg-gradient-to-t from-foreground/85 to-foreground/60"
-                            : "bg-gradient-to-t from-foreground/80 to-foreground/45",
+                        "w-full rounded-full",
+                        i === last ? "bg-highlight" : d.netSalesCents === best ? "bg-foreground/75" : "bg-foreground/50",
                       )}
                       // Never fully flat: a night that took money should not draw
                       // as the same nothing as a night that did not happen.
-                      // Staggered 30ms left to right, oldest night first.
-                      style={{ height: `${Math.max(4, (d.netSalesCents / max) * 100)}%`, animationDelay: `${120 + i * 30}ms` }}
+                      style={{ height: `${Math.max(4, (d.netSalesCents / max) * 100)}%` }}
                     />
                   </div>
                 </div>
