@@ -134,3 +134,26 @@ export async function tagUntaggedDaysAction(eventId: string) {
   for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
   return { days: sales.count };
 }
+
+/** Days already synced with no event whose cash close was tagged: copy the close's event onto the sales. */
+export async function applyCashCloseEventsAction() {
+  await requireOwner();
+  const scope = await getScope();
+  const closes = await prisma.cashClose.findMany({
+    where: { locationId: scope.locationId, eventId: { not: null } },
+    select: { businessDate: true, eventId: true },
+  });
+  let days = 0;
+  for (const c of closes) {
+    const where = { locationId: scope.locationId, businessDate: c.businessDate, eventId: null };
+    const r = await prisma.dailySales.updateMany({ where, data: { eventId: c.eventId } });
+    await prisma.salesItem.updateMany({ where, data: { eventId: c.eventId } });
+    days += r.count;
+  }
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "import.apply_close_events", entityType: "DailySales", diff: { days },
+  });
+  for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
+  return { days };
+}

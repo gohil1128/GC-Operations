@@ -93,6 +93,13 @@ export async function saveCashCloseAction(payload: unknown) {
         closedById: scope.userId,
       },
     });
+    // The close and the day's sales are separate records. Tagging the close to an
+    // event tags that day's sales (and its item rows) too, so the event's own
+    // "Daily sales" fills in. Clearing the tag on the close leaves the sales alone.
+    if (eventId) {
+      await tx.dailySales.updateMany({ where: { locationId: scope.locationId, businessDate }, data: { eventId } });
+      await tx.salesItem.updateMany({ where: { locationId: scope.locationId, businessDate }, data: { eventId } });
+    }
   });
 
   await writeAudit({ businessId: scope.businessId, userId: scope.userId, action: "cash.close", entityType: "CashClose", entityId: businessDate.toISOString() });

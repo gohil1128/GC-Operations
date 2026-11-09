@@ -2,7 +2,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { tagUntaggedDaysAction } from "@/modules/imports/actions";
+import { tagUntaggedDaysAction, applyCashCloseEventsAction } from "@/modules/imports/actions";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -119,7 +119,7 @@ export function SquareDisconnect() {
 }
 
 /* Days Square brought in with no event: pick one and tag them all, or go to Imported days for a range or one day at a time. */
-export function TagUntaggedDays({ count, events }: { count: number; events: { id: string; name: string }[] }) {
+export function TagUntaggedDays({ count, fromCloses, events }: { count: number; fromCloses: number; events: { id: string; name: string }[] }) {
   const router = useRouter();
   const [eventId, setEventId] = React.useState(events[0]?.id ?? "");
   const [pending, start] = React.useTransition();
@@ -152,6 +152,27 @@ export function TagUntaggedDays({ count, events }: { count: number; events: { id
         </Button>
         <Link href="/settings/imported-data" className="text-xs font-medium underline underline-offset-2">Pick days one by one</Link>
       </div>
+      {fromCloses > 0 && (
+        <div className="mt-3 border-t border-warning-border pt-3">
+          <p className="text-xs">{fromCloses} of them {fromCloses === 1 ? "has a cash close" : "have cash closes"} tagged with an event already.</p>
+          <Button
+            size="sm" variant="outline" className="mt-2" disabled={pending}
+            onClick={() =>
+              start(async () => {
+                try {
+                  const r = await applyCashCloseEventsAction();
+                  toast({ title: `Tagged ${r.days} day${r.days === 1 ? "" : "s"} from their cash closes` });
+                  router.refresh();
+                } catch (e) {
+                  toast({ title: "Couldn't tag", description: String((e as Error)?.message ?? e), variant: "destructive" });
+                }
+              })
+            }
+          >
+            Use the cash close&apos;s event
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

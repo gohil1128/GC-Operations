@@ -50,12 +50,18 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
     : [];
   const locations = (conn?.squareLocations ?? []) as { id: string; name: string }[];
   // Synced days that no event covers (or covers twice): offered a tag right here.
-  const [untaggedCount, tagEvents] = conn
+  const [untaggedCount, fromCloses, tagEvents] = conn
     ? await Promise.all([
         prisma.dailySales.count({ where: { locationId: conn.locationId, eventId: null } }),
+        prisma.dailySales.count({
+          where: {
+            locationId: conn.locationId, eventId: null,
+            businessDate: { in: (await prisma.cashClose.findMany({ where: { locationId: conn.locationId, eventId: { not: null } }, select: { businessDate: true } })).map((c) => c.businessDate) },
+          },
+        }),
         prisma.event.findMany({ where: { businessId, isActive: true }, orderBy: { startDate: "desc" }, select: { id: true, name: true } }),
       ])
-    : [0, []];
+    : [0, 0, []];
   const today = conn ? todayIsoIn(conn.timezone) : null;
 
   return (
@@ -118,7 +124,7 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
           </div>
         ) : (
           <>
-            <TagUntaggedDays count={untaggedCount} events={tagEvents} />
+            <TagUntaggedDays count={untaggedCount} fromCloses={fromCloses} events={tagEvents} />
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-1 text-sm">
                 <p><span className="text-muted-foreground">Account:</span> <span className="font-medium">{conn.merchantName}</span></p>

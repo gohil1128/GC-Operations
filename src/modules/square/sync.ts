@@ -187,7 +187,16 @@ async function writeDay(
   if (existing?.source === "MANUAL") return "manual";
 
   const covering = events.filter((e) => e.startDate <= businessDate && businessDate <= e.endDate);
-  const eventId = existing?.eventId ?? (covering.length === 1 ? covering[0].id : null);
+  // A tag already on the day wins; then the event the cash close for that day was tagged
+  // with (they are separate records, and the close is where people choose the event);
+  // then the one event whose dates cover the day.
+  const close = existing?.eventId
+    ? null
+    : await tx.cashClose.findUnique({
+        where: { locationId_businessDate: { locationId, businessDate } },
+        select: { eventId: true },
+      });
+  const eventId = existing?.eventId ?? close?.eventId ?? (covering.length === 1 ? covering[0].id : null);
 
   const day = {
     netSalesCents: d.netCents,

@@ -221,6 +221,21 @@ describe("events", () => {
     expect((await items(d1))[0].eventId).toBe(mela.id);
   });
 
+  it("gives a day the event its cash close was tagged with, even when no event's dates cover it", async () => {
+    const d = addDaysIso(today, -1);
+    const market = await db.event.create({ data: { businessId: ids.businessId, name: "Comfy & Cozy Market", startDate: businessDayFromIso(addDaysIso(today, -30)), endDate: businessDayFromIso(addDaysIso(today, -29)) } });
+    await db.cashClose.create({
+      data: {
+        locationId: ids.locationId, businessDate: businessDayFromIso(d), openingCents: 0, closingCents: 0,
+        cashCents: 0, expectedCents: 0, overShortCents: 0, closedById: ids.userId, eventId: market.id,
+      },
+    });
+    const { deps } = fakeSquare([sale(d)]);
+    await sync(deps);
+    expect((await dayRow(d))!.eventId).toBe(market.id);
+    expect((await items(d))[0].eventId).toBe(market.id);
+  });
+
   it("leaves a day untagged when two events overlap it", async () => {
     const d = addDaysIso(today, -2);
     for (const name of ["A", "B"]) {
