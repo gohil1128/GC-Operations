@@ -106,6 +106,7 @@ export function MobileTabBar({ role }: { role: Role }) {
   const [moreOpen, setMoreOpen] = React.useState(false);
   const sheetRef = React.useRef<HTMLDivElement | null>(null);
   const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const sheetDrag = React.useRef<{ y: number; t: number } | null>(null);
 
   // Close the sheet on navigation.
   React.useEffect(() => { setMoreOpen(false); }, [pathname]);
@@ -351,6 +352,31 @@ export function MobileTabBar({ role }: { role: Role }) {
         )}
         data-open={moreOpen}
         ref={sheetRef}
+        // Swipe down to dismiss: the sheet follows the finger from the top of its
+        // scroll, and lets go past 90px (or on a quick flick).
+        onTouchStart={(e) => {
+          const el = sheetRef.current;
+          if (!el || el.scrollTop > 0) { sheetDrag.current = null; return; }
+          sheetDrag.current = { y: e.touches[0].clientY, t: Date.now() };
+        }}
+        onTouchMove={(e) => {
+          const el = sheetRef.current, d = sheetDrag.current;
+          if (!el || !d) return;
+          const dy = e.touches[0].clientY - d.y;
+          if (dy <= 0) { el.style.transform = ""; return; }
+          el.style.transition = "none";
+          el.style.transform = `translateY(${dy}px)`;
+        }}
+        onTouchEnd={(e) => {
+          const el = sheetRef.current, d = sheetDrag.current;
+          sheetDrag.current = null;
+          if (!el || !d) return;
+          const dy = e.changedTouches[0].clientY - d.y;
+          const flick = dy > 30 && dy / Math.max(1, Date.now() - d.t) > 0.6;
+          el.style.transition = "";
+          el.style.transform = "";
+          if (dy > 90 || flick) setMoreOpen(false);
+        }}
         role="dialog"
         aria-modal={moreOpen}
         aria-hidden={!moreOpen}
@@ -479,7 +505,17 @@ function DockItem({
   current: boolean;
 }) {
   return (
-    <Link href={href} aria-current={current ? "page" : undefined} className={dockSlot}>
+    <Link
+      href={href}
+      aria-current={current ? "page" : undefined}
+      className={dockSlot}
+      // Tapping the tab you are already on takes you back to the top of it.
+      onClick={(e) => {
+        if (!current) return;
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      }}
+    >
       <DockGlyph Icon={Icon} active={active} />
       <DockLabel active={active}>{label}</DockLabel>
     </Link>

@@ -1,6 +1,7 @@
 "use client";
 import { EventMark } from "@/components/event-mark";
 import * as React from "react";
+import { useDraftState, clearDraft } from "@/lib/use-draft";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,6 +57,8 @@ export function CashEntry({
 }) {
   const router = useRouter();
   const [pending, start] = React.useTransition();
+  // A close that is not saved yet keeps what was typed if you leave and come back.
+  const draftKey = existing ? null : `cash-close:${businessDate}`;
 
   /*
     Which payout is being corrected, held here rather than on the row.
@@ -70,19 +73,19 @@ export function CashEntry({
   // us, the form closes instead of editing something that is gone.
   const editingPayout = payouts.find((p) => p.id === editingPayoutId) ?? null;
 
-  const [opening, setOpening] = React.useState(String(existing?.openingDollars ?? 300));
-  const [closing, setClosing] = React.useState(String(existing?.closingDollars ?? 0));
-  const [cash, setCash] = React.useState(String(existing?.cashDollars ?? 0));
-  const [credit, setCredit] = React.useState(String(existing?.creditDollars ?? 0));
-  const [safe, setSafe] = React.useState(String(existing?.safeCountDollars ?? 0));
-  const [paidIn, setPaidIn] = React.useState(String(existing?.paidInDollars ?? 0));
-  const [weather, setWeather] = React.useState(existing?.weather ?? "");
-  const [specialEvents, setSpecialEvents] = React.useState(existing?.specialEvents ?? "");
-  const [eventId, setEventId] = React.useState(existing?.eventId ?? activeEventId ?? "");
-  const [notes, setNotes] = React.useState(existing?.notes ?? "");
+  const [opening, setOpening] = useDraftState(draftKey, "opening", String(existing?.openingDollars ?? 300));
+  const [closing, setClosing] = useDraftState(draftKey, "closing", String(existing?.closingDollars ?? 0));
+  const [cash, setCash] = useDraftState(draftKey, "cash", String(existing?.cashDollars ?? 0));
+  const [credit, setCredit] = useDraftState(draftKey, "credit", String(existing?.creditDollars ?? 0));
+  const [safe, setSafe] = useDraftState(draftKey, "safe", String(existing?.safeCountDollars ?? 0));
+  const [paidIn, setPaidIn] = useDraftState(draftKey, "paidIn", String(existing?.paidInDollars ?? 0));
+  const [weather, setWeather] = useDraftState(draftKey, "weather", existing?.weather ?? "");
+  const [specialEvents, setSpecialEvents] = useDraftState(draftKey, "specialEvents", existing?.specialEvents ?? "");
+  const [eventId, setEventId] = useDraftState(draftKey, "eventId", existing?.eventId ?? activeEventId ?? "");
+  const [notes, setNotes] = useDraftState(draftKey, "notes", existing?.notes ?? "");
 
   const expectedSuggestion = netSalesDollars; // exclusive of tax for simplicity
-  const [expected, setExpected] = React.useState(
+  const [expected, setExpected] = useDraftState(draftKey, "expected",
     existing ? String(existing.expectedDollars) : expectedSuggestion.toFixed(2)
   );
 
@@ -100,6 +103,7 @@ export function CashEntry({
   const flag = Math.abs(overShortCents) > 2000;
 
   const saveClose = () => {
+    if (draftKey) clearDraft(draftKey);
     start(async () => {
       try {
         await saveCashCloseAction({

@@ -14,6 +14,7 @@ import { UserMenu } from "@/components/shell/user-menu";
 import { PageTransition } from "@/components/shell/page-transition";
 import { RouteProgress } from "@/components/shell/route-progress";
 import { ExportInterceptor } from "@/components/export-interceptor";
+import { GestureNav } from "@/components/shell/gesture-nav";
 import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
 import { Sidebar } from "@/components/shell/sidebar";
 import { HeaderHeightVar } from "@/components/shell/header-height";
@@ -115,6 +116,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <ExportInterceptor />
       <RouteProgress />
+      <GestureNav />
       <HeaderHeightVar />
       <MobileTabBar role={scope.role} />
     </div>

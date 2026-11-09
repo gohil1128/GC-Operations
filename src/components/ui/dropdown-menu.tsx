@@ -5,7 +5,38 @@ import { Check, ChevronRight, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+/*
+  Radix opens a menu on pointerdown, which for a finger means the moment it
+  lands: a scroll or a pull-to-refresh that happens to start on a menu button
+  pops the menu open. For touch the trigger opens on a tap instead (a click only
+  fires when the finger did not move), the way native menus behave. Mouse and
+  keyboard keep Radix's own behaviour.
+*/
+const DropdownMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
+>(({ onPointerDown, onClick, ...props }, ref) => {
+  const touch = React.useRef(false);
+  return (
+    <DropdownMenuPrimitive.Trigger
+      ref={ref}
+      onPointerDown={(e) => {
+        onPointerDown?.(e);
+        touch.current = e.pointerType === "touch";
+        if (touch.current) e.preventDefault(); // skip Radix's open-on-press
+      }}
+      onClick={(e) => {
+        onClick?.(e);
+        if (!touch.current || e.defaultPrevented) return;
+        touch.current = false;
+        // Radix toggles on Enter; a tap is the same request.
+        e.currentTarget.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      }}
+      {...props}
+    />
+  );
+});
+DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
 const DropdownMenuSub = DropdownMenuPrimitive.Sub;

@@ -1,6 +1,7 @@
 "use client";
 import { EventMark } from "@/components/event-mark";
 import * as React from "react";
+import { useDraftState, clearDraft } from "@/lib/use-draft";
 import { useRouter } from "next/navigation";
 import { FileText, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,13 +33,13 @@ export function NewInvoiceForm({
 }) {
   const router = useRouter();
   const [pending, start] = React.useTransition();
-  const [supplierId, setSupplierId] = React.useState("");
+  const [supplierId, setSupplierId] = useDraftState("new-invoice", "supplierId", "");
   const [openPos, setOpenPos] = React.useState<{ id: string; orderedAt: string; totalCents: number }[]>([]);
   const [poId, setPoId] = React.useState<string>("");
-  const [eventId, setEventId] = React.useState<string>("none");
-  const [subtotal, setSubtotal] = React.useState("");
-  const [gst, setGst] = React.useState("");
-  const [pst, setPst] = React.useState("");
+  const [eventId, setEventId] = useDraftState<string>("new-invoice", "eventId", "none");
+  const [subtotal, setSubtotal] = useDraftState("new-invoice", "subtotal", "");
+  const [gst, setGst] = useDraftState("new-invoice", "gst", "");
+  const [pst, setPst] = useDraftState("new-invoice", "pst", "");
   const [imageDataUrl, setImageDataUrl] = React.useState<string>("");
   const [compressing, setCompressing] = React.useState(false);
 
@@ -95,6 +96,7 @@ export function NewInvoiceForm({
         if (poId) fd.set("poId", poId);
         fd.set("eventId", eventId);
         if (imageDataUrl) fd.set("imageDataUrl", imageDataUrl);
+        clearDraft("new-invoice");
         start(async () => {
           try {
             await createInvoiceAction(fd);
