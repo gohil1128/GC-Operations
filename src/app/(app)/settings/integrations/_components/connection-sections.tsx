@@ -134,15 +134,15 @@ export async function ConnectionSections({
         {show("imported-data") && (
         <Card id="imported-data" data-settings-section className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Manage imported data <Badge variant="muted" className="ml-2">Delete</Badge></CardTitle>
+            <CardTitle>Imported days <Badge variant="muted" className="ml-2">Tag · Delete</Badge></CardTitle>
             <CardDescription>
-              Every imported sales day at this location. Delete a single day, wipe a whole event,
+              Every synced or imported sales day at this location. Give a day an event (one at a time or a whole range), delete a day, wipe a whole event,
               or clear everything to re-import from scratch. Deleting here removes sales totals and
               item rollups (your events themselves stay).
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ImportedDataManager days={managerDays} eventGroups={eventGroups} />
+            <ImportedDataManager days={managerDays} eventGroups={eventGroups} events={events.map((e) => ({ id: e.id, name: e.name }))} />
           </CardContent>
         </Card>
         )}

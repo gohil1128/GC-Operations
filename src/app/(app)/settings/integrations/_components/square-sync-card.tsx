@@ -11,7 +11,7 @@ import { SquareDisconnect, SquareHistory, SquareSyncNow, UseSquareForDays } from
   Square sales, live.
 
   Replaces uploading a Sales Summary and an Item Sales CSV for every market
-  day: once connected, completed sales arrive on their own every three hours,
+  day: once connected, completed sales arrive when you press Sync now,
   as daily totals, per-item rows, tips and the card side of the cash close.
   The CSV importers stay underneath for anything the sync cannot reach.
 */
@@ -65,8 +65,8 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
           )}
         </CardTitle>
         <CardDescription>
-          Brings in every completed Square sale every three hours — daily totals, what sold, tips, and
-          card takings for the cash close — so there is no CSV to upload after a market. Read-only: it
+          Brings in every completed Square sale when you press Sync now — daily totals, what sold, tips, and
+          card takings for the cash close — so there is no CSV to upload after a market. Nothing syncs on its own. Read-only: it
           cannot take, refund or change anything in Square.
         </CardDescription>
       </CardHeader>

@@ -29,7 +29,7 @@ export const SETTINGS: SettingsEntry[] = [
   { id: "email-invoices", label: "Email invoices", hint: "Read supplier bills from Gmail", group: "Connections", href: "/settings/email-invoices", keywords: "gmail email invoices scan ai inbox" },
   { id: "sales-summary-csv", label: "Sales Summary CSV", hint: "Upload a day's Square summary", group: "Connections", href: "/settings/sales-summary-csv", keywords: "csv upload import square sales summary" },
   { id: "item-sales-csv", label: "Item Sales CSV", hint: "Upload what sold", group: "Connections", href: "/settings/item-sales-csv", keywords: "csv upload import items sold square" },
-  { id: "imported-data", label: "Imported data", hint: "Delete imported sales days", group: "Connections", href: "/settings/imported-data", keywords: "delete imported days wipe sales data" },
+  { id: "imported-data", label: "Imported days", hint: "Tag days with an event, or delete them", group: "Connections", href: "/settings/imported-data", keywords: "delete imported days wipe sales data tag event assign synced square untagged" },
   { id: "items-categories", label: "Items & categories", hint: "Sort Square items, link recipes", group: "Connections", href: "/settings/items-categories", keywords: "items categories premix recipe link categorize" },
   { id: "exports", label: "Data export", hint: "Download CSVs of everything", group: "Export", href: "/settings/exports", keywords: "export download csv backup spreadsheet" },
   { id: "danger-zone", label: "Danger zone", hint: "Wipe demo or operational data", group: "Danger", href: "/settings/danger-zone", keywords: "delete wipe reset danger demo data" },

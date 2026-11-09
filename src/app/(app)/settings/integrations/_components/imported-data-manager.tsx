@@ -15,6 +15,7 @@ import {
   deleteImportedDayAction,
   deleteImportedEventDataAction,
   deleteAllImportedAction,
+  tagImportedDaysAction,
 } from "@/modules/imports/actions";
 
 type Day = {
@@ -33,14 +34,52 @@ type EventGroup = { id: string; name: string; color: string | null; days: number
 // Shared formatter so thousands separators match the rest of the app.
 const money = (n: number) => formatMoney(Math.round(n * 100));
 
+type EventOption = { id: string; name: string };
+
 export function ImportedDataManager({
   days,
   eventGroups,
+  events = [],
 }: {
   days: Day[];
   eventGroups: EventGroup[];
+  events?: EventOption[];
 }) {
   const router = useRouter();
+  const [tagging, setTagging] = React.useState(false);
+  const [tagEvent, setTagEvent] = React.useState(events[0]?.id ?? "");
+  const [scope, setScope] = React.useState<"untagged" | "range">("untagged");
+  const [from, setFrom] = React.useState("");
+  const [to, setTo] = React.useState("");
+  const untagged = days.filter((d) => !d.event);
+  const inRange = days.filter((d) => (!from || d.iso.slice(0, 10) >= from) && (!to || d.iso.slice(0, 10) <= to));
+  const targets = scope === "untagged" ? untagged : inRange;
+
+  // Tag (or clear) the event on some days; the sync keeps a tag once it is set.
+  const tagDays = async (isos: string[], eventId: string | null, key: string) => {
+    setBusy(key);
+    try {
+      const res = await tagImportedDaysAction(isos, eventId);
+      toast({ title: eventId ? `Tagged ${res.days} day${res.days === 1 ? "" : "s"}` : `Cleared the event on ${res.days} day${res.days === 1 ? "" : "s"}` });
+      router.refresh();
+    } catch (err: any) {
+      toast({ title: "Couldn't tag", description: String(err?.message ?? err), variant: "destructive" });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const EventSelect = ({ d }: { d: Day }) => (
+    <select
+      aria-label={`Event for ${d.label}`}
+      value={d.event?.id ?? ""}
+      disabled={busy !== null}
+      onChange={(e) => tagDays([d.iso], e.target.value || null, `tag:${d.iso}`)}
+      className="select-native h-8 max-w-[11rem] text-xs"
+    >
+      <option value="">No event</option>
+      {events.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+    </select>
+  );
   const [busy, setBusy] = React.useState<string | null>(null);
   const [confirm, setConfirm] = React.useState<
     | { kind: "day"; iso: string; label: string }
@@ -71,6 +110,61 @@ export function ImportedDataManager({
 
   return (
     <div className="space-y-4">
+      {/* Tag days with an event. Square's sync only does this by itself when exactly one
+          event covers a day; this is for the rest, one day (the picker on each row) or many. */}
+      {days.length > 0 && events.length > 0 && (
+        <div className="rounded-2xl bg-muted/40">
+          <button
+            type="button"
+            onClick={() => setTagging((v) => !v)}
+            aria-expanded={tagging}
+            className="lg-press flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium"
+          >
+            <span>
+              Tag days with an event
+              {untagged.length > 0 && <span className="ml-2 rounded-full bg-warning-muted px-2 py-0.5 text-2xs font-semibold text-warning-ink">{untagged.length} without</span>}
+            </span>
+            <span className="text-xs text-brand-ink">{tagging ? "Close" : "Open"}</span>
+          </button>
+          {tagging && (
+            <div className="grid gap-3 px-4 pb-4">
+              <div className="grid gap-1.5">
+                <label htmlFor="tag-event" className="text-xs text-muted-foreground">Event</label>
+                <select id="tag-event" value={tagEvent} onChange={(e) => setTagEvent(e.target.value)} className="select-native h-10 w-full">
+                  <option value="">No event (clear the tag)</option>
+                  {events.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+              </div>
+              <div className="grid gap-1.5">
+                <label htmlFor="tag-scope" className="text-xs text-muted-foreground">Which days</label>
+                <select id="tag-scope" value={scope} onChange={(e) => setScope(e.target.value as "untagged" | "range")} className="select-native h-10 w-full">
+                  <option value="untagged">Days without an event ({untagged.length})</option>
+                  <option value="range">A date range</option>
+                </select>
+              </div>
+              {scope === "range" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-1.5">
+                    <label htmlFor="tag-from" className="text-xs text-muted-foreground">From</label>
+                    <input id="tag-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-10 w-full min-w-0 rounded-full border border-input bg-card px-3 text-[13px]" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label htmlFor="tag-to" className="text-xs text-muted-foreground">To</label>
+                    <input id="tag-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-10 w-full min-w-0 rounded-full border border-input bg-card px-3 text-[13px]" />
+                  </div>
+                </div>
+              )}
+              <Button
+                disabled={busy !== null || targets.length === 0}
+                onClick={() => tagDays(targets.map((d) => d.iso), tagEvent || null, "tag:bulk")}
+              >
+                {busy === "tag:bulk" ? "Saving…" : tagEvent ? `Tag ${targets.length} day${targets.length === 1 ? "" : "s"}` : `Clear the event on ${targets.length} day${targets.length === 1 ? "" : "s"}`}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* By event: a quiet list, first five shown. Each row deletes that event's imported days. */}
       {eventGroups.length > 0 && (
         <div>
@@ -133,14 +227,7 @@ export function ImportedDataManager({
                     <span className="num text-sm font-semibold">{money(d.netSalesDollars)}</span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-muted-foreground">
-                    {d.event ? (
-                      <span className="inline-flex min-w-0 items-center gap-1.5">
-                        <EventMark name={d.event.name} size="xs" />
-                        {d.event.name}
-                      </span>
-                    ) : (
-                      <span>No event</span>
-                    )}
+                    {events.length > 0 ? <EventSelect d={d} /> : d.event ? <span>{d.event.name}</span> : <span>No event</span>}
                     <span>{d.guestCount} txns{d.itemCount > 0 ? ` · ${d.itemCount} items` : ""}</span>
                   </div>
                 </div>
@@ -175,14 +262,7 @@ export function ImportedDataManager({
                   <TableRow key={d.iso}>
                     <TableCell className="font-medium">{d.label}</TableCell>
                     <TableCell>
-                      {d.event ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs">
-                          <EventMark name={d.event.name} size="xs" />
-                          {d.event.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
+                      {events.length > 0 ? <EventSelect d={d} /> : d.event ? d.event.name : "—"}
                     </TableCell>
                     <TableCell className="text-right num">{money(d.netSalesDollars)}</TableCell>
                     <TableCell className="text-right num text-muted-foreground">{d.guestCount}</TableCell>

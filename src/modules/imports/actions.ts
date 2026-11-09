@@ -79,3 +79,38 @@ export async function deleteAllImportedAction() {
   revalidatePath("/dashboard");
   return { salesDeleted: salesDeleted.count, itemsDeleted: itemsDeleted.count };
 }
+
+/*
+  Tag imported (CSV or Square) days with an event, or clear the tag.
+
+  Square's sync only tags a day by itself when exactly one event's dates cover
+  it; everything else comes in untagged. This is how an owner assigns those,
+  one day or a whole range. Once a day has a tag the sync keeps it, so a later
+  sync never undoes this. The day's item rows move with it, so the event's
+  items, premix and totals all follow.
+*/
+export async function tagImportedDaysAction(isoDays: string[], eventId: string | null) {
+  await requireOwner();
+  const scope = await getScope();
+  const days = [...new Set(isoDays)].map((d) => new Date(d)).filter((d) => !isNaN(d.getTime()));
+  if (days.length === 0) throw new Error("No days chosen.");
+  if (days.length > 500) throw new Error("That is too many days at once.");
+  if (eventId) {
+    const ev = await prisma.event.findFirst({ where: { id: eventId, businessId: scope.businessId } });
+    if (!ev) throw new Error("Event not found.");
+  }
+  const where = { locationId: scope.locationId, businessDate: { in: days } };
+  const [sales, items] = await prisma.$transaction([
+    prisma.dailySales.updateMany({ where, data: { eventId } }),
+    prisma.salesItem.updateMany({ where, data: { eventId } }),
+  ]);
+  await writeAudit({
+    businessId: scope.businessId,
+    userId: scope.userId,
+    action: "import.tag_days",
+    entityType: "DailySales",
+    diff: { days: days.length, eventId, sales: sales.count, items: items.count },
+  });
+  for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
+  return { days: sales.count };
+}

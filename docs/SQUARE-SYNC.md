@@ -1,6 +1,6 @@
 # Square sales sync
 
-Every three hours the app reads your completed Square sales and files them as
+When you press **Sync now**, the app reads your completed Square sales and files them as
 daily sales and per-item sales. There's no Sales Summary or Item Sales CSV to
 upload after a market any more. This page covers what it does, the one-time
 setup, and what to check the first time.
@@ -100,12 +100,12 @@ only adds a table and changes nothing that already exists.
 (Testing against Square's sandbox instead: use the sandbox app's ID and secret
 and add `SQUARE_ENVIRONMENT=sandbox`.)
 
-### 3. GitHub: the schedule
+### 3. Syncing is on demand
 
-The three-hourly schedule is the same GitHub workflow as the invoice scan
-(`.github/workflows/mail-invoices.yml`). It needs the `CRON_SECRET` repository
-secret, and **only runs from `main`**, so it starts once this branch is merged.
-Until then, use **Sync now**.
+Square does **not** sync on a schedule. Press **Sync now** (Settings → Connections →
+Square sales) after a market, or **Import history** to go further back. The
+GitHub workflow (`mail-invoices.yml`) only scans email now. The secret-protected
+`/api/cron/sync-square` endpoint is still there if a schedule is ever wanted again.
 
 ### 4. Connect, and check the first sync by hand
 
