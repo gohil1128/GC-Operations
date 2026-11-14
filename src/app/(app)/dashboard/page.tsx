@@ -12,7 +12,7 @@ import { findUncountedDrawers } from "@/modules/cash/queries";
 import { pnlByEvent } from "@/modules/reports/queries";
 import { isSectionLocked } from "@/modules/section-lock/actions";
 import { PnlLock } from "@/components/pnl-lock";
-import { fmtDate } from "@/lib/date";
+import { fmtDate, todayIsoIn } from "@/lib/date";
 import { formatMoney, formatMoneyHeadline, formatPercent, safeDivide } from "@/lib/money";
 import { KpiStrip, type Kpi } from "@/components/dashboard/ledger/kpi-strip";
 import { EventControl } from "@/components/dashboard/event-control";
@@ -27,7 +27,7 @@ import {
 import { HeroCard } from "@/components/dashboard/hero-card";
 import { EventCards, type EventCard } from "@/components/dashboard/event-cards";
 import { PremixCard } from "@/components/dashboard/premix-card";
-import { getPremixSummary } from "@/modules/sales/premix";
+import { getPremixData } from "@/modules/sales/premix";
 import { ItemMixDonut } from "@/components/dashboard/bento/item-mix-donut";
 import { isCardVisible, type OverviewCardKey } from "@/modules/dashboard/cards";
 import { can } from "@/lib/permissions";
@@ -85,7 +85,7 @@ export default async function DashboardPage({
   // the page while leaving the same margins on the landing screen.
   const pnlLocked = await isSectionLocked(scope.userId, "REPORTS");
   // Premix ignores the event picker on purpose: it is every bag, everywhere.
-  const premix = isCardVisible(business?.hiddenOverviewCards, "premix") ? await getPremixSummary(scope.locationId, business?.premixCostCents ?? 600) : null;
+  const premix = isCardVisible(business?.hiddenOverviewCards, "premix") ? await getPremixData(scope.locationId, business?.premixCostCents ?? 600) : null;
 
   const [data, pnl, invoiceTracking, dueInvoices, priorNetSales, upcoming, uncounted] =
     await Promise.all([
@@ -306,7 +306,7 @@ export default async function DashboardPage({
 
       {show("premix") && premix && (
         <div className="mt-4">
-          <PremixCard data={premix} />
+          <PremixCard data={premix} todayIso={todayIsoIn(business?.timezone ?? "UTC")} />
         </div>
       )}
 
