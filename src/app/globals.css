@@ -915,14 +915,19 @@
   input[type="date"], input[type="time"], input[type="month"], input[type="datetime-local"] {
     -webkit-appearance: none; appearance: none;
     min-width: 0; max-width: 100%;
-    display: block;
+    display: flex; align-items: center;
     text-align: left;
-    line-height: 1.2;
+    line-height: normal;
+    padding-top: 0; padding-bottom: 0;
   }
+  input[type="date"]::-webkit-datetime-edit,
+  input[type="time"]::-webkit-datetime-edit,
+  input[type="month"]::-webkit-datetime-edit,
+  input[type="datetime-local"]::-webkit-datetime-edit { padding: 0; line-height: normal; }
   input[type="date"]::-webkit-date-and-time-value,
   input[type="time"]::-webkit-date-and-time-value,
   input[type="month"]::-webkit-date-and-time-value,
-  input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; margin: 0; }
+  input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; min-height: 0; margin: 0; padding: 0; display: flex; align-items: center; }
   input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.45; }
   label { max-width: 100%; }
 
