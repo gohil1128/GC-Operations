@@ -336,6 +336,7 @@ export default async function InvoicesPage({
                         className="inline-flex h-7 w-7 items-center justify-center rounded-md text-brand hover:bg-brand/10 transition-colors"
                       >
                         <AttachmentMark className="h-[18px] w-[18px]" />
+                        {i.fileCount > 1 && <span className="num ml-0.5 text-[10px] font-semibold">{i.fileCount}</span>}
                       </AttachmentViewer>
                     ) : (
                       <span className="text-2xs text-muted-foreground/50">—</span>
@@ -405,7 +406,12 @@ export default async function InvoicesPage({
                 title={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
                 className="mr-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
               >
-                <AttachmentMark className="h-5 w-5" />
+                <span className="relative">
+                  <AttachmentMark className="h-5 w-5" />
+                  {i.fileCount > 1 && (
+                    <span className="num absolute -right-2 -top-1.5 rounded-full bg-card px-1 text-[10px] font-semibold leading-tight text-foreground ring-1 ring-border-soft">{i.fileCount}</span>
+                  )}
+                </span>
               </AttachmentViewer>
             ) : (
               <span aria-hidden className="mr-2 w-10 shrink-0" />

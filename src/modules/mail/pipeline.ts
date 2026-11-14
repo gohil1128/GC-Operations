@@ -371,7 +371,8 @@ async function processOne(a: {
     supplierId: sender.supplierId, mailMessageId: a.rowId, invoiceNumber: assessed.invoiceNumber, gmailId: item.id,
     invoiceDate: assessed.invoiceDate, receivedAt: item.receivedAt, dateFromEmail: assessed.dateFromEmail,
     figures: assessed.figures as Figures, fromAddress: item.fromAddress, subject: item.subject,
-    attachment: files[0] ? { mimeType: files[0].mimeType, data: files[0].data } : null,
+    attachment: null,
+    attachments: files.map((f) => ({ mimeType: f.mimeType, data: f.data, name: f.filename })),
   });
   if (!made.ok) {
     await db.mailMessage.update({

@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CategorySelect } from "@/components/ui/category-select";
 import { INVOICE_CATEGORIES } from "@/lib/gc-categories";
-import { updateInvoiceAction, setInvoiceEventAction, setInvoiceCategoryAction, setInvoiceImageAction } from "@/modules/invoices/actions";
+import { updateInvoiceAction, setInvoiceEventAction, setInvoiceCategoryAction, setInvoiceImageAction, addInvoiceAttachmentAction, removeInvoiceAttachmentAction } from "@/modules/invoices/actions";
 import { impossibleInvoiceReason, invoiceDiscountWarning } from "@/modules/invoices/checks";
 import { fileToAttachmentDataUrl } from "@/lib/image-client";
 import { toast } from "@/components/ui/use-toast";
@@ -31,6 +31,8 @@ type Initial = {
   appliesToAllEvents: boolean;
   category: string | null;
   imageDataUrl: string | null;
+  /** Further pages after the main file. */
+  extraFiles?: { id: string; isPdf: boolean }[];
   subtotalDollars: number;
   gstDollars: number;
   pstDollars: number;
@@ -62,6 +64,8 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
   const [shipping, setShipping] = React.useState(String(initial.shippingDollars));
   const [rebate, setRebate] = React.useState(String(initial.rebateDollars));
   const [image, setImage] = React.useState<string | null>(initial.imageDataUrl);
+  // The server can change the main file (removing it promotes the next page), so follow it.
+  React.useEffect(() => setImage(initial.imageDataUrl), [initial.imageDataUrl]);
   const [imagePending, startImage] = React.useTransition();
   const hasItems = initial.numberOfItems > 0;
 
@@ -77,6 +81,36 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
       }
     });
   };
+
+  // Further pages: added after the main file, viewed with it, removed one at a time.
+  const extraFiles = initial.extraFiles ?? [];
+  const addPage = async (f: File) => {
+    try {
+      const url = await fileToAttachmentDataUrl(f);
+      startImage(async () => {
+        try {
+          await addInvoiceAttachmentAction(invoiceId, url);
+          if (!image) setImage(url);
+          toast({ title: "Page added" });
+          router.refresh();
+        } catch (err: any) {
+          toast({ title: "Couldn't add the page", description: String(err?.message ?? err), variant: "destructive" });
+        }
+      });
+    } catch (err: any) {
+      toast({ title: "Could not read the file", description: String(err?.message ?? ""), variant: "destructive" });
+    }
+  };
+  const removePage = (attachmentId: string) =>
+    startImage(async () => {
+      try {
+        await removeInvoiceAttachmentAction(invoiceId, attachmentId);
+        toast({ title: "Page removed" });
+        router.refresh();
+      } catch (err: any) {
+        toast({ title: "Couldn't remove it", description: String(err?.message ?? err), variant: "destructive" });
+      }
+    });
 
   const onPhotoPick = async (f: File) => {
     try {
@@ -219,21 +253,47 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
       <div className="grid gap-1.5">
         <Label>Invoice photo / PDF {imagePending && <span className="text-2xs text-muted-foreground">· saving…</span>}</Label>
         {image ? (
-          <div className="flex items-start gap-3">
-            <AttachmentViewer invoiceId={invoiceId} label="View the attached invoice" title="Invoice">
-              {image.startsWith("data:application/pdf") ? (
-                <span className="inline-flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
-                  <FileText className="h-4 w-4 text-brand" /> View PDF
-                </span>
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={image} alt="Invoice" className="h-32 w-auto rounded-lg border object-cover hover:opacity-90 transition-opacity" />
-              )}
-            </AttachmentViewer>
-            <div className="flex flex-col gap-2">
-              <PhotoInput onPick={onPhotoPick} disabled={imagePending} allowPdf />
-              <button type="button" onClick={() => saveImage(null)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive">
-                <X className="h-3.5 w-3.5" /> Remove
+          <div className="grid gap-3">
+            <div className="flex flex-wrap items-start gap-2.5">
+              <AttachmentViewer invoiceId={invoiceId} label="View the attached invoice" title="Invoice">
+                {image.startsWith("data:application/pdf") ? (
+                  <span className="grid h-24 w-20 place-items-center rounded-lg border bg-muted/40 text-xs font-medium hover:bg-accent transition-colors">
+                    <FileText className="mb-1 h-5 w-5 text-brand" aria-hidden />PDF
+                  </span>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={image} alt="Invoice, page 1" className="h-24 w-auto rounded-lg border object-cover hover:opacity-90 transition-opacity" />
+                )}
+              </AttachmentViewer>
+              {extraFiles.map((f, n) => (
+                <div key={f.id} className="relative">
+                  <AttachmentViewer invoiceId={invoiceId} label={`View page ${n + 2}`} title="Invoice">
+                    {f.isPdf ? (
+                      <span className="grid h-24 w-20 place-items-center rounded-lg border bg-muted/40 text-xs font-medium">
+                        <FileText className="mb-1 h-5 w-5 text-brand" aria-hidden />PDF
+                      </span>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={`/api/purchasing/invoices/${invoiceId}/photo?a=${f.id}`} alt={`Invoice, page ${n + 2}`} className="h-24 w-auto rounded-lg border object-cover" />
+                    )}
+                  </AttachmentViewer>
+                  <button
+                    type="button"
+                    onClick={() => removePage(f.id)}
+                    disabled={imagePending}
+                    aria-label={`Remove page ${n + 2}`}
+                    className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full border bg-card text-muted-foreground shadow-sm hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <PhotoInput onPick={addPage} disabled={imagePending} allowPdf />
+              <span className="text-xs text-muted-foreground">Add another page</span>
+              <button type="button" onClick={() => saveImage(null)} className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive">
+                <X className="h-3.5 w-3.5" /> Remove page 1
               </button>
             </div>
           </div>

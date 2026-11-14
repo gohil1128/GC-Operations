@@ -772,6 +772,8 @@ model Invoice {
   @@index([locationId, invoiceDate])
   @@index([supplierId])
   @@index([eventId])
+  // Pages beyond the first: every image or PDF attached after imageDataUrl.
+  attachments        InvoiceAttachment[]
 }
 
 model InvoiceItem {
@@ -1068,6 +1070,20 @@ model SquareConnection {
   location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   connectedBy User     @relation(fields: [connectedById], references: [id])
   runs              SquareSyncRun[]
+}
+
+// A further page attached to an invoice: the second and later photos or PDFs
+// (the first stays in Invoice.imageDataUrl). Same allowlist and size caps.
+model InvoiceAttachment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  dataUrl   String
+  name      String?
+  createdAt DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, createdAt])
 }
 
 // One Square sync, for the history list in Settings. Counts only, never a sale.

@@ -127,6 +127,22 @@ describe("a clean invoice from a known supplier", () => {
     expect(m).toMatchObject({ status: "LOGGED", invoiceId: inv.id });
   });
 
+  it("keeps every attachment, not just the first, reading a mislabelled PDF by its bytes", async () => {
+    const h = harness([email("m9", {
+      attachments: [
+        { attachmentId: "m9-a", filename: "page1.pdf", mimeType: "application/pdf", size: PDF.length },
+        { attachmentId: "m9-b", filename: "page2.pdf", mimeType: "application/octet-stream", size: PDF.length },
+      ],
+    })]);
+    await scan(h.deps);
+    const [inv] = await invoices();
+    expect(inv.imageDataUrl).toMatch(/^data:application\/pdf;base64,/);
+    const extra = await db.invoiceAttachment.findMany({ where: { invoiceId: inv.id } });
+    expect(extra).toHaveLength(1);
+    expect(extra[0].dataUrl).toMatch(/^data:application\/pdf;base64,/);
+    expect(extra[0].name).toBe("page2.pdf");
+  });
+
   it("leaves inventory untouched", async () => {
     const before = await db.inventoryMovement.count({ where: { locationId: ids.locationId } });
     await scan(harness([email("m1")]).deps);

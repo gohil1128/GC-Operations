@@ -1,5 +1,5 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
-import { parseAttachment } from "@/modules/invoices/attachments";
+import { parseAttachment, sniffMime } from "@/modules/invoices/attachments";
 import type { Figures } from "./rules";
 
 /*
@@ -43,6 +43,8 @@ export type CreateFromEmailArgs = {
   fromAddress: string;
   subject: string;
   attachment: { mimeType: string; data: Buffer } | null;
+  /** Every attachment worth keeping, first the one the figures came from. When set, `attachment` is ignored. */
+  attachments?: { mimeType: string; data: Buffer; name?: string | null }[];
   attachmentDropped?: string | null;
   reviewedBy?: string | null;
 };
@@ -67,17 +69,28 @@ export async function createInvoiceFromEmail(a: CreateFromEmailArgs): Promise<Cr
     select: { category: true },
   });
 
+  // Every attachment is kept, not just the first: the first good one is the
+  // invoice's main file, the rest become further pages. The type is read from
+  // the bytes, because mail clients mislabel files (a PDF as octet-stream).
   let imageDataUrl: string | null = null;
+  const extra: { dataUrl: string; name: string | null }[] = [];
+  const dropped: string[] = [];
   let attachmentNote = a.attachmentDropped ?? "";
-  if (a.attachment) {
-    const url = `data:${a.attachment.mimeType};base64,${a.attachment.data.toString("base64")}`;
+  const files = a.attachments ?? (a.attachment ? [a.attachment] : []);
+  for (const f of files) {
+    const mime = sniffMime(f.data, f.mimeType);
+    const url = `data:${mime};base64,${f.data.toString("base64")}`;
     try {
       // Same allowlist and size caps as a photo attached by hand.
       parseAttachment(url);
-      imageDataUrl = url;
+      if (!imageDataUrl) imageDataUrl = url;
+      else extra.push({ dataUrl: url, name: (f as { name?: string | null }).name ?? null });
     } catch (e) {
-      attachmentNote = `The attachment was not kept (${e instanceof Error ? e.message : "too large"}) — open the email.`;
+      dropped.push(e instanceof Error ? e.message : "too large");
     }
+  }
+  if (dropped.length) {
+    attachmentNote = `${dropped.length === files.length ? "The attachment was" : `${dropped.length} of ${files.length} attachments were`} not kept (${dropped[0]}) — open the email.`;
   }
 
   const memo = [
@@ -113,6 +126,9 @@ export async function createInvoiceFromEmail(a: CreateFromEmailArgs): Promise<Cr
         },
         select: { id: true },
       });
+      if (extra.length) {
+        await tx.invoiceAttachment.createMany({ data: extra.map((x) => ({ invoiceId: inv.id, dataUrl: x.dataUrl, name: x.name })) });
+      }
       await tx.mailMessage.update({
         where: { id: a.mailMessageId },
         data: {

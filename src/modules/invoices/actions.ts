@@ -355,7 +355,17 @@ export async function setInvoiceImageAction(id: string, dataUrl: string | null) 
   const inv = await prisma.invoice.findFirst({ where: { id, locationId: scope.locationId } });
   if (!inv) throw new Error("Not found");
   const imageDataUrl = validateImageDataUrl(dataUrl);
-  await prisma.invoice.update({ where: { id }, data: { imageDataUrl } });
+  // Removing the main file promotes the next page into its place, so the
+  // invoice never shows "attached" with nothing in the first slot.
+  const next = imageDataUrl ? null : await prisma.invoiceAttachment.findFirst({ where: { invoiceId: id }, orderBy: { createdAt: "asc" } });
+  if (next) {
+    await prisma.$transaction([
+      prisma.invoice.update({ where: { id }, data: { imageDataUrl: next.dataUrl } }),
+      prisma.invoiceAttachment.delete({ where: { id: next.id } }),
+    ]);
+  } else {
+    await prisma.invoice.update({ where: { id }, data: { imageDataUrl } });
+  }
   await writeAudit({
     businessId: scope.businessId, userId: scope.userId,
     action: imageDataUrl ? "invoice.image.attach" : "invoice.image.remove",
@@ -415,4 +425,36 @@ export async function deleteInvoiceAction(id: string) {
   await writeAudit({ businessId: scope.businessId, userId: scope.userId, action: "invoice.delete", entityType: "Invoice", entityId: id, diff: { number: inv.invoiceNumber } });
   revalidatePath("/purchasing/invoices");
   revalidatePath("/inventory");
+}
+
+// Add one more photo or PDF page to an invoice. The first file goes in the main
+// slot; every later one is kept as a further page. Allowed on closed invoices too.
+export async function addInvoiceAttachmentAction(id: string, dataUrl: string) {
+  await requireCan("purchasing");
+  const scope = await getScope();
+  const inv = await prisma.invoice.findFirst({ where: { id, locationId: scope.locationId }, select: { id: true, imageDataUrl: true } });
+  if (!inv) throw new Error("Not found");
+  const clean = validateImageDataUrl(dataUrl);
+  if (!clean) throw new Error("Nothing to attach.");
+  if (!inv.imageDataUrl) await prisma.invoice.update({ where: { id }, data: { imageDataUrl: clean } });
+  else {
+    const count = await prisma.invoiceAttachment.count({ where: { invoiceId: id } });
+    if (count >= 20) throw new Error("An invoice can hold 21 files at most.");
+    await prisma.invoiceAttachment.create({ data: { invoiceId: id, dataUrl: clean } });
+  }
+  await writeAudit({ businessId: scope.businessId, userId: scope.userId, action: "invoice.image.attach", entityType: "Invoice", entityId: id });
+  revalidatePath(`/purchasing/invoices/${id}`);
+  revalidatePath("/purchasing/invoices");
+}
+
+// Remove one of the further pages.
+export async function removeInvoiceAttachmentAction(invoiceId: string, attachmentId: string) {
+  await requireCan("purchasing");
+  const scope = await getScope();
+  const inv = await prisma.invoice.findFirst({ where: { id: invoiceId, locationId: scope.locationId }, select: { id: true } });
+  if (!inv) throw new Error("Not found");
+  await prisma.invoiceAttachment.deleteMany({ where: { id: attachmentId, invoiceId } });
+  await writeAudit({ businessId: scope.businessId, userId: scope.userId, action: "invoice.image.remove", entityType: "Invoice", entityId: invoiceId });
+  revalidatePath(`/purchasing/invoices/${invoiceId}`);
+  revalidatePath("/purchasing/invoices");
 }

@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Lock, Unlock, Plus } from "lucide-react";
@@ -22,6 +23,11 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const scope = await requireCapability("purchasing");
   const inv = await getInvoice(scope.locationId, id);
+  // Further pages after the main file: ids and whether each is a PDF, never the bytes.
+  const extraFiles = inv
+    ? (await prisma.invoiceAttachment.findMany({ where: { invoiceId: inv.id }, orderBy: { createdAt: "asc" }, select: { id: true, dataUrl: true } }))
+        .map((a) => ({ id: a.id, isPdf: a.dataUrl.startsWith("data:application/pdf") }))
+    : [];
   if (!inv) notFound();
   const events = await listActiveEvents(scope.businessId);
   const eventProps = events.map((e) => ({ id: e.id, name: e.name, color: e.color }));
@@ -85,6 +91,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 appliesToAllEvents: inv.appliesToAllEvents,
                 category: inv.category ?? null,
                 imageDataUrl: inv.imageDataUrl ?? null,
+                extraFiles: extraFiles,
                 subtotalDollars: fromCents(inv.subtotalCents),
                 gstDollars: fromCents(inv.gstCents),
                 pstDollars: fromCents(inv.pstCents),

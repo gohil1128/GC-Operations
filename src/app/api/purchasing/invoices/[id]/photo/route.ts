@@ -6,14 +6,20 @@ import { readableAttachment } from "@/modules/invoices/attachments";
 // Serves an invoice's attached photo as a real image URL. Browsers block
 // opening data: URLs in a new tab, so every "view photo" link goes through
 // here instead.
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const scope = await scopeFor("purchasing");
   if (!scope) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  // ?a=<attachment id> serves one of the further pages; without it, the main file.
+  const pageId = new URL(req.url).searchParams.get("a");
   const inv = await prisma.invoice.findFirst({
     where: { id, locationId: scope.locationId },
-    select: { imageDataUrl: true },
+    select: {
+      imageDataUrl: true,
+      attachments: pageId ? { where: { id: pageId }, select: { dataUrl: true } } : false,
+    },
   });
+  if (inv && pageId) inv.imageDataUrl = inv.attachments?.[0]?.dataUrl ?? null;
   if (!inv?.imageDataUrl) {
     return NextResponse.json({ error: "No photo attached" }, { status: 404 });
   }

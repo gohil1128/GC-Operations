@@ -60,12 +60,13 @@ export async function listInvoices(locationId: string, filters: InvoiceFilters =
       orderBy: { invoiceDate: "desc" },
     }),
     prisma.invoice.findMany({
-      where: { ...where, imageDataUrl: { not: null } },
-      select: { id: true },
+      where: { ...where, OR: [{ imageDataUrl: { not: null } }, { attachments: { some: {} } }] },
+      select: { id: true, imageDataUrl: false, _count: { select: { attachments: true } } },
     }),
   ]);
-  const photoIds = new Set(withPhoto.map((r) => r.id));
-  return rows.map((r) => ({ ...r, hasImage: photoIds.has(r.id) }));
+  // How many files each invoice holds: the main one plus its further pages.
+  const files = new Map(withPhoto.map((r) => [r.id, 1 + r._count.attachments]));
+  return rows.map((r) => ({ ...r, hasImage: files.has(r.id), fileCount: files.get(r.id) ?? 0 }));
 }
 
 // Full invoice detail for CSV export — includes the tax/shipping/rebate
