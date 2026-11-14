@@ -34,3 +34,12 @@ describe("premix filters", () => {
     expect(summarisePremix(filterPremixRows(rows, { eventId: "e1", from: "2026-11-05" }), 600)).toBeNull();
   });
 });
+
+import { dayStartInstant } from "@/lib/date";
+describe("dayStartInstant", () => {
+  it("is local midnight in the business timezone", () => {
+    // 02:30 UTC on Nov 14 is 21:30 on Nov 13 in New York (EST, UTC-5).
+    expect(dayStartInstant("America/New_York", new Date("2026-11-14T02:30:00Z")).toISOString()).toBe("2026-11-13T05:00:00.000Z");
+    expect(dayStartInstant("UTC", new Date("2026-11-14T02:30:00Z")).toISOString()).toBe("2026-11-14T00:00:00.000Z");
+  });
+});

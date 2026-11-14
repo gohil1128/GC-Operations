@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getScope } from "@/lib/scope";
 import { requireOwner } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
+import { dayStartInstant } from "@/lib/date";
 
 // Delete all imported sales (DailySales + per-item SalesItem) for a single
 // business day at the active location. CashClose rows are left intact — the
@@ -133,6 +134,35 @@ export async function tagUntaggedDaysAction(eventId: string) {
   });
   for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
   return { days: sales.count };
+}
+
+/*
+  Everything that came in today, given one event. "Today" is the business's own
+  calendar day (so a late-evening sync still counts), and "came in" means the
+  rows were first created today: an older day that a sync merely refreshed is
+  left alone.
+*/
+export async function tagImportedTodayAction(eventId: string) {
+  await requireOwner();
+  const scope = await getScope();
+  const [ev, business] = await Promise.all([
+    prisma.event.findFirst({ where: { id: eventId, businessId: scope.businessId } }),
+    prisma.business.findUnique({ where: { id: scope.businessId }, select: { timezone: true } }),
+  ]);
+  if (!ev) throw new Error("Event not found.");
+  const since = dayStartInstant(business?.timezone ?? "UTC");
+  const where = { locationId: scope.locationId, createdAt: { gte: since } };
+  const [sales, items] = await prisma.$transaction([
+    prisma.dailySales.updateMany({ where, data: { eventId } }),
+    prisma.salesItem.updateMany({ where, data: { eventId } }),
+  ]);
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "import.tag_today", entityType: "Event", entityId: eventId,
+    diff: { event: ev.name, days: sales.count, items: items.count },
+  });
+  for (const p of ["/settings", "/dashboard", "/sales", "/reports", "/events"]) revalidatePath(p, "layout");
+  return { days: sales.count, items: items.count };
 }
 
 /** Days already synced with no event whose cash close was tagged: copy the close's event onto the sales. */

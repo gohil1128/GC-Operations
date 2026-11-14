@@ -207,3 +207,10 @@ export function relativeDay(d: Date | string, now: Date = new Date()): string {
   if (days < 7) return `${days}d ago`;
   return fmtDate(then, "MMM d");
 }
+
+/** The instant the current calendar day began in the given timezone. */
+export function dayStartInstant(timeZone: string, now = new Date()): Date {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const n = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  return new Date(now.getTime() - ((n("hour") * 60 + n("minute")) * 60 + n("second")) * 1000);
+}

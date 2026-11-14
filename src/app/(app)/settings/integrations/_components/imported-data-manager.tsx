@@ -16,6 +16,7 @@ import {
   deleteImportedEventDataAction,
   deleteAllImportedAction,
   tagImportedDaysAction,
+  tagImportedTodayAction,
 } from "@/modules/imports/actions";
 
 type Day = {
@@ -48,7 +49,7 @@ export function ImportedDataManager({
   const router = useRouter();
   const [tagging, setTagging] = React.useState(false);
   const [tagEvent, setTagEvent] = React.useState(events[0]?.id ?? "");
-  const [scope, setScope] = React.useState<"untagged" | "range">("untagged");
+  const [scope, setScope] = React.useState<"untagged" | "range" | "today">("untagged");
   const [from, setFrom] = React.useState("");
   const [to, setTo] = React.useState("");
   const untagged = days.filter((d) => !d.event);
@@ -137,9 +138,10 @@ export function ImportedDataManager({
               </div>
               <div className="grid gap-1.5">
                 <label htmlFor="tag-scope" className="text-xs text-muted-foreground">Which days</label>
-                <select id="tag-scope" value={scope} onChange={(e) => setScope(e.target.value as "untagged" | "range")} className="select-native h-10 w-full">
+                <select id="tag-scope" value={scope} onChange={(e) => setScope(e.target.value as "untagged" | "range" | "today")} className="select-native h-10 w-full">
                   <option value="untagged">Days without an event ({untagged.length})</option>
                   <option value="range">A date range</option>
+                  <option value="today">Everything imported today</option>
                 </select>
               </div>
               {scope === "range" && (
@@ -154,12 +156,32 @@ export function ImportedDataManager({
                   </div>
                 </div>
               )}
+              {scope === "today" ? (
+                <Button
+                  disabled={busy !== null || !tagEvent}
+                  onClick={async () => {
+                    setBusy("tag:today");
+                    try {
+                      const r = await tagImportedTodayAction(tagEvent);
+                      toast({ title: r.days ? `Tagged ${r.days} day${r.days === 1 ? "" : "s"} imported today` : "Nothing was imported today" });
+                      router.refresh();
+                    } catch (err: any) {
+                      toast({ title: "Couldn't tag", description: String(err?.message ?? err), variant: "destructive" });
+                    } finally {
+                      setBusy(null);
+                    }
+                  }}
+                >
+                  {busy === "tag:today" ? "Saving…" : "Tag everything imported today"}
+                </Button>
+              ) : (
               <Button
                 disabled={busy !== null || targets.length === 0}
                 onClick={() => tagDays(targets.map((d) => d.iso), tagEvent || null, "tag:bulk")}
               >
                 {busy === "tag:bulk" ? "Saving…" : tagEvent ? `Tag ${targets.length} day${targets.length === 1 ? "" : "s"}` : `Clear the event on ${targets.length} day${targets.length === 1 ? "" : "s"}`}
               </Button>
+              )}
             </div>
           )}
         </div>
