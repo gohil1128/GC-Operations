@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 import { EventMark } from "@/components/event-mark";
-import { AttachmentViewer } from "@/components/attachment-viewer";
+import { AttachmentViewer, AttachmentMark } from "@/components/attachment-viewer";
 import Link from "next/link";
-import { AlertTriangle, Paperclip, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { AlertTriangle, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { requireCapability } from "@/lib/scope";
 import { getActiveEvent, listAllEvents } from "@/modules/events/queries";
 import { listInvoices, listSuppliersForInvoice } from "@/modules/invoices/queries";
@@ -335,7 +335,7 @@ export default async function InvoicesPage({
                         title={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-md text-brand hover:bg-brand/10 transition-colors"
                       >
-                        <Paperclip className="h-4 w-4" aria-hidden />
+                        <AttachmentMark className="h-[18px] w-[18px]" />
                       </AttachmentViewer>
                     ) : (
                       <span className="text-2xs text-muted-foreground/50">—</span>
@@ -403,9 +403,9 @@ export default async function InvoicesPage({
                 invoiceId={i.id}
                 label={`View the ${i.supplier.name} invoice`}
                 title={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
-                className="mr-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-brand-ink hover:bg-muted"
+                className="mr-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
               >
-                <Paperclip className="h-[18px] w-[18px]" aria-hidden />
+                <AttachmentMark className="h-5 w-5" />
               </AttachmentViewer>
             ) : (
               <span aria-hidden className="mr-2 w-10 shrink-0" />

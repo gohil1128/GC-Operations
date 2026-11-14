@@ -1067,6 +1067,27 @@ model SquareConnection {
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   connectedBy User     @relation(fields: [connectedById], references: [id])
+  runs              SquareSyncRun[]
+}
+
+// One Square sync, for the history list in Settings. Counts only, never a sale.
+model SquareSyncRun {
+  id             String   @id @default(cuid())
+  connectionId   String
+  // "cron" | "manual"
+  trigger        String
+  startedAt      DateTime @default(now())
+  finishedAt     DateTime @default(now())
+  ordersRead     Int      @default(0)
+  daysWritten    Int      @default(0)
+  manualDaysKept Int      @default(0)
+  partial        Boolean  @default(false)
+  note           String?
+  error          String?
+
+  connection SquareConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId, startedAt])
 }
 
 // A phone or computer an owner has allowed to send them notifications (for now:

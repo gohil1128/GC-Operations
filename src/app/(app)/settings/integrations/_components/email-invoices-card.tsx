@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { RunHistory } from "@/components/run-history";
 import { Mail, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,9 @@ export async function EmailInvoicesCard({
     prisma.business.findUnique({ where: { id: businessId }, select: { aiScanningEnabled: true } }),
   ]);
   const aiOff = biz?.aiScanningEnabled === false;
+  const scanRuns = overview
+    ? await prisma.mailScanRun.findMany({ where: { connectionId: overview.conn.id }, orderBy: { startedAt: "desc" }, take: 10 })
+    : [];
   const missing = missingConfig();
   // Connect only needs Google and the token key; the AI key is needed to scan.
   const cannotConnect = missingConnectConfig().length > 0;
@@ -183,6 +187,18 @@ export async function EmailInvoicesCard({
                 </ul>
               )}
             </section>
+
+            <RunHistory
+              title="Scan history"
+              empty="No scans yet. Press Scan now."
+              runs={scanRuns.map((r) => ({
+                id: r.id, at: r.startedAt, trigger: r.trigger, partial: r.partial,
+                error: r.error,
+                summary: r.finishedAt
+                  ? `${r.listed} email${r.listed === 1 ? "" : "s"} looked at · ${r.logged} logged · ${r.queued} to review · ${r.skipped} not invoices${r.failed ? ` · ${r.failed} failed` : ""}`
+                  : "Running…",
+              }))}
+            />
 
             {overview.activity.length > 0 && (
               <section aria-labelledby="mail-activity">

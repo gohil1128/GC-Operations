@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { businessDayFromIso, fmtBusinessDate, fmtDate, todayIsoIn } from "@/lib/date";
 import { missingSquareConfig } from "@/modules/square/service";
 import type { SyncResult } from "@/modules/square/sync";
+import { RunHistory } from "@/components/run-history";
 import { SquareDisconnect, SquareHistory, SquareSyncNow, TagUntaggedDays, UseSquareForDays } from "./square-sync-client";
 
 /*
@@ -49,6 +50,9 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
       })).map((d) => d.businessDate.toISOString().slice(0, 10))
     : [];
   const locations = (conn?.squareLocations ?? []) as { id: string; name: string }[];
+  const runs = conn
+    ? await prisma.squareSyncRun.findMany({ where: { connectionId: conn.id }, orderBy: { startedAt: "desc" }, take: 10 })
+    : [];
   // Synced days that no event covers (or covers twice): offered a tag right here.
   const [untaggedCount, fromCloses, tagEvents] = conn
     ? await Promise.all([
@@ -163,6 +167,16 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
                 <SquareHistory />
               </section>
             )}
+
+            <RunHistory
+              title="Sync history"
+              empty="No syncs yet. Press Sync now."
+              runs={runs.map((r) => ({
+                id: r.id, at: r.startedAt, trigger: r.trigger, partial: r.partial,
+                error: r.error,
+                summary: r.note ?? `${r.ordersRead} order${r.ordersRead === 1 ? "" : "s"} read · ${r.daysWritten} day${r.daysWritten === 1 ? "" : "s"} updated${r.manualDaysKept ? ` · ${r.manualDaysKept} hand-entered kept` : ""}`,
+              }))}
+            />
 
             {kept.length > 0 && (
               <section aria-labelledby="square-kept-h" className="rounded-2xl border border-warning-border bg-warning-muted p-4 text-warning-ink">

@@ -170,6 +170,17 @@ export async function syncConnection(connectionId: string, trigger: "cron" | "ma
         lastResult: { ...result, trigger, at: now().toISOString() } as unknown as Prisma.InputJsonValue,
       },
     });
+    // The history list in Settings; a failure to record it never fails the sync.
+    await db.squareSyncRun
+      .create({
+        data: {
+          connectionId: conn.id, trigger, startedAt, finishedAt: now(),
+          ordersRead: result.ordersRead, daysWritten: result.daysWritten,
+          manualDaysKept: result.manualDaysKept.length, partial: result.partial,
+          note: result.note ?? null, error: result.error ?? null,
+        },
+      })
+      .catch(() => {});
   }
 }
 

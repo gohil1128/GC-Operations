@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { X, Share, Loader2, Paperclip } from "lucide-react";
+import { X, Share, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /*
@@ -17,6 +17,21 @@ import { cn } from "@/lib/utils";
   The file is fetched as a blob and shown from a local object URL, so the
   attachment route keeps its strict sandbox headers and nothing is re-served.
 */
+/*
+  The app's own attachment mark: two sheets, one tucked behind the other, a
+  folded corner on the front one. Drawn once here so every "this invoice has a
+  file" spot uses the same small sign (not a paperclip).
+*/
+export function AttachmentMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden className={className}>
+      <path d="M7 3.5h5.5L16 7v8.5a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 15.5v-10A2 2 0 0 1 7 3.5Z" />
+      <path d="M12.5 3.5V7H16" />
+      <path d="M3.5 6.5v9.5a2.5 2.5 0 0 0 2.5 2.5h7" opacity={0.55} />
+    </svg>
+  );
+}
+
 export function AttachmentViewer({
   invoiceId,
   label,
@@ -85,7 +100,7 @@ export function AttachmentViewer({
         className={cn(children ? "" : "lg-press inline-flex h-9 items-center gap-1.5 rounded-full bg-muted px-3.5 text-[13px] font-medium text-foreground hover:bg-muted/70", className)}
         aria-label={children ? label ?? "View attachment" : undefined}
       >
-        {children ?? (<><Paperclip className="h-3.5 w-3.5" aria-hidden /> {label ?? "View attachment"}</>)}
+        {children ?? (<><AttachmentMark className="h-4 w-4" /> {label ?? "View attachment"}</>)}
       </button>
       {open && typeof document !== "undefined" && createPortal(
         <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[90] flex flex-col bg-black/90 text-white">
