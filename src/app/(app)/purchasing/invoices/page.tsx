@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import { EventMark } from "@/components/event-mark";
+import { AttachmentViewer } from "@/components/attachment-viewer";
 import Link from "next/link";
-import { AlertTriangle, Camera, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { AlertTriangle, Paperclip, FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { requireCapability } from "@/lib/scope";
 import { getActiveEvent, listAllEvents } from "@/modules/events/queries";
 import { listInvoices, listSuppliersForInvoice } from "@/modules/invoices/queries";
@@ -328,15 +329,14 @@ export default async function InvoicesPage({
                   <TableCell className="text-muted-foreground text-xs">{i.createdBy.name}</TableCell>
                   <TableCell className="text-center">
                     {i.hasImage ? (
-                      <a
-                        href={`/api/purchasing/invoices/${i.id}/photo`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Open invoice photo"
+                      <AttachmentViewer
+                        invoiceId={i.id}
+                        label={`View the ${i.supplier.name} invoice`}
+                        title={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
                         className="inline-flex h-7 w-7 items-center justify-center rounded-md text-brand hover:bg-brand/10 transition-colors"
                       >
-                        <Camera className="h-4 w-4" />
-                      </a>
+                        <Paperclip className="h-4 w-4" aria-hidden />
+                      </AttachmentViewer>
                     ) : (
                       <span className="text-2xs text-muted-foreground/50">—</span>
                     )}
@@ -370,10 +370,10 @@ export default async function InvoicesPage({
             invoice, where the photo, re-open and delete live. */}
         <div className="overflow-hidden rounded-3xl bg-card lg:hidden">
           {sorted.map((i, n) => (
+            <div key={i.id} className={cn("flex items-center", n > 0 && "border-t border-border-soft")}>
             <Link
-              key={i.id}
               href={`/purchasing/invoices/${i.id}`}
-              className={cn("lg-press flex items-center gap-3 px-4 py-3", n > 0 && "border-t border-border-soft")}
+              className="lg-press flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 pr-2"
             >
               {i.event && !i.appliesToAllEvents ? (
                 <EventMark name={i.event.name} size="md" />
@@ -397,6 +397,20 @@ export default async function InvoicesPage({
                 </span>
               </span>
             </Link>
+            {/* The attached photo or PDF, one tap from the list, viewed in place. */}
+            {i.hasImage ? (
+              <AttachmentViewer
+                invoiceId={i.id}
+                label={`View the ${i.supplier.name} invoice`}
+                title={`${i.supplier.name} · ${fmtDate(i.invoiceDate)}`}
+                className="mr-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-brand-ink hover:bg-muted"
+              >
+                <Paperclip className="h-[18px] w-[18px]" aria-hidden />
+              </AttachmentViewer>
+            ) : (
+              <span aria-hidden className="mr-2 w-10 shrink-0" />
+            )}
+            </div>
           ))}
           {sorted.length === 0 && (
             <div className="px-4 py-10 text-center text-sm text-muted-foreground">

@@ -1,4 +1,5 @@
 "use client";
+import { AttachmentViewer } from "@/components/attachment-viewer";
 import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { useRouter } from "next/navigation";
@@ -219,16 +220,16 @@ export function InvoiceDetailForm({ invoiceId, initial, events = [], readOnly }:
         <Label>Invoice photo / PDF {imagePending && <span className="text-2xs text-muted-foreground">· saving…</span>}</Label>
         {image ? (
           <div className="flex items-start gap-3">
-            <a href={`/api/purchasing/invoices/${invoiceId}/photo`} target="_blank" rel="noreferrer" title="Open full size">
+            <AttachmentViewer invoiceId={invoiceId} label="View the attached invoice" title="Invoice">
               {image.startsWith("data:application/pdf") ? (
                 <span className="inline-flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm font-medium hover:bg-accent transition-colors">
-                  <FileText className="h-4 w-4 text-brand" /> PDF attached — open
+                  <FileText className="h-4 w-4 text-brand" /> View PDF
                 </span>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={image} alt="Invoice" className="h-32 w-auto rounded-lg border object-cover hover:opacity-90 transition-opacity" />
               )}
-            </a>
+            </AttachmentViewer>
             <div className="flex flex-col gap-2">
               <PhotoInput onPick={onPhotoPick} disabled={imagePending} allowPdf />
               <button type="button" onClick={() => saveImage(null)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive">
