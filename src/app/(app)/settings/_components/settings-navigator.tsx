@@ -91,7 +91,7 @@ export function SettingsNavigator({ className }: { className?: string }) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search settings"
           aria-label="Search settings"
-          className="h-11 w-full rounded-full border border-input bg-card pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-search-cancel-button]:hidden"
+          className="h-11 w-full rounded-full border border-input/45 bg-muted/45 pl-10 pr-10 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50 [&::-webkit-search-cancel-button]:hidden"
         />
         {q && (
           <button

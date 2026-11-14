@@ -148,11 +148,11 @@ export function ImportedDataManager({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-1.5">
                     <label htmlFor="tag-from" className="text-xs text-muted-foreground">From</label>
-                    <input id="tag-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-10 w-full min-w-0 rounded-full border border-input bg-card px-3 text-[13px]" />
+                    <input id="tag-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-10 w-full min-w-0 rounded-full border-0 bg-muted/60 px-3 text-[13px]" />
                   </div>
                   <div className="grid gap-1.5">
                     <label htmlFor="tag-to" className="text-xs text-muted-foreground">To</label>
-                    <input id="tag-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-10 w-full min-w-0 rounded-full border border-input bg-card px-3 text-[13px]" />
+                    <input id="tag-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-10 w-full min-w-0 rounded-full border-0 bg-muted/60 px-3 text-[13px]" />
                   </div>
                 </div>
               )}

@@ -893,8 +893,8 @@
     min-width: 0; max-width: 100%;
     appearance: none; -webkit-appearance: none;
     border-radius: 9999px;
-    border: 1px solid hsl(var(--input));
-    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--input) / 0.45);
+    background-color: hsl(var(--muted) / 0.45);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
@@ -908,6 +908,22 @@
   /* A file input has an intrinsic width wider than a small phone; unchecked it
      stretches its form and the whole page scrolls sideways. */
   input[type="file"] { width: 100%; min-width: 0; max-width: 100%; }
+
+  /* Native date / time fields: iOS gives them an intrinsic width wider than a
+     card and centres (or drops) the value. Make them behave like a text field —
+     contained, left-aligned, same quiet fill — everywhere in the app. */
+  input[type="date"], input[type="time"], input[type="month"], input[type="datetime-local"] {
+    -webkit-appearance: none; appearance: none;
+    min-width: 0; max-width: 100%;
+    display: block;
+    text-align: left;
+    line-height: 1.2;
+  }
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; margin: 0; }
+  input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.45; }
   label { max-width: 100%; }
 
   /* Settings: a card jumped to from the navigator clears the sticky header and

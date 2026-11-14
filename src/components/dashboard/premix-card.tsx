@@ -105,7 +105,7 @@ export function PremixCard({ data, todayIso }: { data: PremixData; todayIso: str
               aria-label={`Event: ${eventLabel}. Change event`}
               className={cn(
                 "lg-press inline-flex h-9 max-w-[52%] items-center gap-1.5 rounded-full border px-3 text-xs font-medium",
-                eventId !== "all" ? "border-transparent bg-foreground text-background" : "border-border hover:bg-muted",
+                eventId !== "all" ? "border-transparent bg-brand-muted text-brand-ink" : "border-transparent bg-muted/60 hover:bg-muted",
               )}
             >
               {eventId !== "all" && eventId !== "none" && <EventMark name={eventLabel} />}
@@ -138,7 +138,7 @@ export function PremixCard({ data, todayIso }: { data: PremixData; todayIso: str
               aria-label={`Date sold: ${dateLabel}. Change dates`}
               className={cn(
                 "lg-press inline-flex h-9 min-w-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium",
-                dateKey !== "all" ? "border-transparent bg-foreground text-background" : "border-border hover:bg-muted",
+                dateKey !== "all" ? "border-transparent bg-brand-muted text-brand-ink" : "border-transparent bg-muted/60 hover:bg-muted",
               )}
             >
               <CalendarDays aria-hidden className="h-3.5 w-3.5 shrink-0 opacity-70" />
@@ -167,7 +167,7 @@ export function PremixCard({ data, todayIso }: { data: PremixData; todayIso: str
       </div>
 
       {dateKey === "custom" && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2 [&>label]:min-w-0">
           <label className="text-[11px] text-muted-foreground">
             From
             <input
@@ -175,7 +175,7 @@ export function PremixCard({ data, todayIso }: { data: PremixData; todayIso: str
               value={from}
               max={to || todayIso}
               onChange={(e) => setFrom(e.target.value)}
-              className="mt-1 block h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+              className="mt-1 block h-10 w-full min-w-0 rounded-full border-0 bg-muted/60 px-3 text-sm text-foreground"
             />
           </label>
           <label className="text-[11px] text-muted-foreground">
@@ -186,7 +186,7 @@ export function PremixCard({ data, todayIso }: { data: PremixData; todayIso: str
               min={from || undefined}
               max={todayIso}
               onChange={(e) => setTo(e.target.value)}
-              className="mt-1 block h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground"
+              className="mt-1 block h-10 w-full min-w-0 rounded-full border-0 bg-muted/60 px-3 text-sm text-foreground"
             />
           </label>
         </div>
