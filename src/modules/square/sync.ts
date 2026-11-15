@@ -66,7 +66,13 @@ const empty = (over: Partial<SyncResult> = {}): SyncResult => ({
   ran: false, ordersRead: 0, daysWritten: 0, manualDaysKept: [], foreignCurrency: 0, partial: false, ...over,
 });
 
-export async function syncConnection(connectionId: string, trigger: "cron" | "manual", deps: SyncDeps): Promise<SyncResult> {
+export async function syncConnection(
+  connectionId: string,
+  trigger: "cron" | "manual",
+  deps: SyncDeps,
+  /** `onlyDay` re-reads that one business day (YYYY-MM-DD) and nothing else; where the regular sync has got to is left alone. */
+  opts: { onlyDay?: string } = {},
+): Promise<SyncResult> {
   const now = deps.now ?? (() => new Date());
   const startedAt = now();
   const { db } = deps;
@@ -100,13 +106,19 @@ export async function syncConnection(connectionId: string, trigger: "cron" | "ma
     });
     const categoryCache = new Map<string, string>();
 
-    let from = addDaysIso(conn.syncedThroughDay, -OVERLAP_DAYS);
+    const single = opts.onlyDay && opts.onlyDay <= today ? opts.onlyDay : undefined;
+    if (opts.onlyDay && !single) {
+      result.note = "That day has not happened yet.";
+      return result;
+    }
+    const last = single ?? today;
+    let from = single ?? addDaysIso(conn.syncedThroughDay, -OVERLAP_DAYS);
     let through = conn.syncedThroughDay;
 
-    while (from <= today) {
+    while (from <= last) {
       if (now().getTime() - startedAt.getTime() > RUN_BUDGET_MS) { result.partial = true; break; }
 
-      const toExclusive = addDaysIso(from, CHUNK_DAYS) > addDaysIso(today, 1) ? addDaysIso(today, 1) : addDaysIso(from, CHUNK_DAYS);
+      const toExclusive = addDaysIso(from, CHUNK_DAYS) > addDaysIso(last, 1) ? addDaysIso(last, 1) : addDaysIso(from, CHUNK_DAYS);
       const startAt = startOfDayInZone(from, tz);
       const endAt = new Date(Math.min(startOfDayInZone(toExclusive, tz).getTime(), startedAt.getTime()));
 
@@ -141,7 +153,7 @@ export async function syncConnection(connectionId: string, trigger: "cron" | "ma
 
       // Days before today are final once read in full; today stays open.
       const done = toExclusive > today ? today : toExclusive;
-      if (done > through) {
+      if (!single && done > through) {
         through = done;
         await db.squareConnection.update({ where: { id: conn.id }, data: { syncedThroughDay: through } });
       }

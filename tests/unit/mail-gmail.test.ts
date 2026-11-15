@@ -132,3 +132,11 @@ describe("isAuthenticated — was it really sent by who it says?", () => {
     expect(m.authenticated).toBe(true);
   });
 });
+
+describe("one-day scan query", () => {
+  it("bounds the search on both sides", () => {
+    const q = buildScanQuery(new Date("2026-11-14T05:00:00Z"), new Date("2026-11-15T05:00:00Z"));
+    expect(q).toContain("after:1794632400");
+    expect(q).toContain("before:1794718800");
+  });
+});

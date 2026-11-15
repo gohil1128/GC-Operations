@@ -41,6 +41,8 @@ const Note = ({ reply }: { reply: Reply | null }) => (
 export function ScanNowButton() {
   const { pending, reply, run } = useAction();
   const [range, setRange] = React.useState("0");
+  const [day, setDay] = React.useState("");
+  const oneDay = range === "day";
   return (
     <div className="flex flex-col items-start gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
@@ -54,12 +56,32 @@ export function ScanNowButton() {
           <option value="0">Since last scan</option>
           <option value="7">Last week</option>
           <option value="30">Last month</option>
+          <option value="day">A single day…</option>
         </select>
-        <Button size="sm" disabled={pending} onClick={() => run(() => scanNowAction(Number(range) || undefined))}>
-          {pending ? "Scanning…" : "Scan now"}
+        {oneDay && (
+          <>
+            <label className="sr-only" htmlFor="scan-day">Day to scan</label>
+            <input
+              id="scan-day" type="date" value={day} max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setDay(e.target.value)}
+              className="h-9 min-w-0 rounded-full border-0 bg-muted/60 px-3 text-[13px]"
+            />
+          </>
+        )}
+        <Button
+          size="sm"
+          disabled={pending || (oneDay && !day)}
+          onClick={() => run(() => (oneDay ? scanNowAction(undefined, day) : scanNowAction(Number(range) || undefined)))}
+        >
+          {pending ? "Scanning…" : oneDay ? "Scan that day" : "Scan now"}
         </Button>
       </div>
-      {range !== "0" && (
+      {oneDay && (
+        <p className="text-2xs text-muted-foreground">
+          Reads only the emails received that day. Emails already read are skipped.
+        </p>
+      )}
+      {range !== "0" && !oneDay && (
         <p className="text-2xs text-muted-foreground">
           Emails already read are skipped. A big catch-up reads {40} at a time, so press again if it says there is more to do.
         </p>

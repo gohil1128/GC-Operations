@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 /*
   Wide data tables are unreadable on a phone — sideways scrolling hides the
   columns that matter. These primitives let a screen show its table on desktop
-  and a stacked card list on mobile, from the same data.
+  and a quiet list on mobile, from the same data.
 
   Usage:
     <TableOnDesktop>  ...existing <Table> ...  </TableOnDesktop>
@@ -23,9 +23,22 @@ export function TableOnDesktop({ children, className }: { children: React.ReactN
   return <div className={cn("hidden lg:block", className)}>{children}</div>;
 }
 
-/** The mobile counterpart — a stack of cards, hidden from `md` up. */
+/*
+  The phone counterpart of a table: a quiet list, not a stack of cards.
+
+  It used to be one bordered card per record, each with a ruled-off grid of
+  LABEL / value pairs under it. Five invoices filled two screens and every
+  record shouted equally. Now a record is two or three lines of text: what it
+  is and what it is worth on the first, when and what state on the second, and
+  its details as one soft run beneath. Rows are separated by an inset hairline
+  only, so a list reads as one surface whether it sits on a card or the page.
+*/
 export function MobileList({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("flex flex-col gap-2.5 lg:hidden", className)}>{children}</div>;
+  return (
+    <div className={cn("flex flex-col lg:hidden [&>*+*]:border-t [&>*+*]:border-border-soft/50", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function MobileRow({
@@ -51,34 +64,34 @@ export function MobileRow({
 }) {
   const body = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="truncate text-[15px] font-semibold leading-tight">{title}</div>
-          {subtitle && <div className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</div>}
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {meta && <div className="display-num text-[17px] font-medium">{meta}</div>}
-          {href && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="min-w-0 truncate text-[15px] font-medium leading-snug">{title}</div>
+        <div className="flex shrink-0 items-center gap-1">
+          {meta && <div className="num text-[15px] font-medium tabular-nums">{meta}</div>}
+          {href && <ChevronRight aria-hidden className="h-3.5 w-3.5 translate-y-px text-muted-foreground/70" />}
         </div>
       </div>
 
-      {badges && <div className="mt-2 flex flex-wrap items-center gap-1.5">{badges}</div>}
-
-      {children && (
-        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border-soft pt-3">{children}</dl>
+      {(subtitle || badges) && (
+        <div className="mt-0.5 flex items-center justify-between gap-3">
+          <div className="min-w-0 truncate text-xs text-muted-foreground">{subtitle}</div>
+          {badges && <div className="flex shrink-0 flex-wrap items-center justify-end gap-1 [&>*]:px-2 [&>*]:py-0 [&>*]:text-[10.5px]">{badges}</div>}
+        </div>
       )}
+
+      {children && <dl className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">{children}</dl>}
     </>
   );
 
-  const cls = cn("touch-target bento block p-4 text-left", href && !actions && "active:bg-accent/60", className);
-  const foot = actions && <div className="mt-2 flex items-center justify-end gap-1.5">{actions}</div>;
+  const cls = cn("touch-target block px-1 py-3 text-left", href && !actions && "rounded-xl active:bg-muted/60", className);
+  const foot = actions && <div className="mt-1 flex items-center justify-end gap-1 [&_button]:h-8 [&_button]:gap-1 [&_button]:bg-transparent [&_button]:px-2.5 [&_button]:text-xs [&_button]:shadow-none [&_svg]:h-3.5 [&_svg]:w-3.5">{actions}</div>;
   if (href && !actions) return <Link href={href} className={cls}>{body}</Link>;
   // Actions are buttons, which cannot live inside a link, so the link is the body alone.
   if (href) return <div className={cls}><Link href={href} className="block">{body}</Link>{foot}</div>;
   return <div className={cls}>{body}{foot}</div>;
 }
 
-/** One label/value pair inside a MobileRow's detail grid. */
+/** One label/value pair in a MobileRow's detail line: "Lines 8". */
 export function MobileField({
   label,
   value,
@@ -89,9 +102,9 @@ export function MobileField({
   className?: string;
 }) {
   return (
-    <div className={cn("min-w-0", className)}>
-      <dt className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 truncate text-[13px] font-medium num">{value}</dd>
+    <div className={cn("flex min-w-0 max-w-full items-baseline gap-1", className)}>
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="num min-w-0 truncate text-foreground/80">{value}</dd>
     </div>
   );
 }

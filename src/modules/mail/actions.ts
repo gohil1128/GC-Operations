@@ -5,6 +5,8 @@ import { getScope } from "@/lib/scope";
 import { requireCan } from "@/lib/auth";
 import { writeAudit } from "@/lib/audit";
 import { requiredOwnedId } from "@/lib/ownership";
+import { todayIsoIn } from "@/lib/date";
+import { addDaysIso, startOfDayInZone } from "@/modules/square/aggregate";
 import { decryptSecret } from "./crypto";
 import { revokeToken } from "./gmail";
 import { createInvoiceFromEmail } from "./log";
@@ -32,8 +34,8 @@ const refresh = () => {
 
 /* Owners connect and scan; anyone who can handle invoices can review them. */
 
-/** Scan now. With `days` (7 or 30) it also catches up that far back; emails already seen are skipped for free. */
-export async function scanNowAction(days?: number): Promise<Reply> {
+/** Scan now. With `isoDay` it reads only mail received that day (business timezone). With `days` (7 or 30) it also catches up that far back; emails already seen are skipped for free. */
+export async function scanNowAction(days?: number, isoDay?: string): Promise<Reply> {
   await requireCan("settings");
   const scope = await getScope();
   const conn = await prisma.mailConnection.findUnique({ where: { businessId: scope.businessId } });
@@ -47,7 +49,16 @@ export async function scanNowAction(days?: number): Promise<Reply> {
   }
   try {
     const sinceDays = days === 7 || days === 30 ? days : undefined;
-    const r = await scanConnection(conn.id, "manual", productionDeps(), { sinceDays });
+    let only: { from: Date; to: Date } | undefined;
+    if (isoDay !== undefined) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDay)) return fail("Pick a day.");
+      const tz = (await prisma.business.findUnique({ where: { id: scope.businessId }, select: { timezone: true } }))?.timezone ?? "UTC";
+      const today = todayIsoIn(tz);
+      if (isoDay > today) return fail("That day has not happened yet.");
+      if (isoDay < addDaysIso(today, -365)) return fail("Pick a day within the last year.");
+      only = { from: startOfDayInZone(isoDay, tz), to: startOfDayInZone(addDaysIso(isoDay, 1), tz) };
+    }
+    const r = await scanConnection(conn.id, "manual", productionDeps(), { sinceDays, only });
     refresh();
     if (!r.ran) return fail(r.note ?? "Nothing ran.");
     if (r.error) return fail(`The scan hit a problem: ${r.error}`);

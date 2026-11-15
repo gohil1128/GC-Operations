@@ -180,10 +180,11 @@ export async function fetchProfileEmail(accessToken: string): Promise<string> {
   must either carry an attachment or use the words bills use — a short list,
   because a longer one just rebuilds "everything".
 */
-export function buildScanQuery(after: Date): string {
+export function buildScanQuery(after: Date, before?: Date): string {
   const epoch = Math.floor(after.getTime() / 1000);
   return [
     `after:${epoch}`,
+    ...(before ? [`before:${Math.floor(before.getTime() / 1000)}`] : []),
     "-category:promotions -category:social -category:forums",
     "-in:spam -in:trash -in:drafts -in:sent -from:me",
     '(has:attachment OR invoice OR receipt OR bill OR statement OR "amount due" OR "order confirmation" OR "payment due")',

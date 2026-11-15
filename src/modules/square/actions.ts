@@ -43,9 +43,9 @@ async function connectionForScope() {
   return { scope, conn };
 }
 
-async function run(connectionId: string): Promise<Reply> {
+async function run(connectionId: string, opts: { onlyDay?: string } = {}): Promise<Reply> {
   try {
-    const r = await syncConnection(connectionId, "manual", squareDeps());
+    const r = await syncConnection(connectionId, "manual", squareDeps(), opts);
     refresh();
     return describe(r);
   } catch (e) {
@@ -60,6 +60,23 @@ export async function syncSquareNowAction(): Promise<Reply> {
   // A button people can hold down; once every half minute is plenty.
   if (conn.lastSyncAt && Date.now() - conn.lastSyncAt.getTime() < 30_000) return fail("It just synced — give it a moment.");
   return run(conn.id);
+}
+
+/** Re-read one business day from Square: a day that looks wrong, or one that was missed. */
+export async function syncSquareDayAction(isoDay: string): Promise<Reply> {
+  const { scope, conn } = await connectionForScope();
+  if (!conn) return fail("Connect Square first.");
+  if (conn.status !== "ACTIVE") return fail("Square needs reconnecting first.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDay)) return fail("Pick a day.");
+  const today = todayIsoIn(conn.timezone);
+  if (isoDay > today) return fail("That day has not happened yet.");
+  if (isoDay < addDaysIso(today, -MAX_HISTORY_DAYS)) return fail(`That is further back than Square history goes here (${MAX_HISTORY_DAYS} days).`);
+  await writeAudit({
+    businessId: scope.businessId, userId: scope.userId,
+    action: "square.sync_day", entityType: "SquareConnection", diff: { day: isoDay },
+  });
+  const r = await run(conn.id, { onlyDay: isoDay });
+  return r.ok ? done(`${isoDay}: ${r.message}`) : r;
 }
 
 /** Read further back. Only ever widens the window; never skips forward. */

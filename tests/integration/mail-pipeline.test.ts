@@ -447,3 +447,27 @@ describe("approving a held invoice", () => {
     expect(inv.internalMemo).toMatch(/not kept/);
   });
 });
+
+describe("one day on its own", () => {
+  it("asks Gmail for that window only and does not move the regular scan's place", async () => {
+    const h = harness([email("d1", { subject: "Hello day", receivedAt: new Date(Date.now() - 20 * 86_400_000) })], {
+      "Hello day": { triage: { kind: "other", reason: "x" } as Triage },
+    });
+    let asked = "";
+    const inner = h.deps.mailFor;
+    h.deps.mailFor = async (c) => {
+      const m = await inner(c);
+      return { ...m, listIds: async (q: string, max: number) => { asked = q; return m.listIds(q, max); } };
+    };
+    const before = (await db.mailConnection.findUniqueOrThrow({ where: { id: ids.connectionId } })).scannedThrough;
+    const from = new Date(Date.now() - 21 * 86_400_000), to = new Date(Date.now() - 20 * 86_400_000 + 1000);
+
+    const r = await scanConnection(ids.connectionId, "manual", h.deps, { only: { from, to } });
+
+    expect(r).toMatchObject({ ran: true, listed: 1, skipped: 1 });
+    expect(asked).toContain(`after:${Math.floor(from.getTime() / 1000)}`);
+    expect(asked).toContain(`before:${Math.floor(to.getTime() / 1000)}`);
+    const after = (await db.mailConnection.findUniqueOrThrow({ where: { id: ids.connectionId } })).scannedThrough;
+    expect(after.getTime()).toBe(before.getTime());
+  });
+});

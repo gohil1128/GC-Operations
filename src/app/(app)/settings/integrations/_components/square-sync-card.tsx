@@ -160,7 +160,7 @@ export async function SquareSyncCard({ businessId, flash }: { businessId: string
 
             {conn.status === "ACTIVE" && (
               <section aria-labelledby="square-history-h" className="space-y-2">
-                <h3 id="square-history-h" className="text-sm font-semibold">Bring in older sales</h3>
+                <h3 id="square-history-h" className="text-sm font-semibold">Bring in older sales, or re-sync one day</h3>
                 <p className="text-sm text-muted-foreground">
                   Rebuilds those days from Square, replacing anything imported by CSV for them (hand-entered days are still left alone).
                 </p>

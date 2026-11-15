@@ -289,3 +289,27 @@ describe("its place", () => {
     expect(calls.search).toBeGreaterThanOrEqual(8); // ~63 days / 7
   });
 });
+
+describe("one day on its own", () => {
+  it("re-reads only that day and leaves the regular sync's place where it was", async () => {
+    const wanted = addDaysIso(today, -30); // well before where the sync has got to
+    const other = addDaysIso(today, -29);
+    const { deps, calls } = fakeSquare([sale(wanted), sale(wanted), sale(other)]);
+    const before = (await conn()).syncedThroughDay;
+
+    const r = await syncConnection(ids.connectionId, "manual", deps, { onlyDay: wanted });
+
+    expect(r).toMatchObject({ ran: true, ordersRead: 2, daysWritten: 1 });
+    expect(calls.search).toBe(1);
+    expect((await dayRow(wanted))?.netSalesCents).toBe(1000);
+    expect(await dayRow(other)).toBeNull();
+    expect((await conn()).syncedThroughDay).toBe(before);
+  });
+
+  it("refuses a day that has not happened yet", async () => {
+    const { deps, calls } = fakeSquare([]);
+    const r = await syncConnection(ids.connectionId, "manual", deps, { onlyDay: addDaysIso(today, 2) });
+    expect(r.note).toMatch(/not happened/);
+    expect(calls.search).toBe(0);
+  });
+});

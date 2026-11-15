@@ -72,7 +72,7 @@ export async function scanConnection(
   trigger: "cron" | "manual",
   deps: ScanDeps,
   /** Look back this many days from now instead of from where the last scan finished (a manual catch-up). */
-  opts: { sinceDays?: number } = {},
+  opts: { sinceDays?: number; /** Only mail received in this window (one day); the regular scan's place is left alone. */ only?: { from: Date; to: Date } } = {},
 ): Promise<ScanResult> {
   const { db, extractor } = deps;
   const now = deps.now ?? (() => new Date());
@@ -133,7 +133,9 @@ export async function scanConnection(
       : new Date(connection.scannedThrough.getTime() - OVERLAP_HOURS * 3_600_000);
     // A connection left idle for weeks does not go back and read all of it.
     const floor = new Date(startedAt.getTime() - MAX_LOOKBACK_DAYS * 86_400_000);
-    const ids = (await mail.listIds(buildScanQuery(windowStart > floor ? windowStart : floor), 500)).reverse();
+    const ids = (
+      await mail.listIds(opts.only ? buildScanQuery(opts.only.from, opts.only.to) : buildScanQuery(windowStart > floor ? windowStart : floor), 500)
+    ).reverse();
     result.listed = ids.length;
 
     const seen = await db.mailMessage.findMany({
@@ -191,7 +193,8 @@ export async function scanConnection(
     await db.mailMessage.deleteMany({
       where: { connectionId, status: "SKIPPED", createdAt: { lt: new Date(startedAt.getTime() - SKIPPED_RETENTION_DAYS * 86_400_000) } },
     });
-    return finish({}, result.partial ? (cursor ?? undefined) : startedAt);
+    // A one-day scan never moves the regular scan's place.
+    return finish({}, opts.only ? undefined : result.partial ? (cursor ?? undefined) : startedAt);
   } catch (e) {
     if (e instanceof GmailAuthError) await markReconnect(db, connectionId);
     return finish({ error: brief(e) });

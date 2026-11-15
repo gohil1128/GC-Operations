@@ -6,7 +6,7 @@ import { tagUntaggedDaysAction, applyCashCloseEventsAction } from "@/modules/imp
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import {
-  disconnectSquareAction, importSquareHistoryAction, syncSquareNowAction, replaceManualDaysWithSquareAction,
+  disconnectSquareAction, importSquareHistoryAction, syncSquareNowAction, syncSquareDayAction, replaceManualDaysWithSquareAction,
 } from "@/modules/square/actions";
 
 type Reply = { ok: boolean; message: string };
@@ -57,6 +57,8 @@ const HISTORY = [
 export function SquareHistory() {
   const { pending, reply, run } = useAction();
   const [days, setDays] = React.useState(30);
+  const [day, setDay] = React.useState("");
+  const oneDay = days === 0;
   return (
     <div className="flex flex-col items-start gap-1.5">
       <div className="flex flex-wrap items-center gap-2">
@@ -68,9 +70,23 @@ export function SquareHistory() {
           className="select-native h-10"
         >
           {HISTORY.map((h) => <option key={h.days} value={h.days}>{h.label}</option>)}
+          <option value={0}>A single day…</option>
         </select>
-        <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => importSquareHistoryAction(days))}>
-          {pending ? "Importing…" : "Import history"}
+        {oneDay && (
+          <>
+            <label className="sr-only" htmlFor="square-day">Day to sync</label>
+            <input
+              id="square-day" type="date" value={day} max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setDay(e.target.value)}
+              className="h-10 min-w-0 rounded-full border-0 bg-muted/60 px-3 text-[13px]"
+            />
+          </>
+        )}
+        <Button
+          size="sm" variant="outline" disabled={pending || (oneDay && !day)}
+          onClick={() => run(() => (oneDay ? syncSquareDayAction(day) : importSquareHistoryAction(days)))}
+        >
+          {pending ? (oneDay ? "Syncing…" : "Importing…") : oneDay ? "Sync that day" : "Import history"}
         </Button>
       </div>
       <Note reply={reply} />
