@@ -72,3 +72,14 @@ export const onPath = (pathname: string, href: string) => pathname === href || p
 export function bestPage(pathname: string, pages: NavPage[]): NavPage | undefined {
   return pages.filter((p) => onPath(pathname, p.href)).sort((a, b) => b.href.length - a.href.length)[0];
 }
+
+/*
+  Pages where a sideways swipe must never change tab. Sales and invoices are
+  read row by row, often with a thumb sliding across a list or a chip strip;
+  being thrown to another tab mid-review loses your place. The tab bar and the
+  section tabs still work by tapping.
+*/
+const NO_TAB_SWIPE = ["/sales", "/purchasing"];
+export function tabSwipeAllowed(pathname: string) {
+  return !NO_TAB_SWIPE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}

@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { markNavigation } from "@/lib/nav-kind";
-import { bestPage, hubsFor } from "./nav";
+import { bestPage, hubsFor, tabSwipeAllowed } from "./nav";
 
 /* The destinations live in ./nav.ts as hubs; this file only lays them out. */
 
@@ -275,7 +275,7 @@ export function MobileTabBar({ role }: { role: Role }) {
       if (busy || handoff.from !== null || e.touches.length !== 1 || c.moreOpen || window.innerWidth >= 1024) return;
       const t0 = e.touches[0];
       if (t0.clientX < 22 || t0.clientX > window.innerWidth - 22) return; // leave the browser's edge gestures alone
-      if (blocked(e.target)) return;
+      if (blocked(e.target) || !tabSwipeAllowed(c.pathname)) return;
       const i = c.swipeTabs.findIndex((x) => x.href === c.pathname);
       if (i < 0) return;
       // Get the neighbours loading while the finger is still down.

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { bestPage, hubsFor } from "./nav";
+import { bestPage, hubsFor, tabSwipeAllowed } from "./nav";
 
 /*
   The pages inside a hub (Stock, Staff, Settings), as a strip of tabs at the
@@ -50,7 +50,7 @@ export function SectionTabs({ hub, role }: { hub: string; role: Role }) {
   const router = useRouter();
   const idx = pages.findIndex((p) => p.href === current?.href);
   React.useEffect(() => {
-    if (pages.length < 2 || idx < 0) return;
+    if (pages.length < 2 || idx < 0 || !tabSwipeAllowed(pathname)) return;
     let s: { x: number; y: number; ok: boolean } | null = null;
     const blocked = (el: Element | null) => {
       for (let n = el; n && n !== document.body; n = n.parentElement) {
@@ -77,7 +77,7 @@ export function SectionTabs({ hub, role }: { hub: string; role: Role }) {
     document.addEventListener("touchstart", down, { passive: true });
     document.addEventListener("touchend", up, { passive: true });
     return () => { document.removeEventListener("touchstart", down); document.removeEventListener("touchend", up); };
-  }, [pages, idx, router]);
+  }, [pages, idx, router, pathname]);
 
   if (pages.length < 2) return null;
 
