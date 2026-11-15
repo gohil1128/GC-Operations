@@ -1,3 +1,4 @@
+import type * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight, Wallet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ export type TradingDay = { businessDate: Date; netSalesCents: number };
 export function HeroCard({
   figure,
   figureLabel,
+  labelSlot,
   delta,
   days,
   canCloseDrawer,
@@ -40,6 +42,8 @@ export function HeroCard({
 }: {
   figure: string;
   figureLabel: string;
+  /** Replaces the plain label, e.g. with the event picker. */
+  labelSlot?: React.ReactNode;
   delta: { text: string; up: boolean } | null;
   days: TradingDay[];
   canCloseDrawer: boolean;
@@ -57,7 +61,7 @@ export function HeroCard({
           <Wallet className="h-5 w-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] text-muted-foreground">{figureLabel}</div>
+          {labelSlot ?? <div className="text-[12.5px] text-muted-foreground">{figureLabel}</div>}
           <div className="display-num mt-0.5 truncate text-[34px] font-medium leading-tight tracking-[-0.025em] tabular-nums sm:text-[40px]">
             {figure}
           </div>

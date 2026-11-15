@@ -227,12 +227,6 @@ export default async function DashboardPage({
             Here&apos;s where things stand · {range.subLabel}
           </p>
         </div>
-        <EventControl
-          events={eventOptions}
-          activeKey={range.key}
-          activeLabel={range.label}
-          basePath="/dashboard"
-        />
       </header>
 
       {/* Above the figures, not in Settings: a business on the wrong timezone
@@ -294,6 +288,9 @@ export default async function DashboardPage({
         <HeroCard
           figure={formatMoneyHeadline(netSalesCents)}
           figureLabel={`Net sales · ${range.label}`}
+          labelSlot={
+            <EventControl events={eventOptions} activeKey={range.key} activeLabel={range.label} basePath="/dashboard" prefix="Net sales" />
+          }
           delta={deltaPct === null ? null : { text: formatPercent(Math.abs(deltaPct)), up: deltaPct >= 0 }}
           days={tradingDays}
           canCloseDrawer={can(scope.role, "cash")}

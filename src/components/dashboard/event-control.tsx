@@ -28,15 +28,29 @@ export function EventControl({
   activeKey,
   activeLabel,
   basePath,
+  prefix,
 }: {
   events: EventOption[];
   activeKey: string;
   activeLabel: string;
   basePath: string;
+  /** Inline form: sits in a card's label line ("Net sales · All events ▾") instead of a pill of its own. */
+  prefix?: string;
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
+        {prefix ? (
+          <button
+            type="button"
+            className="-mx-1.5 -my-1 inline-flex max-w-full items-center gap-1 rounded-full px-1.5 py-1 text-[12.5px] text-muted-foreground hover:bg-foreground/[0.05]"
+          >
+            <span className="shrink-0">{prefix} ·</span>
+            <span className="min-w-0 truncate font-semibold text-foreground">{activeLabel}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+            <span className="sr-only">Change which event this screen shows</span>
+          </button>
+        ) : (
         <button
           type="button"
           className="glass-pill touch-target inline-flex max-w-[15rem] items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-secondary-foreground"
@@ -46,8 +60,9 @@ export function EventControl({
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
           <span className="sr-only">Change which event this screen shows</span>
         </button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-[60vh] w-64 overflow-y-auto">
+      <DropdownMenuContent align={prefix ? "start" : "end"} className="max-h-[60vh] w-64 overflow-y-auto">
         <DropdownMenuLabel className="normal-case tracking-normal">Show</DropdownMenuLabel>
         <Row href={`${basePath}?event=all`} eventId={null} label="All events" active={activeKey === "all"} />
         {events.length > 0 && <DropdownMenuSeparator />}
