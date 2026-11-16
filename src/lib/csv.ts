@@ -4,7 +4,7 @@ export function toCsv(rows: Record<string, unknown>[], columns?: string[]): stri
   if (rows.length === 0) {
     return columns ? columns.join(",") + "\n" : "";
   }
-  return Papa.unparse(rows, { columns, header: true });
+  return Papa.unparse(rows, { columns, header: true, escapeFormulae: true });
 }
 
 export function parseCsv<T = Record<string, string>>(input: string): T[] {

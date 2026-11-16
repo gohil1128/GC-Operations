@@ -10,7 +10,7 @@ import { addDaysIso, startOfDayInZone } from "@/modules/square/aggregate";
 import { decryptSecret } from "./crypto";
 import { revokeToken } from "./gmail";
 import { createInvoiceFromEmail } from "./log";
-import { scanConnection } from "./pipeline";
+import { pickAttachments, scanConnection } from "./pipeline";
 import { mailClientFor, productionDeps } from "./service";
 import type { Figures } from "./rules";
 
@@ -129,15 +129,24 @@ export async function approveMailMessageAction(
     return fail("Pick which supplier this is from.");
   }
 
-  // The attachment is fetched again now rather than stored: nothing from the
-  // mailbox sits in the database any longer than it has to.
-  let attachment: { mimeType: string; data: Buffer } | null = null;
+  // The documents are fetched again now rather than stored: nothing from the
+  // mailbox sits in the database any longer than it has to. Every page the
+  // scan would have kept is fetched, not only the first, and the email is
+  // read afresh because Gmail does not promise an attachment id stays valid.
+  let attachments: { mimeType: string; data: Buffer; name?: string }[] = [];
   let attachmentDropped: string | null = null;
   if (x.attachmentId && x.attachmentMime) {
     try {
       const mail = await mailClientFor(msg.connection);
-      attachment = { mimeType: x.attachmentMime, data: await mail.attachment(msg.gmailId, x.attachmentId) };
+      const item = await mail.get(msg.gmailId);
+      for (const f of pickAttachments(item)) {
+        attachments.push({ mimeType: f.mimeType, data: await mail.attachment(item.id, f.attachmentId), name: f.filename });
+      }
+      if (attachments.length === 0) {
+        attachments = [{ mimeType: x.attachmentMime, data: await mail.attachment(msg.gmailId, x.attachmentId) }];
+      }
     } catch {
+      attachments = [];
       attachmentDropped = "The attachment could not be fetched again — open the email.";
     }
   }
@@ -148,7 +157,7 @@ export async function approveMailMessageAction(
     invoiceNumber: x.invoiceNumber ?? null, gmailId: msg.gmailId,
     invoiceDate: new Date(`${x.invoiceDate}T00:00:00.000Z`), receivedAt: msg.receivedAt,
     dateFromEmail: Boolean(x.dateFromEmail), figures: x.figures,
-    fromAddress: msg.fromAddress, subject: msg.subject, attachment, attachmentDropped,
+    fromAddress: msg.fromAddress, subject: msg.subject, attachment: null, attachments, attachmentDropped,
     reviewedBy: scope.userId,
   });
   if (!made.ok) {

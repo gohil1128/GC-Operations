@@ -103,7 +103,7 @@ export async function ConnectionSections({
               <strong> Net sales, Tips, Taxes, Cash, Card</strong> and total transactions. Pick the
               business date (auto-guessed from the filename); we&apos;ll create the daily totals AND
               pre-fill that day&apos;s cash close split.
-              {broadway && <span className="block mt-1 text-brand">Defaults to your &quot;{broadway.name}&quot; event.</span>}
+              {broadway && <span className="block mt-1 text-brand-ink">Defaults to your &quot;{broadway.name}&quot; event.</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>

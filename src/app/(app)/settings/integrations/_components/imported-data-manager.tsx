@@ -3,7 +3,7 @@ import { EventMark } from "@/components/event-mark";
 import * as React from "react";
 import { formatMoney } from "@/lib/money";
 import { useRouter } from "next/navigation";
-import { Trash2, AlertTriangle, Database, Loader2 } from "lucide-react";
+import { Trash2, AlertTriangle, Database, Loader2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,7 +47,9 @@ export function ImportedDataManager({
   events?: EventOption[];
 }) {
   const router = useRouter();
-  const [tagging, setTagging] = React.useState(false);
+  // Closed until wanted: tagging and deleting imported days is an occasional job.
+  const [open, setOpen] = React.useState(false);
+  const [view, setView] = React.useState<"day" | "event" | "bulk">("day");
   const [tagEvent, setTagEvent] = React.useState(events[0]?.id ?? "");
   const [scope, setScope] = React.useState<"untagged" | "range" | "today">("untagged");
   const [from, setFrom] = React.useState("");
@@ -113,21 +115,43 @@ export function ImportedDataManager({
     <div className="space-y-4">
       {/* Tag days with an event. Square's sync only does this by itself when exactly one
           event covers a day; this is for the rest, one day (the picker on each row) or many. */}
-      {days.length > 0 && events.length > 0 && (
-        <div className="rounded-2xl bg-muted/40">
-          <button
-            type="button"
-            onClick={() => setTagging((v) => !v)}
-            aria-expanded={tagging}
-            className="lg-press flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium"
-          >
-            <span>
-              Tag days with an event
-              {untagged.length > 0 && <span className="ml-2 rounded-full bg-warning-muted px-2 py-0.5 text-2xs font-semibold text-warning-ink">{untagged.length} without</span>}
+      {days.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="lg-press flex w-full items-center justify-between gap-3 rounded-2xl bg-muted/40 px-4 py-3 text-left"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">
+              {days.length} imported day{days.length === 1 ? "" : "s"}
+              {untagged.length > 0 && <span className="ml-2 rounded-full bg-warning-muted px-2 py-0.5 text-2xs font-semibold text-warning-ink">{untagged.length} without an event</span>}
             </span>
-            <span className="text-xs text-brand-ink">{tagging ? "Close" : "Open"}</span>
-          </button>
-          {tagging && (
+            <span className="mt-0.5 block text-2xs text-muted-foreground">{money(totalNet)} net sales · tag days with an event, or delete them</span>
+          </span>
+          <ChevronDown aria-hidden className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      )}
+
+      {/* One control for the three ways in: day by day, by event, or many days at once. */}
+      {open && days.length > 0 && (
+        <div role="tablist" aria-label="Imported days view" className="flex gap-1 rounded-full bg-muted/60 p-1">
+          {([["day", "By day"], ["event", "By event"], ["bulk", "Tag many"]] as const)
+            .filter(([k]) => (k === "event" ? eventGroups.length > 0 : k === "bulk" ? events.length > 0 : true))
+            .map(([k, label]) => (
+              <button
+                key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)}
+                className={`min-h-9 flex-1 rounded-full px-3 text-[13px] font-medium ${view === k ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+              >
+                {label}
+              </button>
+            ))}
+        </div>
+      )}
+
+      {open && view === "bulk" && days.length > 0 && events.length > 0 && (
+        <div className="rounded-2xl bg-muted/40 pt-4">
+          {(
             <div className="grid gap-3 px-4 pb-4">
               <div className="grid gap-1.5">
                 <label htmlFor="tag-event" className="text-xs text-muted-foreground">Event</label>
@@ -188,9 +212,8 @@ export function ImportedDataManager({
       )}
 
       {/* By event: a quiet list, first five shown. Each row deletes that event's imported days. */}
-      {eventGroups.length > 0 && (
+      {open && view === "event" && eventGroups.length > 0 && (
         <div>
-          <h4 className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">By event</h4>
           <ul className="divide-y divide-border-soft overflow-hidden rounded-2xl bg-muted/40">
             {(showAllGroups ? eventGroups : eventGroups.slice(0, 5)).map((g) => (
               <li key={g.id} className="flex items-center gap-2.5 py-1.5 pl-3 pr-1.5">
@@ -222,12 +245,9 @@ export function ImportedDataManager({
           <Database className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
           No imported sales data yet. Upload a CSV above to get started.
         </div>
-      ) : (
+      ) : open && view === "day" ? (
         <>
-          <div className="flex items-center justify-between">
-            <p className="text-2xs text-muted-foreground">
-              {days.length} imported day{days.length === 1 ? "" : "s"} · {money(totalNet)} total net sales
-            </p>
+          <div className="flex items-center justify-end">
             <Button
               size="sm"
               variant="outline"
@@ -250,7 +270,7 @@ export function ImportedDataManager({
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs text-muted-foreground">
                     {events.length > 0 ? <EventSelect d={d} /> : d.event ? <span>{d.event.name}</span> : <span>No event</span>}
-                    <span>{d.guestCount} txns{d.itemCount > 0 ? ` · ${d.itemCount} items` : ""}</span>
+                    <span>{d.guestCount} txns{d.itemCount > 0 ? ` · ${d.itemCount} item${d.itemCount === 1 ? "" : "s"}` : ""}</span>
                   </div>
                 </div>
                 <Button
@@ -312,7 +332,7 @@ export function ImportedDataManager({
             </Table>
           </div>
         </>
-      )}
+      ) : null}
 
       <Dialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
         <DialogContent>

@@ -64,11 +64,11 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 space-y-4">
         {inv.closedAt ? (
           <div className="rounded-lg border border-muted-foreground/30 bg-muted/30 text-muted-foreground px-3 py-2 text-xs flex items-center gap-2">
-            <Lock className="h-3.5 w-3.5" /> Closed {fmtDateTime(inv.closedAt)}. Fields are locked. Click <span className="font-medium">Re-open</span> above to edit.
+            <Lock className="h-3.5 w-3.5 shrink-0" /> <span>Closed {fmtDateTime(inv.closedAt)}. Fields are locked. Tap <b className="font-medium">Re-open</b> above to edit.</span>
           </div>
         ) : (
           <div className="rounded-lg border border-success/25 bg-success-muted text-success px-3 py-2 text-xs flex items-center gap-2">
-            <Unlock className="h-3.5 w-3.5" /> Open for editing. Change any field below and click <span className="font-medium">Update</span> at the bottom to save. Add line items in the Line items section.
+            <Unlock className="h-3.5 w-3.5 shrink-0" /> <span>Open for editing. Change any field below and tap <b className="font-medium">Update</b> at the bottom to save.</span>
           </div>
         )}
 

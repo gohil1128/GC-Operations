@@ -17,7 +17,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
   const scope = await requireCapability("inventory");
   const [r, ings] = await Promise.all([getRecipe(scope.businessId, id), listIngredientsForPicker(scope.businessId)]);
   if (!r) notFound();
-  const pct = safeDivide(r.plateCostCents, r.menuPriceCents) * 100;
+  const pct = safeDivide(r.plateCostCents / (r.yieldQty > 0 ? r.yieldQty : 1), r.menuPriceCents) * 100;
   const tone = pct > 35 ? "danger" : pct > 30 ? "warning" : "success";
   return (
     <div>
@@ -34,7 +34,8 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
           <CardContent className="space-y-2 text-sm">
             <Row label="Menu price" value={formatMoney(r.menuPriceCents)} />
             <Row label="Plate cost" value={formatMoney(r.plateCostCents)} />
-            <Row label="Margin" value={formatMoney(r.menuPriceCents - r.plateCostCents)} />
+            <Row label={r.yieldQty > 1 ? `Cost per unit (batch of ${r.yieldQty})` : "Cost per unit"} value={formatMoney(Math.round(r.plateCostCents / (r.yieldQty > 0 ? r.yieldQty : 1)))} />
+            <Row label="Margin per unit" value={formatMoney(r.menuPriceCents - Math.round(r.plateCostCents / (r.yieldQty > 0 ? r.yieldQty : 1)))} />
             <Row label="Food cost %" value={<Badge variant={tone as any}>{formatPercent(pct)}</Badge>} />
             <Row label="Status" value={r.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="muted">Inactive</Badge>} />
           </CardContent>

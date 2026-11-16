@@ -121,8 +121,10 @@ export async function POST(req: Request) {
     const net = netCol ? parseMoney(r[netCol]) : parseMoney(r[grossCol!]);
     const tax = taxCol ? parseMoney(r[taxCol]) : 0;
     const refunds = refundsCol ? parseMoney(r[refundsCol]) : 0;
-    // Net out refunds if Square gave a separate refunds column.
-    const finalNet = net - refunds;
+    // Square's Net Sales is already net of refunds, so it is taken as it stands.
+    // Refunds only come off when all the file gives is Gross Sales, and by
+    // size, since Square writes them as 20.00, -20.00 or (20.00) by report.
+    const finalNet = netCol ? net : net - Math.abs(refunds);
 
     const netCents = toCents(finalNet);
     const taxCents = toCents(tax);

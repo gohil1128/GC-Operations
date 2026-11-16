@@ -68,6 +68,7 @@ export async function syncSquareDayAction(isoDay: string): Promise<Reply> {
   if (!conn) return fail("Connect Square first.");
   if (conn.status !== "ACTIVE") return fail("Square needs reconnecting first.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDay)) return fail("Pick a day.");
+  if (conn.lastSyncAt && Date.now() - conn.lastSyncAt.getTime() < 30_000) return fail("It just synced — give it a moment.");
   const today = todayIsoIn(conn.timezone);
   if (isoDay > today) return fail("That day has not happened yet.");
   if (isoDay < addDaysIso(today, -MAX_HISTORY_DAYS)) return fail(`That is further back than Square history goes here (${MAX_HISTORY_DAYS} days).`);

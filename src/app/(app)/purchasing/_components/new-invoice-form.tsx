@@ -141,7 +141,7 @@ export function NewInvoiceForm({
             <button
               type="button"
               onClick={() => setAddingSupplier(true)}
-              className="self-start inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline"
+              className="self-start inline-flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
             >
               <Plus className="h-3 w-3" /> New supplier
             </button>
@@ -228,7 +228,7 @@ export function NewInvoiceForm({
           <div className="flex items-start gap-3">
             {imageDataUrl.startsWith("data:application/pdf") ? (
               <span className="inline-flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm font-medium">
-                <FileText className="h-4 w-4 text-brand" /> PDF attached
+                <FileText className="h-4 w-4 text-brand-ink" /> PDF attached
               </span>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element

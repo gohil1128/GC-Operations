@@ -207,7 +207,7 @@ export function InvoiceItemsTable({ invoiceId, supplierId, items, readOnly }: { 
                   <button
                     type="button"
                     onClick={openCreate}
-                    className="sticky bottom-0 w-full text-left px-2 py-2 border-t bg-popover hover:bg-accent flex items-center gap-2 text-brand font-medium"
+                    className="sticky bottom-0 w-full text-left px-2 py-2 border-t bg-popover hover:bg-accent flex items-center gap-2 text-brand-ink font-medium"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Create &quot;{q.trim() || "new ingredient"}&quot;

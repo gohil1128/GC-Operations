@@ -42,7 +42,8 @@ type Payout = {
 };
 type Event = { id: string; name: string; color: string | null };
 
-const fmt = (n: number) => `$${n.toFixed(2)}`;
+// "-$300.00", not "$-300.00", and thousands separated.
+const fmt = (n: number) => `${n < 0 ? "-" : ""}$${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function CashEntry({
   businessDate, locationName, netSalesDollars, events, activeEventId, existing, deposits, payouts,

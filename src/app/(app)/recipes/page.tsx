@@ -35,7 +35,7 @@ export default async function RecipesPage() {
             </TableHeader>
             <TableBody>
               {recipes.map((r) => {
-                const pct = safeDivide(r.plateCostCents, r.menuPriceCents) * 100;
+                const pct = safeDivide(r.plateCostCents / (r.yieldQty > 0 ? r.yieldQty : 1), r.menuPriceCents) * 100;
                 const tone = pct > 35 ? "danger" : pct > 30 ? "warning" : "success";
                 return (
                   <TableRow key={r.id}>
@@ -64,7 +64,7 @@ export default async function RecipesPage() {
 
           <MobileList>
             {recipes.map((r) => {
-              const pct = safeDivide(r.plateCostCents, r.menuPriceCents) * 100;
+              const pct = safeDivide(r.plateCostCents / (r.yieldQty > 0 ? r.yieldQty : 1), r.menuPriceCents) * 100;
               const tone = pct > 35 ? "danger" : pct > 30 ? "warning" : "success";
               return (
                 <MobileRow

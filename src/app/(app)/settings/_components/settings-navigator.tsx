@@ -58,9 +58,9 @@ export function SettingsNavigator({ className }: { className?: string }) {
       onClick={(e) => onPick(e, s)}
       className="lg-press flex min-h-11 items-center gap-3.5 rounded-2xl px-3 py-2 hover:bg-muted/60 active:bg-muted/60"
     >
-      <SettingIcon name={s.icon ?? s.id} className={cn("shrink-0", s.group === "Danger" ? "text-destructive" : "text-brand-ink")} />
+      <SettingIcon name={s.icon ?? s.id} className={cn("shrink-0", s.id === "danger-zone" ? "text-destructive" : "text-brand-ink")} />
       <span className="min-w-0 flex-1">
-        <span className={cn("block text-[15px] leading-tight", s.group === "Danger" && "text-destructive")}>{s.label}</span>
+        <span className={cn("block text-[15px] leading-tight", s.id === "danger-zone" && "text-destructive")}>{s.label}</span>
         {showHint && <span className="mt-0.5 block truncate text-2xs text-muted-foreground">{s.group} · {s.hint}</span>}
       </span>
     </Link>

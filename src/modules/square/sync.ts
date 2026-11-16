@@ -181,7 +181,7 @@ export async function syncConnection(
         lastSyncAt: now(),
         lastResult: { ...result, trigger, at: now().toISOString() } as unknown as Prisma.InputJsonValue,
       },
-    });
+    }).catch(() => {}); // disconnected mid-run: nothing left to update
     // The history list in Settings; a failure to record it never fails the sync.
     await db.squareSyncRun
       .create({
