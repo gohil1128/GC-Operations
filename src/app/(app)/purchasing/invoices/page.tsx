@@ -7,6 +7,7 @@ import { requireCapability } from "@/lib/scope";
 import { getActiveEvent, listAllEvents } from "@/modules/events/queries";
 import { listInvoices, listSuppliersForInvoice } from "@/modules/invoices/queries";
 import { PageHeader } from "@/components/page-header";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { Dismissible } from "@/components/dismissible";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -139,6 +140,7 @@ export default async function InvoicesPage({
 
   return (
     <div>
+      <SectionTabs hub="invoices" role={scope.role} />
       <PageHeader
         eyebrow="Purchasing · Invoices"
         title="Invoice tracking"

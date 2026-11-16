@@ -26,7 +26,7 @@ export const HUBS: NavHub[] = [
   { key: "home", label: "Home", icon: LayoutDashboard, pages: [{ href: "/dashboard", label: "Home", cap: "overview" }] },
   { key: "events", label: "Events", icon: CalendarDays, pages: [{ href: "/events", label: "Events", cap: "events" }] },
   { key: "reports", label: "Reports", icon: TrendingUp, pages: [{ href: "/reports", label: "Reports", cap: "financials" }] },
-  { key: "invoices", label: "Invoices", icon: FileText, pages: [{ href: "/purchasing/invoices", label: "Invoices", cap: "purchasing" }] },
+  { key: "invoices", label: "Invoices", icon: FileText, pages: [{ href: "/purchasing/invoices", label: "Invoices", cap: "purchasing" }, { href: "/purchasing/order", label: "Order", cap: "purchasing" }] },
   { key: "sales", label: "Sales", icon: ShoppingBag, pages: [{ href: "/sales", label: "Sales", cap: "financials" }] },
   { key: "cash", label: "Cash", icon: Wallet, pages: [{ href: "/cash", label: "Cash closes", cap: "cash" }] },
   { key: "expenses", label: "Expenses", icon: Receipt, pages: [{ href: "/expenses", label: "Expenses", cap: "expenses" }] },
