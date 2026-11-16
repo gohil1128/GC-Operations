@@ -58,7 +58,7 @@ export default async function CashPage() {
         description={`${position.closes} close${position.closes === 1 ? "" : "s"} recorded · ${closes.length} in the last 30 days`}
         actions={
           <>
-            <Button asChild variant="outline" size="sm"><a href="/api/exports/cash"><Download className="h-3.5 w-3.5" /> CSV</a></Button>
+            <Button asChild variant="outline" size="sm" className="max-sm:h-10 max-sm:w-10 max-sm:rounded-full max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground"><a href="/api/exports/cash" aria-label="Download CSV"><Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" /><span className="max-sm:sr-only">CSV</span></a></Button>
             <Button asChild size="sm"><Link href="/cash/new"><Plus className="h-3.5 w-3.5" /> New close</Link></Button>
           </>
         }

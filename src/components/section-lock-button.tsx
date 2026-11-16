@@ -31,7 +31,7 @@ export function SectionLockButton() {
           window.location.reload();
         })
       }
-      className="touch-target grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-60"
+      className="touch-target grid h-9 w-9 place-items-center rounded-full border border-border bg-card text-muted-foreground max-sm:border-0 max-sm:bg-transparent transition-colors hover:bg-accent hover:text-foreground disabled:opacity-60"
     >
       <Lock className="h-3.5 w-3.5" aria-hidden />
     </button>

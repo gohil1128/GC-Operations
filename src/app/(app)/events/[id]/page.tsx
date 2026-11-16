@@ -59,10 +59,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </Link>
             <a
               href={`/api/exports/event-summary${q}`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-highlight px-3.5 py-2 text-[13px] font-medium text-highlight-foreground"
+              aria-label="Export CSV"
+              className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-2 text-[13px] font-medium text-foreground max-sm:h-10 max-sm:w-10 max-sm:justify-center max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground"
             >
-              Export CSV
-              <Download className="h-3.5 w-3.5" aria-hidden />
+              <span className="max-sm:sr-only">Export CSV</span>
+              <Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" aria-hidden />
             </a>
           </>
         }

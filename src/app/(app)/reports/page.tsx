@@ -59,8 +59,8 @@ export default async function ReportsPage() {
           <>
             <PrintButton />
             <PnlLock userId={scope.userId} />
-            <Button asChild variant="outline" size="sm">
-              <a href="/api/exports/pnl" download><Download className="h-3.5 w-3.5" />Download CSV</a>
+            <Button asChild variant="outline" size="sm" className="max-sm:h-10 max-sm:w-10 max-sm:rounded-full max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground">
+              <a href="/api/exports/pnl" download aria-label="Download CSV"><Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" /><span className="max-sm:sr-only">Download CSV</span></a>
             </Button>
           </>
         }

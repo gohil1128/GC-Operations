@@ -26,7 +26,7 @@ export default async function VariancePage() {
           <>
             <Button asChild variant="outline" size="sm"><Link href="/inventory/counts">New count</Link></Button>
             {report && (
-              <Button asChild variant="outline" size="sm"><a href={`/api/exports/variance`}><Download className="h-3.5 w-3.5" /> CSV</a></Button>
+              <Button asChild variant="outline" size="sm" className="max-sm:h-10 max-sm:w-10 max-sm:rounded-full max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground"><a href={`/api/exports/variance`} aria-label="Download CSV"><Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" /><span className="max-sm:sr-only">CSV</span></a></Button>
             )}
           </>
         }

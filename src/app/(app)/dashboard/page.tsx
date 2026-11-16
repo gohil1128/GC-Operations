@@ -218,12 +218,12 @@ export default async function DashboardPage({
         a plain page instead — which on the tablet this is read on at a stall
         is most of a screen of numbers recovered.
       */}
-      <header className="flex flex-col gap-4 pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+      <header className="flex flex-col gap-4 pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:pb-2">
         <div className="min-w-0">
-          <h1 className="font-display text-[26px] font-semibold tracking-[-0.02em]">
+          <h1 className="font-display text-[22px] font-semibold tracking-[-0.02em] sm:text-[26px]">
             Good {partOfDay}, {firstName}
           </h1>
-          <p className="mt-[3px] text-[13px] text-muted-foreground">
+          <p className="mt-[3px] hidden text-[13px] text-muted-foreground sm:block">
             Here&apos;s where things stand · {range.subLabel}
           </p>
         </div>

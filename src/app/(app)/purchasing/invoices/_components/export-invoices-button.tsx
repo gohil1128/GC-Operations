@@ -35,9 +35,9 @@ export function ExportInvoicesButton({ count }: { count: number }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled}>
-          <Download className="h-3.5 w-3.5" />
-          Download CSV
+        <Button variant="outline" size="sm" disabled={disabled} aria-label="Download CSV" className="max-sm:h-10 max-sm:w-10 max-sm:rounded-full max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground">
+          <Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+          <span className="max-sm:sr-only">Download CSV</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

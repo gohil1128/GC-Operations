@@ -58,9 +58,9 @@ export function PrintButton({ label = "Print / PDF" }: { label?: string }) {
   }, []);
 
   return (
-    <Button type="button" variant="outline" size="sm" data-print="keep" onClick={onPrint}>
-      <Printer className="h-3.5 w-3.5" />
-      {label}
+    <Button type="button" variant="outline" size="sm" data-print="keep" onClick={onPrint} aria-label={label} className="max-sm:h-10 max-sm:w-10 max-sm:rounded-full max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground">
+      <Printer className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+      <span className="max-sm:sr-only">{label}</span>
     </Button>
   );
 }

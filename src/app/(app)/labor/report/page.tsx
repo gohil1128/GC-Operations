@@ -23,7 +23,7 @@ export default async function LaborReportPage() {
         eyebrow="Labor · Report"
         title="Labor performance"
         description={`${fmtDate(r.period.from)} – ${fmtDate(r.period.to)} · ${r.period.days} days`}
-        actions={<Button asChild variant="outline" size="sm"><a href="/api/exports/labor"><Download className="h-3.5 w-3.5" /> CSV</a></Button>}
+        actions={<Button asChild variant="outline" size="sm" className="max-sm:h-10 max-sm:w-10 max-sm:rounded-full max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:text-muted-foreground"><a href="/api/exports/labor" aria-label="Download CSV"><Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" /><span className="max-sm:sr-only">CSV</span></a></Button>}
       />
       <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-5 sm:px-6 lg:px-8 space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -37,26 +37,26 @@ export function PageHeader({
            max-w-[1400px] column with px-4/6/8, and 35 route files already do it,
            so the header follows that instead — a header indented differently
            from the figures under it is worse than a few px off a mock. */
-        "mx-auto flex max-w-[1400px] flex-col gap-4 px-4 pb-5 pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:px-6 lg:px-8",
+        "mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 pb-1 pt-2 sm:gap-5 sm:px-6 sm:pb-5 sm:pt-5 lg:px-8",
         className,
       )}
     >
       <div className="min-w-0">
-        {eyebrow && <div className="text-xs text-muted-foreground">{eyebrow}</div>}
+        {eyebrow && <div className="hidden text-xs text-muted-foreground sm:block">{eyebrow}</div>}
         <h1
           /* font-semibold at 26px, which is v3's display setting. Not lighter:
              the face is loaded at 400-700 and Apple's own guidance rules out
              Thin and Light for anything structural. */
-          className="font-display text-[26px] font-semibold tracking-[-0.02em]"
+          className="font-display text-[22px] font-semibold tracking-[-0.02em] sm:text-[26px]"
         >
           {title}
         </h1>
-        {description && <p className="mt-[3px] text-[13px] text-muted-foreground">{description}</p>}
+        {description && <p className="mt-[3px] hidden text-[13px] text-muted-foreground sm:block">{description}</p>}
       </div>
       {actions && (
         /* Navigation and export controls, not content — gone from the printed
            sheet, including whichever button started the print. */
-        <div data-print="hide" className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        <div data-print="hide" className="flex shrink-0 items-center gap-0.5 sm:flex-wrap sm:gap-2">
           {actions}
         </div>
       )}
