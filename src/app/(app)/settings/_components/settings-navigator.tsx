@@ -2,16 +2,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Search, X, ChevronRight, Building2, LayoutDashboard, MapPin, Lock, Users, Plug, Download, TriangleAlert,
-} from "lucide-react";
+import { Search, X } from "lucide-react";
+import { SettingIcon } from "./settings-icons";
 import { cn } from "@/lib/utils";
 import { GROUPS, SETTINGS, type SettingsEntry } from "./settings-index";
-
-const ICON: Record<SettingsEntry["group"], typeof Search> = {
-  General: Building2, Dashboard: LayoutDashboard, Operations: MapPin, Privacy: Lock,
-  Team: Users, Connections: Plug, Export: Download, Danger: TriangleAlert,
-};
 
 /** Scroll to a card on this page and light it up briefly so the eye lands on it. */
 export function revealSection(id: string) {
@@ -52,37 +46,28 @@ export function SettingsNavigator({ className }: { className?: string }) {
     }
   };
 
-  const row = (s: SettingsEntry, showGroup = false) => {
-    const Icon = ICON[s.group];
-    return (
-      <Link
-        key={`${s.label}-${s.href}`}
-        href={s.href}
-        onClick={(e) => onPick(e, s)}
-        className="lg-press flex items-center gap-3 px-3.5 py-2.5 hover:bg-muted/60"
-      >
-        <span
-          aria-hidden
-          className={cn(
-            "grid h-8 w-8 shrink-0 place-items-center rounded-[10px]",
-            s.group === "Danger" ? "bg-destructive-muted text-destructive" : "bg-brand-muted text-brand-ink",
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium leading-tight">{s.label}</span>
-          <span className="mt-0.5 block truncate text-2xs text-muted-foreground">
-            {showGroup ? `${s.group} · ${s.hint}` : s.hint}
-          </span>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-      </Link>
-    );
-  };
+  /*
+    A row is an icon and a name, nothing else: no tile behind the icon, no
+    chevron, no rule under it. The one-line description only appears in search
+    results, where it is what tells two matches apart.
+  */
+  const row = (s: SettingsEntry, showHint = false) => (
+    <Link
+      key={`${s.label}-${s.href}`}
+      href={s.href}
+      onClick={(e) => onPick(e, s)}
+      className="lg-press flex min-h-11 items-center gap-3.5 rounded-2xl px-3 py-2 hover:bg-muted/60 active:bg-muted/60"
+    >
+      <SettingIcon name={s.icon ?? s.id} className={cn("shrink-0", s.group === "Danger" ? "text-destructive" : "text-brand-ink")} />
+      <span className="min-w-0 flex-1">
+        <span className={cn("block text-[15px] leading-tight", s.group === "Danger" && "text-destructive")}>{s.label}</span>
+        {showHint && <span className="mt-0.5 block truncate text-2xs text-muted-foreground">{s.group} · {s.hint}</span>}
+      </span>
+    </Link>
+  );
 
   return (
-    <nav aria-label="Settings" className={cn("space-y-3", className)}>
+    <nav aria-label="Settings" className={cn("space-y-5", className)}>
       <div className="relative">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <input
@@ -106,7 +91,7 @@ export function SettingsNavigator({ className }: { className?: string }) {
       </div>
 
       {query ? (
-        <div className="overflow-hidden rounded-3xl bg-card" role="region" aria-live="polite" aria-label="Search results">
+        <div role="region" aria-live="polite" aria-label="Search results">
           {results.length > 0 ? (
             results.map((s) => row(s, true))
           ) : (
@@ -118,8 +103,8 @@ export function SettingsNavigator({ className }: { className?: string }) {
           const items = SETTINGS.filter((s) => s.group === g);
           return (
             <section key={g} aria-label={g}>
-              <h2 className="mb-1.5 px-3.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{g}</h2>
-              <div className="divide-y divide-border-soft overflow-hidden rounded-3xl bg-card">{items.map((s) => row(s))}</div>
+              <h2 className="mb-0.5 px-3 text-[11px] font-medium tracking-[0.04em] text-muted-foreground/80">{g}</h2>
+              <div>{items.map((s) => row(s))}</div>
             </section>
           );
         })

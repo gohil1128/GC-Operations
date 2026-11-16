@@ -6,6 +6,8 @@
 */
 export type SettingsEntry = {
   id: string;
+  /** Which mark the navigator draws for it (settings-icons.tsx). Defaults to `id`. */
+  icon?: string;
   label: string;
   hint: string;
   group: "General" | "Dashboard" | "Operations" | "Privacy" | "Team" | "Connections" | "Export" | "Danger";
@@ -15,7 +17,7 @@ export type SettingsEntry = {
 
 export const SETTINGS: SettingsEntry[] = [
   { id: "business", label: "Business profile", hint: "Name, timezone, cost targets", group: "General", href: "/settings/business", keywords: "name timezone time zone food cost labor labour target percent" },
-  { id: "business", label: "Valuation multipliers", hint: "EBITDA and revenue multiples", group: "General", href: "/settings/business", keywords: "valuation ebitda revenue multiple worth value" },
+  { id: "business", icon: "valuation", label: "Valuation multipliers", hint: "EBITDA and revenue multiples", group: "General", href: "/settings/business", keywords: "valuation ebitda revenue multiple worth value" },
   { id: "overview-cards", label: "Overview cards", hint: "What the Home screen shows", group: "Dashboard", href: "/settings/overview-cards", keywords: "home dashboard cards hide show widgets" },
   { id: "cost-of-goods", label: "Cost of goods", hint: "Which bills count against gross margin", group: "Dashboard", href: "/settings/cost-of-goods", keywords: "cogs gross margin categories opex operating expense invoice category" },
   { id: "transparency", label: "Transparency", hint: "How see-through panels are on this device", group: "Dashboard", href: "/settings/transparency", keywords: "glass blur frosted solid contrast appearance display" },
@@ -23,7 +25,7 @@ export const SETTINGS: SettingsEntry[] = [
   { id: "locations", label: "Locations", hint: "Stores and event channels", group: "Operations", href: "/settings/locations", keywords: "location store cafe address channel" },
   { id: "events", label: "Events", hint: "Markets, dates and fees", group: "Operations", href: "/settings/events", keywords: "event market festival fee dates colour color" },
   { id: "pin-lock", label: "My PIN lock", hint: "Hide P&L, events or recipes on your screen", group: "Privacy", href: "/settings/pin-lock", keywords: "pin lock password privacy hide profit loss recipes" },
-  { id: "team", label: "Team members", hint: "Invite people, roles and access", group: "Team", href: "/settings/users", keywords: "users team staff manager owner invite role access join requests approve google" },
+  { id: "team", icon: "team", label: "Team members", hint: "Invite people, roles and access", group: "Team", href: "/settings/users", keywords: "users team staff manager owner invite role access join requests approve google" },
   { id: "ai", label: "AI invoice reading", hint: "Turn the Anthropic API on or off", group: "Connections", href: "/settings/ai", keywords: "ai anthropic claude api scan gmail email invoices read automatic off on toggle privacy" },
   { id: "square", label: "Square sales", hint: "Live sales sync", group: "Connections", href: "/settings/square", keywords: "square pos sales sync connect" },
   { id: "email-invoices", label: "Email invoices", hint: "Read supplier bills from Gmail", group: "Connections", href: "/settings/email-invoices", keywords: "gmail email invoices scan ai inbox" },
