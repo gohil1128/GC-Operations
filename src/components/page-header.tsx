@@ -37,11 +37,11 @@ export function PageHeader({
            max-w-[1400px] column with px-4/6/8, and 35 route files already do it,
            so the header follows that instead — a header indented differently
            from the figures under it is worse than a few px off a mock. */
-        "mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 pb-1 pt-2 sm:gap-5 sm:px-6 sm:pb-5 sm:pt-5 lg:px-8",
+        "mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:flex-nowrap px-4 pb-1 pt-2 sm:gap-5 sm:px-6 sm:pb-5 sm:pt-5 lg:px-8",
         className,
       )}
     >
-      <div className="min-w-0">
+      <div className="min-w-[60%] flex-1 sm:min-w-0 sm:flex-none">
         {eyebrow && <div className="hidden text-xs text-muted-foreground sm:block">{eyebrow}</div>}
         <h1
           /* font-semibold at 26px, which is v3's display setting. Not lighter:
@@ -56,7 +56,7 @@ export function PageHeader({
       {actions && (
         /* Navigation and export controls, not content — gone from the printed
            sheet, including whichever button started the print. */
-        <div data-print="hide" className="flex shrink-0 items-center gap-0.5 sm:flex-wrap sm:gap-2">
+        <div data-print="hide" className="flex max-w-full flex-wrap items-center gap-1 max-sm:-ml-1 sm:shrink-0 sm:gap-2">
           {actions}
         </div>
       )}
