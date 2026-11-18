@@ -9,8 +9,11 @@
   a single chai-rust accent, and one dark card per screen for contrast.
   Display numerals use Bricolage Grotesque; UI text uses DM Sans.
 
-  Colour: every brown and orange is a shade of one of the two colours actually
-  in public/logo.png (#3C2216 and #B85D3C), held at a fixed hue. Beige is the
+  Colour: God's Chai's three brand colours — Cream #F2EBE1, Espresso #3C2116
+  and Rust #B55F3E (the two logo colours plus the cream they sit on). Every
+  brown and orange is a step of Espresso or Rust at hue 17; every cream a step
+  of Cream. Rust fills carry white text (4.5:1); rust as text on cream uses the
+  deeper --rust-700 (#8B472C, 5.8:1). Beige is the
   one non-logo family, kept because it is what gives a highlighted row or a
   bar track separation from the card without adding a third accent.
 
@@ -26,56 +29,59 @@
 
     /* ── Brand colour system ──────────────────────────────────────────────
        Seven brand colours, each a 100-900 scale with 500 as the anchor (the
-       swatch on the brand sheet). Marigold Gold #F2A93C is the primary.
+       swatch on the brand sheet). The names are historical: `marigold` now
+       holds the Rust ramp (#B55F3E), `cocoa` Espresso (#3C2116), `cream`
+       Cream (#F2EBE1), `ivory` its lighter card step and `peach` its deeper
+       tray step. Coral and sun are kept only as data/event colours.
        Semantic tokens below are mapped onto these. `ink` is the Dark Brown
        text/surface ramp and `rust` — kept as the name so ~80 call sites need
        no edit — holds the Marigold ramp that `brand` points at. */
-    --marigold-100: 40 82% 87%; --marigold-200: 37 90% 85%; --marigold-300: 40 85% 77%; --marigold-400: 38 86% 67%; --marigold-500: 36 88% 59%;
-    --marigold-600: 36 87% 47%; --marigold-700: 34 87% 39%; --marigold-800: 34 83% 31%; --marigold-900: 37 83% 27%;
+    --marigold-100: 17 50% 92%; --marigold-200: 17 50% 85%; --marigold-300: 17 49% 75%; --marigold-400: 17 49% 62%; --marigold-500: 17 49% 48%;
+    --marigold-600: 17 52% 42%; --marigold-700: 17 52% 36%; --marigold-800: 17 54% 29%; --marigold-900: 17 56% 22%;
     --coral-100: 17 100% 93%; --coral-200: 11 100% 88%; --coral-300: 10 100% 82%; --coral-400: 9 100% 76%; --coral-500: 8 100% 70%;
     --coral-600: 7 73% 60%; --coral-700: 7 53% 49%; --coral-800: 8 53% 40%; --coral-900: 9 59% 31%;
-    --cocoa-100: 27 25% 79%; --cocoa-200: 22 18% 62%; --cocoa-300: 22 12% 51%; --cocoa-400: 22 26% 30%; --cocoa-500: 21 40% 12%;
-    --cocoa-600: 21 42% 10%; --cocoa-700: 21 47% 8%; --cocoa-800: 21 47% 7%; --cocoa-900: 21 50% 6%;
-    --cream-100: 30 100% 97%; --cream-200: 30 90% 96%; --cream-300: 30 90% 95%; --cream-400: 29 85% 95%; --cream-500: 28 79% 96%;
-    --cream-600: 29 55% 93%; --cream-700: 30 50% 90%; --cream-800: 30 48% 86%; --cream-900: 31 47% 81%;
-    --ivory-100: 36 100% 97%; --ivory-200: 38 100% 98%; --ivory-300: 42 100% 98%; --ivory-400: 42 100% 98%; --ivory-500: 42 100% 98%;
-    --ivory-600: 36 55% 95%; --ivory-700: 37 50% 92%; --ivory-800: 38 47% 88%; --ivory-900: 38 46% 84%;
-    --peach-100: 28 100% 96%; --peach-200: 29 95% 95%; --peach-300: 29 95% 93%; --peach-400: 29 92% 92%; --peach-500: 30 89% 89%;
-    --peach-600: 29 78% 88%; --peach-700: 30 70% 85%; --peach-800: 30 63% 81%; --peach-900: 31 57% 76%;
+    --cocoa-100: 20 22% 80%; --cocoa-200: 18 20% 63%; --cocoa-300: 17 18% 50%; --cocoa-400: 17 30% 28%; --cocoa-500: 17 46% 16%;
+    --cocoa-600: 17 47% 13%; --cocoa-700: 17 48% 10%; --cocoa-800: 17 48% 8%; --cocoa-900: 17 50% 6%;
+    --cream-100: 35 45% 98%; --cream-200: 35 43% 97%; --cream-300: 35 42% 96%; --cream-400: 35 40% 94%; --cream-500: 35 39% 92%;
+    --cream-600: 35 35% 89%; --cream-700: 34 32% 86%; --cream-800: 33 30% 82%; --cream-900: 32 28% 76%;
+    --ivory-100: 35 50% 99%; --ivory-200: 35 48% 98%; --ivory-300: 35 46% 98%; --ivory-400: 35 45% 97%; --ivory-500: 35 45% 97%;
+    --ivory-600: 35 40% 94%; --ivory-700: 35 36% 91%; --ivory-800: 34 33% 87%; --ivory-900: 33 30% 83%;
+    --peach-100: 34 40% 95%; --peach-200: 34 38% 93%; --peach-300: 33 36% 91%; --peach-400: 33 35% 89%; --peach-500: 33 34% 86%;
+    --peach-600: 32 32% 83%; --peach-700: 31 30% 79%; --peach-800: 30 28% 74%; --peach-900: 29 26% 68%;
     --sun-100: 43 90% 92%; --sun-200: 43 94% 85%; --sun-300: 44 92% 76%; --sun-400: 44 92% 66%; --sun-500: 44 92% 53%;
     --sun-600: 44 85% 48%; --sun-700: 44 78% 41%; --sun-800: 44 78% 33%; --sun-900: 44 78% 26%;
 
-    --ink-950: 21 40% 12%;
-    --ink-900: 21 38% 14%;
-    --ink-800: 21 36% 16%;
-    --ink-700: 20 25% 25%;
-    --ink-600: 21 20% 32%;
-    --ink-500: 22 17% 37%;
-    --ink-400: 22 14% 44%;
-    --ink-300: 24 14% 65%;
+    --ink-950: 17 46% 16%;
+    --ink-900: 17 40% 20%;
+    --ink-800: 17 46% 16%;
+    --ink-700: 17 28% 26%;
+    --ink-600: 17 24% 32%;
+    --ink-500: 17 20% 37%;
+    --ink-400: 17 16% 44%;
+    --ink-300: 20 14% 65%;
 
-    --rust-800: 34 62% 28%;
+    --rust-800: 17 54% 29%;
     /* v3 specifies link rust #B4532D (17 60% 44%). Held two points darker
        because the handoff's own two values collide: #B4532D on the v3
        surface tint #F3EFE9 is 4.33:1, under the 4.5:1 that link-sized text
        needs, and links do sit on tinted tiles. At 42% it is 4.67:1 on the
        tint, 5.08:1 on the page and 5.38:1 on white — safe everywhere — and
        the shift is not visible side by side. */
-    --rust-700: 34 62% 35%;
-    --rust-600: 36 80% 52%;
-    --rust-500: 36 88% 59%;
-    --rust-400: 36 88% 68%;
-    --rust-300: 36 85% 78%;
-    --rust-200: 36 80% 87%;
-    --rust-100: 36 75% 94%;
+    --rust-700: 17 52% 36%;
+    --rust-600: 17 49% 43%;
+    --rust-500: 17 49% 48%;
+    --rust-400: 17 49% 60%;
+    --rust-300: 17 49% 74%;
+    --rust-200: 17 50% 85%;
+    --rust-100: 17 50% 92%;
 
     /* Beige — the contrast band. Deliberately kept alongside the logo hues:
        it is what separates a highlighted row or a bar track from the card
        without introducing a colour the mark doesn't have. */
-    --beige: 28 45% 91%;
-    --beige-deep: 29 50% 87%;
+    --beige: 33 34% 88%;
+    --beige-deep: 33 32% 84%;
     /* Cross-highlight tint for the P&L statement's hovered row and column. */
-    --cell-hot: 29 60% 93%;
+    --cell-hot: 33 40% 90%;
 
     /* Canvas + surfaces.
        Soft glass puts a photograph behind the top of every page and floats
@@ -83,19 +89,19 @@
        gradient the solid-card system used — a gradient under translucent
        panels shows through them and makes identical cards read as different
        shades depending on where they sit. */
-    --background: 28 79% 96%;
-    --canvas-from: 28 79% 96%;
-    --canvas-via: 28 79% 96%;
-    --canvas-to: 28 79% 96%;
+    --background: 35 39% 92%;
+    --canvas-from: 35 39% 92%;
+    --canvas-via: 35 39% 92%;
+    --canvas-to: 35 39% 92%;
 
     /* Glass. --panel-glass is the cream the frosted cards are tinted with,
        --glass-edge the white their borders and the toolbar are drawn from,
        --scrim the ink the photograph is darkened with so display type over
        it clears 3:1. */
-    --panel-glass: 42 100% 98%;
+    --panel-glass: 35 45% 97%;
     --glass-edge: 0 0% 100% / 0.8;     /* the lit edge that bounds a frosted card */
     --pill-bg: 0 0% 100% / 0.84;       /* toolbar + rail; .84 is the contrast floor */
-    --scrim: 21 50% 7%;                /* #1C1009 */
+    --scrim: 17 50% 7%;
     /* The photograph. Its band is sized by the masthead it sits behind, so
        there is no height to set here. */
     --app-photo-src: url("/hero-chai.jpg");
@@ -104,32 +110,32 @@
        an olive card on the dark one, so it reads as part of the app rather
        than a black panel dropped into it. Status colours are the app's own
        semantic ramp, deepened in light so each keeps 4.5:1 on its tint. */
-    --board-ground: 42 100% 98%;
+    --board-ground: 35 45% 97%;
     --board-ink: var(--ink-950);
     --board-dim: var(--ink-500);
     --board-green: 44 85% 24%;
     --board-amber: 29 85% 28%;
     --board-red: 8 65% 38%;
     --foreground: var(--ink-950);      /* 17.4:1 on card */
-    --card: 42 100% 98%;
+    --card: 35 45% 97%;
     --card-foreground: var(--ink-950);
-    --popover: 42 100% 98%;
+    --popover: 35 45% 97%;
     --popover-foreground: var(--ink-950);
 
     /* Espresso — dark cards, active nav pill, primary buttons */
     --primary: var(--ink-800);
-    --primary-foreground: 28 79% 96%;
+    --primary-foreground: 35 39% 92%;
     --espresso: var(--ink-800);
-    --espresso-foreground: 28 79% 96%;
+    --espresso-foreground: 35 39% 92%;
     /* Chart ink: the data series must stay the strongest mark on the card in
        BOTH themes. --espresso is correct on cream but disappears on dark. */
     --chart-ink: var(--ink-800);
 
-    --secondary: 28 55% 94%;
+    --secondary: 35 38% 95%;
     --secondary-foreground: var(--ink-600);
-    --muted: 28 45% 91%;
+    --muted: 34 34% 89%;
     --muted-foreground: var(--ink-500);  /* 5.6:1 on card, 4.8:1 on canvas */
-    --accent: 28 45% 91%;
+    --accent: 34 34% 89%;
     --accent-foreground: var(--ink-600);
 
     /* Status — foreground on its own tinted background */
@@ -153,7 +159,7 @@
 
     /* Single accent + data highlight */
     --brand: var(--rust-500);          /* logo rust — fills, dots, borders */
-    --brand-foreground: 21 40% 12%;
+    --brand-foreground: 0 0% 100%;
     /* Text-only rust: the logo rust is 4.3:1 on cream and marginal as body
        text, so links and labels use the darker step (6.7:1). */
     --brand-ink: var(--rust-700);
@@ -168,41 +174,41 @@
        stronger one draws structural edges (the sidebar's right edge, a
        control's outline), the softer one draws dividers INSIDE a card, where
        a structural weight would cut the card into pieces. */
-    --border: 28 35% 85%;
+    --border: 30 24% 83%;
     /* FILL ONLY, in both themes. Lime as text on a light page is ~1.3:1, so it
        is never a text colour for anything a person has to read; as a fill it
        carries the olive ink at well over 9:1. One rule for both themes keeps a
        component from passing in dark and failing when someone switches. */
-    --highlight: 36 88% 59%;
-    --highlight-foreground: 21 40% 12%;
+    --highlight: 17 49% 48%;
+    --highlight-foreground: 0 0% 100%;
     /* The dock: the floating tab bar, frosted glass over whatever scrolls
        beneath it, in the same two colours as the rest of the dashboard. The
        glass is the page's own tint (white here, olive in dark) rather than an
        inverse pill, so it belongs to the page instead of sitting on it. The
        current item is the lime highlight in both themes, with the olive ink the
        highlight fill always carries. */
-    --dock: 42 100% 98%;
+    --dock: 35 45% 97%;
     --dock-a: 0.72;
     --dock-rim: 0 0% 100%;
-    --dock-ink: 21 40% 12%;
-    --dock-muted: 22 20% 32%;
-    --dock-active: 36 88% 59%;
-    --dock-active-ink: 21 40% 12%;
+    --dock-ink: 17 46% 16%;
+    --dock-muted: 17 24% 32%;
+    --dock-active: 17 49% 48%;
+    --dock-active-ink: 0 0% 100%;
     /* The page's colour at the very top of the screen. In light the page is
        flat, so it is the background; in dark it is the lit end of the
        gradient. Defined once because two things must agree on it: the
        gradient itself, and the header once it turns solid — a header filled
        with --background would show as a darker bar cut across the light. */
-    --page-top: 28 79% 96%;
-    --border-soft: 28 40% 90%;
-    --input: 28 35% 84%;
+    --page-top: 35 39% 92%;
+    --border-soft: 30 28% 88%;
+    --input: 30 22% 78%;
     --ring: var(--rust-500);
     --radius: 1.5rem;                  /* 24px bento card */
 
     /* Warm elevation. The handoff specifies no shadows; these were added on
        request. Every layer is tinted with the logo brown rather than black,
        so depth reads as the paper warming rather than a grey haze. */
-    --shadow-color: 21 40% 12%;
+    --shadow-color: 17 46% 16%;
     --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 0.04);
     --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.05), 0 2px 6px -2px hsl(var(--shadow-color) / 0.07);
     --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.04), 0 8px 20px -8px hsl(var(--shadow-color) / 0.13);
@@ -212,65 +218,65 @@
 
   /* Espresso dark mode — same ramps inverted onto the dark card colour. */
   .dark {
-    --ink-950: 28 79% 96%;
-    --ink-900: 28 40% 92%;
-    --ink-800: 21 30% 24%;
-    --ink-700: 21 30% 19%;
-    --ink-600: 28 20% 70%;
-    --ink-500: 28 18% 74%;
-    --ink-400: 26 14% 60%;
-    --ink-300: 22 14% 42%;
+    --ink-950: 35 39% 92%;
+    --ink-900: 35 30% 88%;
+    --ink-800: 17 30% 22%;
+    --ink-700: 17 30% 18%;
+    --ink-600: 30 20% 70%;
+    --ink-500: 30 18% 74%;
+    --ink-400: 28 14% 60%;
+    --ink-300: 20 14% 42%;
 
-    --rust-800: 36 90% 50%;
-    --rust-700: 36 88% 59%;
-    --rust-600: 36 88% 59%;
-    --rust-500: 36 88% 59%;
-    --rust-400: 36 88% 66%;
-    --rust-300: 34 50% 30%;
-    --rust-200: 30 40% 20%;
-    --rust-100: 24 35% 15%;
+    --rust-800: 17 60% 66%;
+    --rust-700: 17 65% 70%;
+    --rust-600: 17 49% 48%;
+    --rust-500: 17 49% 48%;
+    --rust-400: 17 55% 58%;
+    --rust-300: 17 40% 30%;
+    --rust-200: 17 35% 20%;
+    --rust-100: 17 35% 15%;
 
-    --beige: 21 28% 19%;
-    --beige-deep: 21 28% 23%;
-    --cell-hot: 21 28% 21%;
+    --beige: 17 26% 18%;
+    --beige-deep: 17 26% 22%;
+    --cell-hot: 17 26% 20%;
 
-    --background: 21 40% 8%;
-    --canvas-from: 21 40% 8%;
-    --canvas-via: 21 40% 8%;
-    --canvas-to: 21 40% 8%;
+    --background: 17 38% 8%;
+    --canvas-from: 17 38% 8%;
+    --canvas-via: 17 38% 8%;
+    --canvas-to: 17 38% 8%;
 
     /* Glass, inverted. The panel tint becomes a lifted brown rather than
        cream, and the edge that gives a frosted card its boundary has to be a
        low-alpha white here — a solid white hairline on a dark panel reads as
        a drawn outline rather than a lit edge. The scrim stays ink: the
        photograph is darkened toward the dark canvas either way. */
-    --panel-glass: 21 36% 14%;
-    --glass-edge: 28 60% 90% / 0.14;
-    --pill-bg: 21 36% 16% / 0.86;
-    --scrim: 19 50% 4%;
+    --panel-glass: 17 34% 13%;
+    --glass-edge: 35 60% 90% / 0.14;
+    --pill-bg: 17 34% 15% / 0.86;
+    --scrim: 17 50% 4%;
 
-    --foreground: 28 79% 96%;
-    --board-ground: 21 40% 12%;
-    --board-ink: 28 79% 96%;
-    --board-dim: 28 18% 72%;
+    --foreground: 35 39% 92%;
+    --board-ground: 17 36% 11%;
+    --board-ink: 35 39% 92%;
+    --board-dim: 30 18% 72%;
     --board-green: 44 91% 64%;
     --board-amber: 29 90% 76%;
     --board-red: 8 100% 84%;
-    --card: 21 40% 12%;
-    --card-foreground: 28 79% 96%;
-    --popover: 21 35% 16%;
-    --popover-foreground: 28 79% 96%;
-    --primary: 28 79% 96%;
-    --primary-foreground: 21 40% 12%;
-    --espresso: 21 30% 24%;
-    --espresso-foreground: 28 79% 96%;
-    --chart-ink: 28 79% 96%;
-    --secondary: 21 30% 16%;
-    --secondary-foreground: 28 79% 96%;
-    --muted: 21 30% 16%;
-    --muted-foreground: 28 20% 68%;
-    --accent: 21 28% 20%;
-    --accent-foreground: 28 79% 96%;
+    --card: 17 36% 11%;
+    --card-foreground: 35 39% 92%;
+    --popover: 17 32% 15%;
+    --popover-foreground: 35 39% 92%;
+    --primary: 35 39% 92%;
+    --primary-foreground: 17 46% 16%;
+    --espresso: 17 30% 22%;
+    --espresso-foreground: 35 39% 92%;
+    --chart-ink: 35 39% 92%;
+    --secondary: 17 28% 15%;
+    --secondary-foreground: 35 39% 92%;
+    --muted: 17 28% 15%;
+    --muted-foreground: 30 18% 68%;
+    --accent: 17 26% 19%;
+    --accent-foreground: 35 39% 92%;
     --destructive: 8 100% 72%;
     --destructive-foreground: 21 40% 12%;
     --destructive-muted: 8 40% 17%;
@@ -280,20 +286,20 @@
     --warning: 29 90% 74%;
     --warning-foreground: 21 40% 12%;
     --warning-muted: 29 35% 14%;
-    --brand: 36 88% 59%;
-    --brand-foreground: 21 40% 12%;
-    --brand-ink: 36 88% 62%;
-    --brand-strong: 36 88% 59%;
-    --brand-muted: 36 35% 16%;
+    --brand: 17 49% 48%;
+    --brand-foreground: 0 0% 100%;
+    --brand-ink: 17 65% 70%;
+    --brand-strong: 17 49% 48%;
+    --brand-muted: 17 35% 16%;
     --amber: 44 91% 53%;
     --amber-foreground: 21 40% 12%;
     --amber-deep: 36 70% 50%;
-    --ring: 36 88% 59%;
+    --ring: 17 60% 60%;
 
     /* On a dark ground a warm-brown shadow is invisible; the elevation cue
        has to come from something darker than the card, so these deepen to
        near-black while keeping the brown hue. */
-    --shadow-color: 21 50% 3%;
+    --shadow-color: 17 50% 3%;
     --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 0.30);
     --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.34), 0 2px 6px -2px hsl(var(--shadow-color) / 0.40);
     --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.34), 0 8px 20px -8px hsl(var(--shadow-color) / 0.55);
@@ -302,21 +308,21 @@
     /* Highlight: the reference's lime, #C2EF00. The one primary action on a
        screen and the one picked-out card — never more than one thing per
        view, or it stops meaning "this one". */
-    --highlight: 36 88% 59%;
-    --highlight-foreground: 21 40% 12%;
+    --highlight: 17 49% 48%;
+    --highlight-foreground: 0 0% 100%;
     /* Solid, not alpha. A token carrying its own alpha breaks every rule
        that adds another (border-border/60 exists in three places), so these
        are the colours a 10% cream line actually lands at over this base. */
-    --border: 21 22% 22%;
-    --border-soft: 21 24% 18%;
-    --input: 21 20% 26%;
-    --dock: 21 30% 20%;
+    --border: 17 20% 21%;
+    --border-soft: 17 24% 17%;
+    --input: 17 20% 25%;
+    --dock: 17 30% 19%;
     --dock-a: 0.68;
-    --dock-rim: 28 60% 92%;
-    --dock-ink: 28 79% 96%;
-    --dock-muted: 28 20% 78%;
-    --dock-active: 36 88% 59%;
-    --dock-active-ink: 21 40% 12%;
+    --dock-rim: 35 60% 92%;
+    --dock-ink: 35 39% 92%;
+    --dock-muted: 30 20% 78%;
+    --dock-active: 17 49% 48%;
+    --dock-active-ink: 0 0% 100%;
     /* The banner and chip families had light values only, so in dark they
        inherited them: dark-brown banner text on a dark-amber ground. Each is
        inverted here — a deep tint for the ground, a light ink on it. */
@@ -325,7 +331,7 @@
     --warning-ink: 29 90% 88%;
     --alert: 36 88% 62%;
     --alert-muted: 36 35% 14%;
-    --page-top: 21 35% 13%;
+    --page-top: 17 34% 12%;
   }
 }
 

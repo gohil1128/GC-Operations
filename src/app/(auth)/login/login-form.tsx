@@ -30,7 +30,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           figures: this page is unauthenticated, so real season numbers here would be public. */}
       <div
         className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-white lg:m-5 lg:flex lg:flex-col"
-        style={{ background: "radial-gradient(120% 120% at 0% 100%, #4A2F1D 0%, #2B1B12 55%, #170E09 100%)" }}
+        style={{ background: "radial-gradient(120% 120% at 0% 100%, #55301F 0%, #3C2116 55%, #1C0F0A 100%)" }}
       >
         <ChaiMoon variant="massive" />
         {!logoFailed ? (
@@ -61,16 +61,16 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
             Hidden on desktop, where the brand panel carries the moon. */}
         <div aria-hidden className="absolute inset-0 overflow-hidden lg:hidden">
           <ChaiMoon variant="background" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#170E09]/70 via-[#170E09]/55 to-[#170E09]/78" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1C0F0A]/70 via-[#1C0F0A]/55 to-[#1C0F0A]/78" />
         </div>
         {/* In normal flow above the moon (relative, z-10). The colours are the app's: cocoa
-            fields, cream text, marigold links and button. On desktop (lg) everything falls back
+            fields, cream text, rust links and button. On desktop (lg) everything falls back
             to the theme tokens exactly as the page was before the moon went full-screen. */}
         <div className="relative z-10 w-full max-w-[380px]">
           <div className="mb-6 flex justify-center lg:hidden">
             <BrandLogo alt={APP_NAME} className="h-12 w-auto" />
           </div>
-          <h1 className="display-num text-[30px] font-medium text-[#FDF5EE] lg:text-inherit">Welcome back</h1>
+          <h1 className="display-num text-[30px] font-medium text-[#F2EBE1] lg:text-inherit">Welcome back</h1>
           <p className="mt-1.5 text-[13px] text-[#C9CBBF] lg:text-muted-foreground">Sign in to your back-office</p>
 
           <form action={formAction} className="mt-7 grid gap-3.5">
@@ -83,7 +83,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 autoComplete="email"
                 required
                 placeholder="you@example.com"
-                className="h-12 rounded-2xl border-[#5A4030] bg-[#3A2619]/80 px-4 text-sm text-[#FDF5EE] backdrop-blur-md placeholder:text-[#C9B5A6] lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none lg:placeholder:text-muted-foreground"
+                className="h-12 rounded-2xl border-[#5C3A2B] bg-[#3C2116]/80 px-4 text-sm text-[#F2EBE1] backdrop-blur-md placeholder:text-[#C9B5A6] lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none lg:placeholder:text-muted-foreground"
               />
             </div>
             <div className="grid gap-1.5">
@@ -97,7 +97,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 type="password"
                 autoComplete="current-password"
                 required
-                className="h-12 rounded-2xl border-[#5A4030] bg-[#3A2619]/80 px-4 text-sm text-[#FDF5EE] backdrop-blur-md lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none"
+                className="h-12 rounded-2xl border-[#5C3A2B] bg-[#3C2116]/80 px-4 text-sm text-[#F2EBE1] backdrop-blur-md lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none"
               />
             </div>
 

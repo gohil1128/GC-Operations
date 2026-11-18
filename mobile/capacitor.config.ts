@@ -49,7 +49,7 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
     // The site's own cream canvas, so a cold start does not flash white.
-    backgroundColor: "#F8F4EC",
+    backgroundColor: "#F2EBE1",
   },
 };
 

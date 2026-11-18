@@ -25,8 +25,8 @@ export default function GlobalError({
           minHeight: "100vh",
           display: "grid",
           placeItems: "center",
-          background: "linear-gradient(180deg,#2B1B12 0%,#170E09 60%)",
-          color: "#FCFCFB",
+          background: "linear-gradient(180deg,#3C2116 0%,#1C0F0A 60%)",
+          color: "#F2EBE1",
           fontFamily: "ui-sans-serif, system-ui, sans-serif",
           padding: "24px",
         }}
@@ -36,8 +36,8 @@ export default function GlobalError({
             maxWidth: 420,
             width: "100%",
             textAlign: "center",
-            background: "#3A2619",
-            border: "1px solid #3A4430",
+            background: "#3C2116",
+            border: "1px solid #5C3A2B",
             borderRadius: 24,
             padding: 40,
           }}
@@ -59,7 +59,7 @@ export default function GlobalError({
             <button
               onClick={reset}
               style={{
-                background: "#F2A93C", color: "#2B1B12", border: 0, borderRadius: 999,
+                background: "#B55F3E", color: "#FFFFFF", border: 0, borderRadius: 999,
                 padding: "10px 18px", fontSize: 14, fontWeight: 500, cursor: "pointer",
               }}
             >
@@ -68,7 +68,7 @@ export default function GlobalError({
             <a
               href="/dashboard"
               style={{
-                border: "1px solid #3A4430", color: "#FCFCFB", borderRadius: 999,
+                border: "1px solid #5C3A2B", color: "#F2EBE1", borderRadius: 999,
                 padding: "10px 18px", fontSize: 14, fontWeight: 500, textDecoration: "none",
               }}
             >
