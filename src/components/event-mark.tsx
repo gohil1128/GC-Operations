@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
   the same tile, on every screen, so an event is recognisable at a glance.
 */
 const PALETTE = [
-  "#F2A93C", "#FF7A66", "#F5BD1C", "#8FB573", "#6FA8C9", "#A98BD1",
+  "#B55F3E", "#FF7A66", "#F5BD1C", "#8FB573", "#6FA8C9", "#A98BD1",
   "#E58CB0", "#C98F5A", "#5BB8A6", "#D96B4A", "#9BA84A", "#7C8FE0",
 ];
 const SKIP = new Set(["the", "of", "and", "at", "in", "a", "an", "for", "&", "with"]);

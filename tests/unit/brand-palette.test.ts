@@ -23,8 +23,9 @@ const near = (a: string, b: string) =>
 
 describe("brand palette anchors", () => {
   const anchors: Record<string, string> = {
-    marigold: "#F2A93C", coral: "#FF7A66", cocoa: "#2B1B12", cream: "#FDF5EE",
-    ivory: "#FFFCF5", peach: "#FCE4CC", sun: "#F5BD1C",
+    // marigold holds Rust, cocoa Espresso: God's Chai's three brand colours are rust, espresso and cream.
+    marigold: "#B55F3E", coral: "#FF7A66", cocoa: "#3C2116", cream: "#F2EBE1",
+    ivory: "#FBF8F4", peach: "#E7DDCF", sun: "#F5BD1C",
   };
   for (const [n, h] of Object.entries(anchors)) {
     it(`${n} 500 is ${h}`, () => expect(near(hex(n), h), `${hex(n)} vs ${h}`).toBe(true));
@@ -32,5 +33,5 @@ describe("brand palette anchors", () => {
   it("defines every shade 100-900", () => {
     for (const n of Object.keys(anchors)) for (let k = 100; k <= 900; k += 100) expect(root).toContain(`--${n}-${k}:`);
   });
-  it("uses marigold as the primary highlight", () => expect(root).toMatch(/--highlight:\s*36 88% 59%/));
+  it("uses rust as the primary highlight", () => expect(root).toMatch(/--highlight:\s*17 49% 48%/));
 });

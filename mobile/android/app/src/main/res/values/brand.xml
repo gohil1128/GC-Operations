@@ -7,5 +7,5 @@
       splash, and the first painted frame are all one colour instead of
       flashing white between them.
     -->
-    <color name="brandCanvas">#F8F4EC</color>
+    <color name="brandCanvas">#F2EBE1</color>
 </resources>

@@ -39,13 +39,13 @@ function formatRange(start: string, end: string) {
 // default for every event anybody creates, and it has to be seen on both
 // themes. The old default was espresso #3A2415, which is a brown-black dot on
 // a near-black page: almost every event had a colour nobody could see. The
-// marigold leads now; every swatch is also drawn with a hairline ring, so even a
+// rust leads now; every swatch is also drawn with a hairline ring, so even a
 // colour that happens to match the surface it sits on still reads.
 const PALETTE = [
-  "#F2A93C", // marigold — the brand's own
+  "#B55F3E", // rust — the brand's own
   "#FF7A66", // coral
   "#F5BD1C", // yellow
-  "#C4623A", // rust
+  "#D9A27F", // latte
   "#3F8FB8", // blue
   "#8D9191", // grey
 ];
