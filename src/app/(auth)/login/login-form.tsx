@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "@/modules/auth/actions";
 import { APP_NAME } from "@/lib/brand";
-import { BrandLogo } from "@/components/brand-logo";
 import { GoogleButton, OrDivider } from "../_components/google-button";
+import { LoginFloat } from "@/components/login-float";
 import { LoginVideo } from "@/components/login-video";
 function Submit() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
+    <Button type="submit" size="lg" className="login-submit w-full" disabled={pending}>
       {pending ? "Signing in…" : "Sign in"}
     </Button>
   );
@@ -23,59 +23,36 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
   const [state, formAction] = useFormState(loginAction, null as { error?: string } | null);
   const [logoFailed, setLogoFailed] = React.useState(false);
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel (desktop): chai simmering, an 8-second silent loop, under an espresso scrim
-          so the cream headline stays readable. The footer is a small chip. Deliberately carries no
-          live figures: this page is unauthenticated, so real season numbers here would be public. */}
-      <div
-        className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-white lg:m-5 lg:flex lg:flex-col"
-        style={{ background: "radial-gradient(120% 120% at 0% 100%, #55301F 0%, #3C2116 55%, #1C0F0A 100%)" }}
-      >
-        <LoginVideo className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_55%]" />
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(28,15,10,0.72)_0%,rgba(28,15,10,0.38)_42%,rgba(28,15,10,0.5)_70%,rgba(20,11,7,0.86)_100%)]" />
-        {!logoFailed ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src="/logo.png" alt={APP_NAME} className="relative h-16 w-auto self-start" style={{ filter: "brightness(3.4) saturate(.4)" }} onError={() => setLogoFailed(true)} />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand">
-            <UtensilsCrossed className="h-6 w-6" />
-          </div>
-        )}
-        <div className="relative mt-10">
-          <p className="display-num text-[44px] font-medium leading-[1.05]">
-            Every cup,
-            <br />
-            accounted for.
-          </p>
-          <p className="mt-3.5 max-w-[360px] text-sm leading-relaxed opacity-70">
-            Sales, invoices, cash and labor for every event — in one warm back-office.
-          </p>
-        </div>
-        <div className="relative mt-auto w-fit rounded-full bg-black/35 px-3 py-1 text-2xs text-white/80 backdrop-blur">{APP_NAME}</div>
+    <div className="login-scene">
+      {/* Chai simmering, an 8-second silent loop, full screen under a cocoa scrim so the cream type stays
+          readable. Deliberately no live figures: this page is unauthenticated, so real season numbers here
+          would be public. */}
+      <div aria-hidden className="login-stage">
+        <LoginVideo className="login-video" />
+        <div className="login-scrim" />
       </div>
-      {/* Form side */}
-      <main className="relative flex flex-col items-center overflow-hidden px-6 pb-10 pt-8 sm:px-10 lg:justify-center lg:p-10">
-        {/* Phone / installed app: the same chai video fills the screen behind the form. The scrim
-            over it is the app's own cocoa-black (the sign-in gradient's darkest colour), not
-            plain black, so the chai stays warm and the page stays in the palette. Hidden on
-            desktop, where the brand panel carries the video. */}
-        <div aria-hidden className="absolute inset-0 overflow-hidden lg:hidden">
-          <LoginVideo className="absolute inset-0 h-full w-full object-cover object-[center_55%]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1C0F0A]/70 via-[#1C0F0A]/55 to-[#1C0F0A]/78" />
-        </div>
-        {/* In normal flow above the video (relative, z-10). The colours are the app's: cocoa
-            fields, cream text, rust links and button. On desktop (lg) everything falls back
-            to the theme tokens exactly as the page was before the video went full-screen. */}
-        <div className="relative z-10 w-full max-w-[380px]">
-          <div className="mb-6 flex justify-center lg:hidden">
-            <BrandLogo alt={APP_NAME} className="h-12 w-auto" />
-          </div>
-          <h1 className="display-num text-[30px] font-medium text-[#F2EBE1] lg:text-inherit">Welcome back</h1>
-          <p className="mt-1.5 text-[13px] text-[#C9CBBF] lg:text-muted-foreground">Sign in to your back-office</p>
+      <p aria-hidden className="display-num login-tagline">
+        Every cup,
+        <br />
+        accounted for.
+      </p>
+
+      <main className="login-main">
+        <LoginFloat>
+          {!logoFailed ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/logo.png" alt={APP_NAME} className="login-logo" onError={() => setLogoFailed(true)} />
+          ) : (
+            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white">
+              <UtensilsCrossed className="h-6 w-6" />
+            </div>
+          )}
+          <h1 className="display-num text-[30px] font-medium">Welcome back</h1>
+          <p className="login-muted mt-1.5 text-[13px]">Sign in to your back-office</p>
 
           <form action={formAction} className="mt-7 grid gap-3.5">
             <div className="grid gap-1.5">
-              <Label htmlFor="email" className="text-xs text-[#C9CBBF] lg:text-muted-foreground">Email</Label>
+              <Label htmlFor="email" className="text-xs">Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -83,13 +60,13 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 autoComplete="email"
                 required
                 placeholder="you@example.com"
-                className="h-12 rounded-2xl border-[#5C3A2B] bg-[#3C2116]/80 px-4 text-sm text-[#F2EBE1] backdrop-blur-md placeholder:text-[#C9B5A6] lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none lg:placeholder:text-muted-foreground"
+                className="h-12 rounded-2xl px-4 text-sm"
               />
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-baseline justify-between">
-                <Label htmlFor="password" className="text-xs text-[#C9CBBF] lg:text-muted-foreground">Password</Label>
-                <Link href="/forgot-password" className="text-xs text-highlight hover:underline lg:text-brand-ink">Forgot?</Link>
+                <Label htmlFor="password" className="text-xs">Password</Label>
+                <Link href="/forgot-password" className="login-link text-xs hover:underline">Forgot?</Link>
               </div>
               <Input
                 id="password"
@@ -97,7 +74,7 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
                 type="password"
                 autoComplete="current-password"
                 required
-                className="h-12 rounded-2xl border-[#5C3A2B] bg-[#3C2116]/80 px-4 text-sm text-[#F2EBE1] backdrop-blur-md lg:border-input lg:bg-card lg:text-foreground lg:backdrop-blur-none"
+                className="h-12 rounded-2xl px-4 text-sm"
               />
             </div>
 
@@ -113,18 +90,19 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
           </form>
 
           {googleEnabled && (
-            <>
+            <div className="login-alt">
               <OrDivider />
               <GoogleButton />
-            </>
+            </div>
           )}
 
-          <p className="mt-5 text-center text-xs text-[#C9CBBF] lg:text-muted-foreground">
+          <p className="login-muted mt-5 text-center text-xs">
             New here?{" "}
-            <Link href="/signup" className="text-highlight hover:underline lg:text-brand-ink">Create an account</Link>
+            <Link href="/signup" className="login-link hover:underline">Create an account</Link>
           </p>
-        </div>
+        </LoginFloat>
       </main>
+      <p aria-hidden className="login-foot">{APP_NAME}</p>
     </div>
   );
 }
