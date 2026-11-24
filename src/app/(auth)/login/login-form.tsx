@@ -10,7 +10,7 @@ import { loginAction } from "@/modules/auth/actions";
 import { APP_NAME } from "@/lib/brand";
 import { BrandLogo } from "@/components/brand-logo";
 import { GoogleButton, OrDivider } from "../_components/google-button";
-import { ChaiMoon } from "../_components/chai-moon";
+import { LoginVideo } from "@/components/login-video";
 function Submit() {
   const { pending } = useFormStatus();
   return (
@@ -24,15 +24,15 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
   const [logoFailed, setLogoFailed] = React.useState(false);
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel (desktop): the chai moon, massive, filling the lower part of the panel.
-          The headline sits up under the logo, on the dark of the panel, and the footer is a
-          small chip so nothing is set over the bright foam. Deliberately carries no live
-          figures: this page is unauthenticated, so real season numbers here would be public. */}
+      {/* Brand panel (desktop): chai simmering, an 8-second silent loop, under an espresso scrim
+          so the cream headline stays readable. The footer is a small chip. Deliberately carries no
+          live figures: this page is unauthenticated, so real season numbers here would be public. */}
       <div
         className="relative m-3 hidden overflow-hidden rounded-bento p-10 text-white lg:m-5 lg:flex lg:flex-col"
         style={{ background: "radial-gradient(120% 120% at 0% 100%, #55301F 0%, #3C2116 55%, #1C0F0A 100%)" }}
       >
-        <ChaiMoon variant="massive" />
+        <LoginVideo className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_55%]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(28,15,10,0.72)_0%,rgba(28,15,10,0.38)_42%,rgba(28,15,10,0.5)_70%,rgba(20,11,7,0.86)_100%)]" />
         {!logoFailed ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src="/logo.png" alt={APP_NAME} className="relative h-16 w-auto self-start" style={{ filter: "brightness(3.4) saturate(.4)" }} onError={() => setLogoFailed(true)} />
@@ -55,17 +55,17 @@ export function LoginForm({ googleEnabled, notice }: { googleEnabled: boolean; n
       </div>
       {/* Form side */}
       <main className="relative flex flex-col items-center overflow-hidden px-6 pb-10 pt-8 sm:px-10 lg:justify-center lg:p-10">
-        {/* Phone / installed app: the chai moon fills the screen behind the form. The scrim
-            over it is the app's own cocoa-black (the sign-in gradient's darkest colour),
-            not plain black, so the moon stays warm and the page stays in the palette.
-            Hidden on desktop, where the brand panel carries the moon. */}
+        {/* Phone / installed app: the same chai video fills the screen behind the form. The scrim
+            over it is the app's own cocoa-black (the sign-in gradient's darkest colour), not
+            plain black, so the chai stays warm and the page stays in the palette. Hidden on
+            desktop, where the brand panel carries the video. */}
         <div aria-hidden className="absolute inset-0 overflow-hidden lg:hidden">
-          <ChaiMoon variant="background" />
+          <LoginVideo className="absolute inset-0 h-full w-full object-cover object-[center_55%]" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#1C0F0A]/70 via-[#1C0F0A]/55 to-[#1C0F0A]/78" />
         </div>
-        {/* In normal flow above the moon (relative, z-10). The colours are the app's: cocoa
+        {/* In normal flow above the video (relative, z-10). The colours are the app's: cocoa
             fields, cream text, rust links and button. On desktop (lg) everything falls back
-            to the theme tokens exactly as the page was before the moon went full-screen. */}
+            to the theme tokens exactly as the page was before the video went full-screen. */}
         <div className="relative z-10 w-full max-w-[380px]">
           <div className="mb-6 flex justify-center lg:hidden">
             <BrandLogo alt={APP_NAME} className="h-12 w-auto" />
