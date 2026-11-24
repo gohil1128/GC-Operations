@@ -2314,7 +2314,7 @@
 .login-logo { display: block; height: 3.75rem; width: auto; margin-bottom: 1.5rem; padding: 0.3rem; border-radius: 1rem; background: hsl(var(--cream)); box-shadow: 0 8px 20px -8px hsl(17 60% 4% / 0.6); }
 .login-card label { color: hsl(var(--cream) / 0.78); }
 .login-card .login-muted { color: hsl(var(--cream) / 0.68); }
-.login-card .login-link { color: hsl(var(--rust-300)); }
+.login-card .login-link { color: hsl(17 70% 74%); }
 .login-card .login-link:hover { color: hsl(var(--cream)); }
 .login-card input:not([type="hidden"]) { background: hsl(17 46% 6% / 0.38); border-color: hsl(var(--cream) / 0.2); color: hsl(var(--cream)); }
 .login-card input::placeholder { color: hsl(var(--cream) / 0.45); }
