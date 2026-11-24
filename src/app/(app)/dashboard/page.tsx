@@ -25,6 +25,7 @@ import {
   UpcomingEventsCard,
 } from "@/components/dashboard/ledger/rail-cards";
 import { HeroCard } from "@/components/dashboard/hero-card";
+import { SyncButton } from "@/components/dashboard/sync-button";
 import { EventCards, type EventCard } from "@/components/dashboard/event-cards";
 import { PremixCard } from "@/components/dashboard/premix-card";
 import { getPremixData } from "@/modules/sales/premix";
@@ -70,6 +71,13 @@ export default async function DashboardPage({
     listEventOptions(scope.businessId),
   ]);
   const canChangeSettings = can(scope.role, "settings");
+  // The Overview's sync button: only for somebody who may sync, and only when something is connected to sync.
+  const [squareOn, mailOn] = canChangeSettings
+    ? await Promise.all([
+        prisma.squareConnection.count({ where: { businessId: scope.businessId, status: "ACTIVE" } }),
+        prisma.mailConnection.count({ where: { businessId: scope.businessId, status: "ACTIVE" } }),
+      ])
+    : [0, 0];
   const now = new Date();
   /*
     Which cards this business wants. Stored as the hidden ones, so a card added
@@ -291,6 +299,7 @@ export default async function DashboardPage({
           labelSlot={
             <EventControl events={eventOptions} activeKey={range.key} activeLabel={range.label} basePath="/dashboard" prefix="Net sales" />
           }
+          syncSlot={squareOn + mailOn > 0 ? <SyncButton /> : undefined}
           delta={deltaPct === null ? null : { text: formatPercent(Math.abs(deltaPct)), up: deltaPct >= 0 }}
           days={tradingDays}
           canCloseDrawer={can(scope.role, "cash")}

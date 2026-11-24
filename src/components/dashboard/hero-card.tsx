@@ -35,6 +35,7 @@ export function HeroCard({
   figure,
   figureLabel,
   labelSlot,
+  syncSlot,
   delta,
   days,
   canCloseDrawer,
@@ -44,6 +45,8 @@ export function HeroCard({
   figureLabel: string;
   /** Replaces the plain label, e.g. with the event picker. */
   labelSlot?: React.ReactNode;
+  /** A sync button, shown beside the report link when something is connected. */
+  syncSlot?: React.ReactNode;
   delta: { text: string; up: boolean } | null;
   days: TradingDay[];
   canCloseDrawer: boolean;
@@ -78,6 +81,7 @@ export function HeroCard({
             )}
           </div>
         </div>
+        {syncSlot}
         <Link
           href="/reports"
           aria-label="Open the full profit and loss report"
