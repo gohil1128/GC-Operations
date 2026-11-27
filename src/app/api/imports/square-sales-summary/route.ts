@@ -126,6 +126,11 @@ export async function POST(req: Request) {
   const cashCents = toCents(cashDollars);
   const cardCents = toCents(cardDollars);
 
+  const existingDay = await prisma.dailySales.findUnique({
+    where: { locationId_businessDate: { locationId: scope.locationId, businessDate } },
+  });
+  // No event chosen on the form means "leave it as it is", not "remove it".
+  const keptEventId = eventId ?? existingDay?.eventId ?? null;
   const dayData = {
     locationId: scope.locationId,
     businessDate,
@@ -133,13 +138,10 @@ export async function POST(req: Request) {
     taxCents,
     tipsCents,
     guestCount: txnCount, // 1 transaction = 1 guest per the existing convention
-    eventId,
+    eventId: keptEventId,
     source: "POS" as const,
   };
 
-  const existingDay = await prisma.dailySales.findUnique({
-    where: { locationId_businessDate: { locationId: scope.locationId, businessDate } },
-  });
   let dayCreated = 0;
   let dayUpdated = 0;
   if (existingDay) {

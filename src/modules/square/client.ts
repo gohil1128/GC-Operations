@@ -156,15 +156,29 @@ export async function revokeMerchant(merchantId: string): Promise<void> {
 
 export function createSquareClient(accessToken: string): SquareClient {
   async function call<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
-    const res = await fetch(new URL(`/v2${path}`, squareBase()), {
-      method: init.method ?? "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Square-Version": SQUARE_VERSION,
-        "Content-Type": "application/json",
-      },
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    });
+    /*
+      A hung request used to run into the platform's 60-second kill, which
+      skipped the sync's cleanup and left "another sync is running" showing for
+      ten minutes. So each call times out well inside that, and a rate limit or
+      a brief outage is retried once, honouring Retry-After.
+    */
+    const send = () =>
+      fetch(new URL(`/v2${path}`, squareBase()), {
+        method: init.method ?? "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Square-Version": SQUARE_VERSION,
+          "Content-Type": "application/json",
+        },
+        body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        signal: AbortSignal.timeout(15_000),
+      });
+    let res = await send();
+    if (res.status === 429 || res.status === 503) {
+      const wait = Math.min(Number(res.headers.get("retry-after")) || 1, 4);
+      await new Promise((r) => setTimeout(r, wait * 1000));
+      res = await send();
+    }
     const json = (await res.json().catch(() => ({}))) as T & { errors?: { code?: string; detail?: string }[] };
     if (res.status === 401 || res.status === 403) {
       throw new SquareAuthError(`Square refused the request (${json.errors?.[0]?.code ?? res.status}).`);

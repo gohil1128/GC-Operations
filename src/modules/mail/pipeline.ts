@@ -65,6 +65,18 @@ const empty = (connectionId: string): ScanResult => ({
   connectionId, ran: false, listed: 0, triaged: 0, logged: 0, queued: 0, skipped: 0, failed: 0, partial: false,
 });
 
+/*
+  A failure that is the service's or the account's, not this one email's: a
+  revoked or unpaid key, a retired model, rate limiting, an outage. Treating
+  these as "this email failed" marked every bill in the inbox failed and then
+  moved the scan forward past them, so they were never read. They stop the run
+  instead, and the scan's place stays where it was.
+*/
+function isSystemic(e: unknown) {
+  const status = (e as { status?: number } | null)?.status;
+  return typeof status === "number" && (status === 401 || status === 402 || status === 403 || status === 404 || status === 429 || status >= 500);
+}
+
 const brief = (e: unknown) => (e instanceof Error ? e.message : String(e)).replace(/\s+/g, " ").slice(0, 200);
 
 export async function scanConnection(
@@ -161,6 +173,7 @@ export async function scanConnection(
     ).map((s) => ({ id: s.id, name: s.name, email: s.email, senders: s.mailSenders.map((x) => x.address) }));
 
     let cursor: Date | null = null;
+    let systemicError: string | null = null;
     let exhausted = false;
     let handled = 0;
     for (const id of todo) {
@@ -179,6 +192,13 @@ export async function scanConnection(
         cursor = outcome.receivedAt;
       } catch (e) {
         if (e instanceof GmailAuthError) throw e;
+        if (isSystemic(e)) {
+          // Put the email back as if it had not been looked at, and stop.
+          if (seenById.has(id)) await db.mailMessage.update({ where: { id: claimed }, data: { status: "FAILED", reason: brief(e) } });
+          else await db.mailMessage.delete({ where: { id: claimed } }).catch(() => {});
+          systemicError = `The reading service refused the request (${brief(e)}). Nothing was lost: these emails will be read once it works again.`;
+          break;
+        }
         result.failed++;
         await db.mailMessage.update({
           where: { id: claimed },
@@ -193,6 +213,7 @@ export async function scanConnection(
     await db.mailMessage.deleteMany({
       where: { connectionId, status: "SKIPPED", createdAt: { lt: new Date(startedAt.getTime() - SKIPPED_RETENTION_DAYS * 86_400_000) } },
     });
+    if (systemicError) return finish({ error: systemicError }, undefined);
     // A one-day scan never moves the regular scan's place.
     return finish({}, opts.only ? undefined : result.partial ? (cursor ?? undefined) : startedAt);
   } catch (e) {

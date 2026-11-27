@@ -35,13 +35,16 @@ export async function POST(req: NextRequest) {
       revalidatePath("/dashboard");
       revalidatePath("/settings/integrations");
     }
+    // A run that could read nothing because the service refused is an outage,
+    // not a green tick: the scheduler should show it as failed.
+    const broken = results.some((r) => r.error);
     return NextResponse.json({
-      ok: true,
+      ok: !broken,
       scanned: results.filter((r) => r.ran).length,
       results: results.map(({ ran, note, listed, triaged, logged, queued, skipped, failed, partial, error }) => ({
         ran, note, listed, triaged, logged, queued, skipped, failed, partial, error,
       })),
-    });
+    }, { status: broken ? 502 : 200 });
   } catch (e) {
     // Not-yet-configured is an expected state, not an outage.
     if (e instanceof MailConfigError) return NextResponse.json({ ok: false, error: e.message }, { status: 503 });

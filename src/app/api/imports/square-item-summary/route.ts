@@ -108,6 +108,13 @@ export async function POST(req: Request) {
   let totalQty = 0;
   const errors: { row: number; reason: string }[] = [];
 
+  // No event chosen on the form means "leave it as it is", not "remove it".
+  const dayBefore = await prisma.dailySales.findUnique({
+    where: { locationId_businessDate: { locationId: scope.locationId, businessDate } },
+    select: { eventId: true },
+  });
+  const keptEventId = eventId ?? dayBefore?.eventId ?? null;
+
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i] as Record<string, string>;
     const rawName = String(r[itemCol] ?? "").trim();
@@ -142,7 +149,7 @@ export async function POST(req: Request) {
       netSalesCents: netCents,
       taxCents,
       txCount: 0, // unknown at summary grain
-      eventId,
+      eventId: keptEventId,
     };
 
     const existing = await prisma.salesItem.findUnique({
@@ -177,7 +184,7 @@ export async function POST(req: Request) {
     // This format doesn't carry transaction or guest count — leave at 0
     // unless the operator already entered one we should preserve.
     guestCount: existingDay?.guestCount ?? 0,
-    eventId,
+    eventId: keptEventId,
     source: "POS" as const,
   };
   let dayCreated = 0;

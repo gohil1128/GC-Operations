@@ -128,7 +128,7 @@ function header(fromName: string, fromAddress: string, subject: string) {
   return `<from>${escapeUntrusted(fromName ? `${fromName} <${fromAddress}>` : fromAddress)}</from>\n<subject>${escapeUntrusted(subject)}</subject>`;
 }
 
-export function createAnthropicExtractor(client: Anthropic = new Anthropic()): InvoiceExtractor {
+export function createAnthropicExtractor(client: Anthropic = new Anthropic({ timeout: 25_000, maxRetries: 1 })): InvoiceExtractor {
   /*
     claude-opus-5-5 cannot disable thinking and rejects forced tool_choice, so
     this asks for structured output rather than a forced tool call, and steers

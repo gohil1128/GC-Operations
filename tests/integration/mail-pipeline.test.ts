@@ -471,3 +471,29 @@ describe("one day on its own", () => {
     expect(after.getTime()).toBe(before.getTime());
   });
 });
+
+describe("when the reading service itself is refusing", () => {
+  it("stops, loses nothing and does not move the scan's place — instead of marking every bill failed", async () => {
+    const items = [email("s1", { subject: "Bill A" }), email("s2", { subject: "Bill B" })];
+    const refused = Object.assign(new Error("credit balance is too low"), { status: 402 });
+    const h = harness(items, { "Bill A": { triage: refused }, "Bill B": { triage: refused } });
+    const before = (await db.mailConnection.findUniqueOrThrow({ where: { id: ids.connectionId } })).scannedThrough;
+
+    const r = await scan(h.deps);
+
+    expect(r.error).toMatch(/refused the request/);
+    expect(r.failed).toBe(0);
+    expect(h.calls.triage).toBe(1); // it did not go on to try the second
+    expect(await db.mailMessage.count({ where: { connectionId: ids.connectionId } })).toBe(0);
+    const after = (await db.mailConnection.findUniqueOrThrow({ where: { id: ids.connectionId } })).scannedThrough;
+    expect(after.getTime()).toBe(before.getTime());
+  });
+
+  it("still treats an ordinary one-email failure as that email's alone", async () => {
+    const items = [email("t1", { subject: "Bad" }), email("t2", { subject: "Good" })];
+    const h = harness(items, { Bad: { triage: new Error("odd file") } });
+    const r = await scan(h.deps);
+    expect(r.failed).toBe(1);
+    expect(r.error).toBeUndefined();
+  });
+});
